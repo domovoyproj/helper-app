@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Enterprise Security Vault</title>
+    <!-- Библиотека шифрования (CryptoJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax5/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Библиотека для 2FA (TOTP) -->
+    <script src="https://cdn.jsdelivr.net/npm/otplib@12.0.1/otplib-browser.js"></script>
+    <style>
+        :root {
+            --primary: #0056b3; --primary-hover: #004085;
+            --bg: #f4f6f9; --card: #ffffff; --text: #333333;
+            --border: #ced4da; --danger: #dc3545; --success: #28a745;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; }
+        .page { display: none; max-width: 600px; margin: 0 auto; }
+        .page.active { display: block; }
+        .card { background: var(--card); border-radius: 8px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h1, h2 { margin-bottom: 15px; font-size: 22px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; }
+        .btn { padding: 12px 20px; border-radius: 6px; border: none; background: var(--primary); color: white; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 8px; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-secondary { background: #6c757d; }
+        .btn-danger { background: var(--danger); }
+        .list-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+        .list-item:last-child { border-bottom: none; }
+        .code-badge { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; color: var(--primary); }
+        .hidden { display: none; }
+        .flex-row { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН 1: Авторизация (Мастер-пароль) -->
+    <div id="auth-page" class="page active">
+        <div class="card" style="margin-top: 50px; text-align: center;">
+            <h2>Enterprise Vault</h2>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Введите мастер-пароль для расшифровки локальной базы</p>
+            <input type="password" id="master-password" placeholder="Мастер-пароль">
+            <button class="btn" onclick="unlockVault()">Разблокировать</button>
+            <button class="btn btn-secondary" onclick="resetVault()" style="background: transparent; color: var(--danger); border: 1px solid var(--danger); margin-top: 10px;">Сбросить хранилище</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 2: Главная панель -->
+    <div id="dashboard-page" class="page">
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Хранилище паролей</h1>
+            <button class="btn" style="width: auto; margin:0;" onclick="lockVault()">Заблокировать</button>
+        </div>
+
+        <!-- Поиск -->
+        <div class="card">
+            <input type="text" id="search-box" placeholder="🔍 Поиск по сервисам..." oninput="renderVault()">
+        </div>
+
+        <!-- Список записей -->
+        <div class="card">
+            <h2>Записи</h2>
+            <div id="vault-list"></div>
+            <button class="btn" onclick="showSection('add-page')">+ Добавить запись</button>
+        </div>
+
+        <!-- Инструменты и Бэкап -->
+        <div class="card">
+            <h2>Управление и Бэкап</h2>
+            <button class="btn btn-secondary" onclick="showSection('import-page')">📥 Импорт из Яндекс.Браузера (CSV)</button>
+            <button class="btn btn-success" style="background: var(--success);" onclick="syncToGitHub()">☁️ Синхронизация с GitHub</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 3: Добавление записи -->
+    <div id="add-page" class="page">
+        <div class="card">
+            <h2>Новая запись</h2>
+            <input type="text" id="add-name" placeholder="Название (например, GitHub)">
+            <input type="text" id="add-user" placeholder="Логин / Email">
+            <input type="password" id="add-pwd" placeholder="Пароль">
+            <input type="text" id="add-secret" placeholder="2FA Secret (опционально, для TOTP кодов)">
+            <button class="btn" onclick="saveNewCredential()">Сохранить</button>
+            <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 4: Импорт из Яндекса -->
+    <div id="import-page" class="page">
+        <div class="card">
+            <h2>Импорт CSV из Яндекс.Браузера</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Экспортируйте пароли в Яндекс.Браузере (Настройки -> Пароли -> Экспорт в файл) и загрузите полученный .csv файл сюда.</p>
+            <input type="file" id="csv-file-input" accept=".csv" style="margin-bottom: 12px;">
+            <button class="btn" onclick="processYandexCSV()">Импортировать</button>
+            <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
+        </div>
+    </div>
+
+    <script>
+        let masterKey = "";
+        let vaultData = []; // [{name, user, pwd, secret}]
+        const { totp } = otplib;
+        totp.options = { step: 30 };
+
+        // Управление экранами
+        function showSection(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if(pageId === 'dashboard-page') renderVault();
+        }
+
+        // Разблокировка хранилища
+        function unlockVault() {
+            const pwd = document.getElementById('master-password').value;
+            if(!pwd) return alert("Введите пароль");
+
+            const encrypted = localStorage.getItem('encVaultData');
+            if (!encrypted) {
+                // Если база пустая, создаем новую с этим мастер-паролем
+                masterKey = pwd;
+                vaultData = [];
+                saveVaultEncrypted();
+                showSection('dashboard-page');
+                return;
+            }
+
+            try {
+                const bytes = CryptoJS.AES.decrypt(encrypted, pwd);
+                const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+                if (!decryptedStr) throw new Error("Неверный ключ");
+                
+                vaultData = JSON.parse(decryptedStr);
+                masterKey = pwd;
+                document.getElementById('master-password').value = "";
+                showSection('dashboard-page');
+            } catch (e) {
+                alert("Неверный мастер-пароль!");
+            }
+        }
+
+        function lockVault() {
+            masterKey = "";
+            vaultData = [];
+            showSection('auth-page');
+        }
+
+        function resetVault() {
+            if(confirm("Внимание! Все данные будут удалены. Продолжить?")) {
+                localStorage.removeItem('encVaultData');
+                location.reload();
+            }
+        }
+
+        // Шифрование и сохранение в localStorage
+        function saveVaultEncrypted() {
+            if(!masterKey) return;
+            const encryptedStr = CryptoJS.AES.encrypt(JSON.stringify(vaultData), masterKey).toString();
+            localStorage.setItem('encVaultData', encryptedStr);
+        }
+
+        // Рендер списка
+        function renderVault() {
+            const query = document.getElementById('search-box').value.toLowerCase();
+            const container = document.getElementById('vault-list');
+            
+            const filtered = vaultData.filter(i => i.name.toLowerCase().includes(query) || i.user.toLowerCase().includes(query));
+            
+            if(filtered.length === 0) {
+                container.innerHTML = '<p style="color:#888; text-align:center; padding: 10px;">Нет записей</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.map((item, index) => {
+                let totpCode = "";
+                if(item.secret) {
+                    try { totpCode = `<span class="code-badge">${totp.generate(item.secret)}</span>`; } 
+                    catch(e) { totpCode = `<span style="color:red; font-size:12px;">Ошибка 2FA</span>`; }
+                }
+                return `
+                    <div class="list-item">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <span style="font-size: 13px; color: #666;">${item.user}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${totpCode}
+                            <button class="btn" style="width: auto; padding: 6px 10px; font-size: 13px;" onclick="copyPassword(${index})">Пароль</button>
+                            <button class="btn btn-danger" style="width: auto; padding: 6px 10px; font-size: 13px;" onclick="deleteItem(${index})">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function copyPassword(index) {
+            navigator.clipboard.writeText(vaultData[index].pwd);
+            alert("Пароль скопирован в буфер обмена!");
+        }
+
+        function deleteItem(index) {
+            if(confirm("Удалить запись?")) {
+                vaultData.splice(index, 1);
+                saveVaultEncrypted();
+                renderVault();
+            }
+        }
+
+        function saveNewCredential() {
+            const name = document.getElementById('add-name').value.trim();
+            const user = document.getElementById('add-user').value.trim();
+            const pwd = document.getElementById('add-pwd').value;
+            const secret = document.getElementById('add-secret').value.trim();
+
+            if(!name || !pwd) return alert("Заполните название и пароль");
+
+            vaultData.push({ name, user, pwd, secret });
+            saveVaultEncrypted();
+
+            document.getElementById('add-name').value = "";
+            document.getElementById('add-user').value = "";
+            document.getElementById('add-pwd').value = "";
+            document.getElementById('add-secret').value = "";
+
+            showSection('dashboard-page');
+        }
+
+        // Импорт CSV из Яндекса
+        function processYandexCSV() {
+            const fileInput = document.getElementById('csv-file-input');
+            if(!fileInput.files.length) return alert("Выберите файл");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                // Яндекс формат CSV обычно содержит: name,url,login,password (или аналогично)
+                let count = 0;
+                for(let i = 1; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if(!line) continue;
+                    // Простой парсер CSV по запятым/кавычкам
+                    let cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if(cols.length >= 4) {
+                        let name = cols[0].replace(/"/g, '').trim();
+                        let user = cols[2].replace(/"/g, '').trim();
+                        let pwd = cols[3].replace(/"/g, '').trim();
+                        if(name && pwd) {
+                            vaultData.push({ name, user, pwd, secret: "" });
+                            count++;
+                        }
+                    }
+                }
+                saveVaultEncrypted();
+                alert(`Успешно импортировано записей: ${count}`);
+                showSection('dashboard-page');
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+
+        // Авто-синхронизация с GitHub
+        async function syncToGitHub() {
+            const token = prompt("Введите GitHub Personal Access Token:");
+            const repo = prompt("Введите репозиторий в формате 'username/repo-name':");
+            if(!token || !repo) return;
+
+            const encryptedData = localStorage.getItem('encVaultData');
+            const path = "encrypted_vault_backup.json";
+            
+            try {
+                // 1. Получаем текущий SHA файла (если он есть)
+                let sha = "";
+                let getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if(getRes.ok) {
+                    let fileInfo = await getRes.json();
+                    sha = fileInfo.sha;
+                }
+
+                // 2. Отправляем зашифрованный файл
+                let bodyData = {
+                    message: "Auto-backup encrypted vault",
+                    content: btoa(unescape(encodeURIComponent(encryptedData)))
+                };
+                if(sha) bodyData.sha = sha;
+
+                let putRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `token ${token}`, 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify(bodyData)
+                });
+
+                if(putRes.ok) {
+                    alert("Бэкап успешно отправлен на GitHub в зашифрованном виде!");
+                } else {
+                    let err = await putRes.json();
+                    alert("Ошибка GitHub API: " + err.message);
+                }
+            } catch(e) {
+                alert("Ошибка сети при синхронизации.");
+            }
+        }
+    </script>
+</body>
+</html>
