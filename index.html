@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Helper</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Главный экран (Дашборд) -->
+    <div id="dashboard" class="page active">
+        <header>
+            <h1>Helper</h1>
+            <button onclick="showPage('settings')" class="icon-btn">⚙️</button>
+        </header>
+        
+        <div class="card">
+            <h2>Сводка на сегодня</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <span class="label">Калории</span>
+                    <span class="value" id="cal-value">0</span>
+                    <span class="target">/ 2000 ккал</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Вода</span>
+                    <span class="value" id="water-value">0</span>
+                    <span class="target">/ 2000 мл</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <button class="btn primary" onclick="showPage('food')">🥗 Записать еду</button>
+            <button class="btn secondary" onclick="addWater(250)">💧 +250 мл воды</button>
+        </div>
+    </div>
+
+    <!-- Экран добавления еды (ИИ) -->
+    <div id="food" class="page">
+        <header>
+            <button onclick="showPage('dashboard')" class="icon-btn">◀</button>
+            <h1>Что съели?</h1>
+            <div style="width: 24px;"></div> <!-- Пустой блок для баланса -->
+        </header>
+        <div class="card">
+            <p class="subtitle">Нейросеть Gemini рассчитает КБЖУ</p>
+            <textarea id="food-input" placeholder="Например: 2 вареных яйца и кофе..."></textarea>
+            <button class="btn primary full-width" onclick="analyzeFood()" id="analyze-btn">✨ Рассчитать</button>
+            <div id="food-result" class="result-box hidden"></div>
+        </div>
+    </div>
+
+    <!-- Настройки (Ввод ключа API) -->
+    <div id="settings" class="page">
+        <header>
+            <button onclick="showPage('dashboard')" class="icon-btn">◀</button>
+            <h1>Настройки</h1>
+            <div style="width: 24px;"></div>
+        </header>
+        <div class="card">
+            <h2>Интеграция ИИ</h2>
+            <p class="subtitle">Введите ваш Gemini API Key. Он будет храниться только на этом устройстве.</p>
+            <input type="password" id="api-key-input" placeholder="AIzaSy...">
+            <button class="btn primary full-width" onclick="saveApiKey()">Сохранить ключ</button>
+        </div>
+        <div class="card danger-zone">
+            <button class="btn danger full-width" onclick="clearData()">🗑 Очистить все данные</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
