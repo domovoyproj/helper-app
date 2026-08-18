@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Helper</title>
+    <!-- Библиотека шифрования (CryptoJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1c1c1e;
+            --text-primary: #f2f2f7;
+            --text-secondary: #8e8e93;
+            --accent: #2e8b57;
+            --accent-hover: #246b43;
+            --danger: #ff453a;
+            --border: rgba(255,255,255,0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-color); color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px; padding-bottom: max(20px, env(safe-area-inset-bottom));
+            -webkit-font-smoothing: antialiased;
+        }
+        .page { display: none; max-width: 600px; margin: 0 auto; }
+        .page.active { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background-color: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid var(--border); }
+        h1, h2 { margin-bottom: 15px; font-size: 20px; color: var(--text-primary); }
+        .subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 12px; }
+        
+        input, select, textarea { width: 100%; background: #2c2c2e; border: 1px solid var(--border); color: #ffffff; padding: 14px; margin-bottom: 12px; border-radius: 12px; font-size: 16px; outline: none; }
+        select option { background: #1c1c1e; color: #ffffff; padding: 10px; }
+        textarea { resize: none; height: 85px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+        .btn { padding: 15px; border-radius: 14px; border: none; background: var(--accent); color: white; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 8px; transition: 0.15s; text-align: center; text-decoration: none; display: inline-block; }
+        .btn:active { opacity: 0.8; transform: scale(0.99); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
+        .btn-danger { background: rgba(255,69,58,0.15); color: var(--danger); }
+        .btn-success { background: #32d74b; color: #000; }
+        .btn-github { background: #24292e; color: white; border: 1px solid #3f4448; }
+
+        .date-navigator { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 14px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .date-navigator button { background: none; border: none; color: var(--accent); font-size: 20px; font-weight: bold; cursor: pointer; padding: 0 10px; }
+        .date-navigator span { font-size: 16px; font-weight: 600; }
+
+        .stats { display: flex; gap: 8px; margin-bottom: 12px; }
+        .stat-box { flex: 1; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .stat-box .label { display: block; color: var(--text-secondary); font-size: 11px; margin-bottom: 4px; }
+        .stat-box .value { font-size: 20px; font-weight: 700; display: block; }
+
+        .mood-selector { display: flex; justify-content: space-between; gap: 6px; margin-top: 10px; }
+        .mood-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; font-size: 22px; flex: 1; padding: 8px; cursor: pointer; transition: 0.2s; }
+
+        .quick-grid { display: flex; gap: 8px; margin-bottom: 8px; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+        .cal-day { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 10px 0; text-align: center; font-weight: 600; font-size: 13px; cursor: pointer; min-height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .cal-day-name { text-align: center; color: var(--text-secondary); font-size: 11px; margin-bottom: 4px; font-weight: bold; }
+        .shift-day { background: #ff9f0a; color: #000; }
+        .shift-night { background: #5e5ce6; color: #fff; }
+        .shift-off { background: #32d74b; color: #000; }
+
+        .list-container { display: flex; flex-direction: column; gap: 8px; }
+        .list-item { border: 1px solid var(--border); background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .list-item.done { opacity: 0.4; text-decoration: line-through; }
+        .task-content { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; }
+        .task-content span { word-break: break-word; }
+        .list-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--accent); margin: 0; flex-shrink: 0; }
+        .del-btn { background: rgba(255,69,58,0.15); color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-weight: bold; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        
+        .debt-positive { color: #32d74b; font-weight: bold; }
+        .debt-negative { color: var(--danger); font-weight: bold; }
+        .code-badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-family: monospace; font-weight: bold; color: var(--accent); font-size: 14px; letter-spacing: 1px; cursor: pointer; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН 1: Авторизация -->
+    <div id="auth-page" class="page active">
+        <div class="card" style="margin-top: 40px; text-align: center;">
+            <h2>Helper</h2>
+            <p class="subtitle">Введите мастер-пароль для расшифровки базы</p>
+            <input type="password" id="master-password" placeholder="Мастер-пароль" onkeydown="if(event.key==='Enter') unlockVault()">
+            <button class="btn" onclick="unlockVault()">Разблокировать</button>
+            <button class="btn btn-github" onclick="restoreFromGitHubAuth()" style="margin-top: 10px;">⬇️ Восстановить с GitHub (Новое устройство)</button>
+            <button class="btn btn-secondary" onclick="resetVault()" style="background: transparent; color: var(--danger); border: 1px solid var(--danger); margin-top: 12px;">Сбросить локальные данные</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 2: Дашборд -->
+    <div id="dashboard-page" class="page">
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Helper</h2>
+            <button class="btn btn-secondary" style="width: auto; margin:0; padding: 8px 14px; font-size: 13px;" onclick="lockVault()">Заблокировать</button>
+        </div>
+
+        <div class="date-navigator">
+            <button onclick="changeDate(-1)">◀</button>
+            <span id="date-display">Сегодня</span>
+            <button onclick="changeDate(1)">▶</button>
+        </div>
+
+        <div class="card">
+            <h2>Статистика дня</h2>
+            <div class="stats">
+                <div class="stat-box"><span class="label">Калории</span><span class="value" id="cal-value">0</span></div>
+                <div class="stat-box"><span class="label">Вода</span><span class="value" id="water-value">0</span></div>
+                <div class="stat-box"><span class="label">Шаги</span><span class="value" id="steps-value">0</span></div>
+            </div>
+            <div class="subtitle" style="margin-top: 12px; line-height: 1.4;">
+                Настроение: <strong id="current-mood" style="color: var(--text-primary); font-size: 15px;">—</strong>
+            </div>
+            <div class="mood-selector">
+                <button class="mood-btn" onclick="addMoodEntry('🤩')">🤩</button>
+                <button class="mood-btn" onclick="addMoodEntry('🙂')">🙂</button>
+                <button class="mood-btn" onclick="addMoodEntry('😐')">😐</button>
+                <button class="mood-btn" onclick="addMoodEntry('😫')">😫</button>
+                <button class="mood-btn" onclick="addMoodEntry('🤬')">🤬</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Действия</h2>
+            <button class="btn" onclick="showSection('food-page')">📸 Записать прием пищи</button>
+            <div class="quick-grid">
+                <button class="btn btn-secondary" onclick="addCustomWater()">💧 + Вода</button>
+                <button class="btn btn-secondary" onclick="addCustomSteps()">👟 + Шаги</button>
+            </div>
+            <div class="quick-grid">
+                <button class="btn btn-secondary" onclick="showSection('calendar-page'); renderCalendar();">📅 График смен</button>
+                <button class="btn btn-secondary" onclick="showSection('planner-page'); renderPlanner();">✅ Задачи / Долги</button>
+            </div>
+            <div class="quick-grid">
+                <button class="btn btn-secondary" onclick="showSection('export-page')">📊 Выгрузка отчетов</button>
+                <button class="btn btn-secondary" onclick="showSection('misc-page')">🧰 Прочее</button>
+            </div>
+        </div>
+
+        <!-- ИСТОРИЯ ЗА ДЕНЬ -->
+        <div class="card">
+            <h2>📖 История за день</h2>
+            <div id="daily-history-list" class="list-container"></div>
+        </div>
+
+        <!-- БЕЗОПАСНОСТЬ / ХРАНИЛИЩЕ ПАРОЛЕЙ -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 style="margin-bottom:0;">Хранилище</h2>
+                <span id="totp-timer" style="font-size:12px; color:var(--text-secondary); font-family: monospace;"></span>
+            </div>
+            <input type="text" id="search-box" placeholder="🔍 Поиск по сервисам и логинам..." oninput="renderVault()" style="margin-bottom: 8px;">
+            <div id="vault-list" class="list-container" style="margin-bottom: 12px;"></div>
+            <button class="btn" onclick="showSection('add-vault-page')">+ Добавить пароль / 2FA</button>
+        </div>
+
+        <!-- СИСТЕМА И СИНХРОНИЗАЦИЯ -->
+        <div class="card">
+            <h2>Система и Бэкап</h2>
+            <div class="quick-grid">
+                <button class="btn btn-success" onclick="syncToGitHub(this)">☁️ Отправить на GitHub</button>
+                <button class="btn btn-github" onclick="importFromGitHub(this)">⬇️ Скачать с GitHub</button>
+            </div>
+            <button class="btn btn-secondary" onclick="showSection('settings-page')">⚙️ Настройки API и GitHub</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 3: Еда -->
+    <div id="food-page" class="page">
+        <div class="card">
+            <h2>Записать прием пищи</h2>
+            <p class="subtitle">Опишите еду текстом или прикрепите фото блюда</p>
+            <textarea id="food-input" placeholder="Например: 2 вареных яйца и кофе без сахара..."></textarea>
+            <input type="file" id="food-image" accept="image/*" class="file-input" onchange="previewImage(event)" style="margin-bottom: 8px;">
+            <img id="image-preview" style="display:none; width:100%; border-radius:12px; margin-bottom:12px; max-height:220px; object-fit: cover;">
+            <button class="btn" onclick="analyzeFood()" id="analyze-btn">✨ Рассчитать и записать</button>
+            <div id="food-result" class="result-box hidden" style="margin-top:12px; padding:12px; background:rgba(46,139,87,0.15); border-radius:12px; border:1px solid var(--accent);"></div>
+            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="showSection('dashboard-page')">Назад</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 4: Планировщик -->
+    <div id="planner-page" class="page">
+        <div class="card">
+            <h2>Список дел</h2>
+            <div class="quick-grid">
+                <input type="text" id="task-input" placeholder="Новая задача..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') addTask()">
+                <button class="btn" onclick="addTask()" style="width: 60px; margin-bottom:0; padding:0;">+</button>
+            </div>
+            <div id="tasks-list" class="list-container" style="margin-top: 12px;"></div>
+        </div>
+        <div class="card">
+            <h2>Учет долгов</h2>
+            <input type="text" id="debt-who" placeholder="Имя / Сервис">
+            <input type="number" id="debt-amount" placeholder="Сумма (с минусом, если должны вы)">
+            <button class="btn" onclick="addDebt()">Добавить долг</button>
+            <div id="debts-list" class="list-container" style="margin-top: 12px;"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
+    </div>
+
+    <!-- ЭКРАН 5: График смен -->
+    <div id="calendar-page" class="page">
+        <div class="card">
+            <h2>Шаблон графика смен</h2>
+            <div class="quick-grid">
+                <select id="t-1"><option value="none">Пусто</option><option value="day">☀️ День</option><option value="night">🌙 Ночь</option><option value="off" selected>🌴 Выходной</option></select>
+                <select id="t-2"><option value="none">Пусто</option><option value="day" selected>☀️ День</option><option value="night">🌙 Ночь</option><option value="off">🌴 Выходной</option></select>
+                <select id="t-3"><option value="none" selected>Пусто</option><option value="day">☀️ День</option><option value="night">🌙 Ночь</option><option value="off">🌴 Выходной</option></select>
+                <select id="t-4"><option value="none" selected>Пусто</option><option value="day">☀️ День</option><option value="night">🌙 Ночь</option><option value="off">🌴 Выходной</option></select>
+            </div>
+            <input type="date" id="template-start-date" style="margin-bottom: 8px;">
+            <button class="btn" onclick="applyShiftTemplate()">⚡ Применить шаблон на 3 месяца</button>
+        </div>
+        <div class="card">
+            <h2>💰 Расчет дохода за месяц</h2>
+            <div class="quick-grid">
+                <div><span class="subtitle">Ставка за день</span><input type="number" id="rate-day" placeholder="0" oninput="calculateSalary()" style="margin-bottom:0;"></div>
+                <div><span class="subtitle">Ставка за ночь</span><input type="number" id="rate-night" placeholder="0" oninput="calculateSalary()" style="margin-bottom:0;"></div>
+            </div>
+            <div style="margin-top: 14px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size:14px;">
+                    <span>Дней: <strong id="count-days">0</strong></span>
+                    <span>Ночей: <strong id="count-nights">0</strong></span>
+                </div>
+                <div style="font-size: 18px; font-weight: bold; color: #32d74b; text-align: center;" id="total-salary">Итого: 0 ₽</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="date-navigator" style="margin-bottom:8px;">
+                <button onclick="changeCalMonth(-1)">◀</button>
+                <span id="month-name">Месяц</span>
+                <button onclick="changeCalMonth(1)">▶</button>
+            </div>
+            <div class="calendar-grid" id="cal-grid"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
+    </div>
+
+    <!-- ЭКРАН 6: Добавить пароль -->
+    <div id="add-vault-page" class="page">
+        <div class="card">
+            <h2>Новая запись</h2>
+            <input type="text" id="add-name" placeholder="Сервис (например, GitHub)">
+            <input type="text" id="add-user" placeholder="Логин / Email">
+            <input type="password" id="add-pwd" placeholder="Пароль">
+            <input type="text" id="add-secret" placeholder="2FA Secret Base32 (опционально)">
+            <button class="btn" onclick="saveNewCredential()">Сохранить</button>
+            <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 7: Настройки -->
+    <div id="settings-page" class="page">
+        <div class="card">
+            <h2>Интеграция ИИ</h2>
+            <p class="subtitle">API-ключ Google AI Studio</p>
+            <input type="password" id="api-key-input" placeholder="AIzaSy...">
+        </div>
+        <div class="card">
+            <h2>Синхронизация GitHub</h2>
+            <p class="subtitle">Personal Access Token (права repo)</p>
+            <input type="password" id="gh-token-input" placeholder="ghp_...">
+            <p class="subtitle">Путь к репозиторию</p>
+            <input type="text" id="gh-repo-input" placeholder="username/helper-backup">
+        </div>
+        <button class="btn" onclick="saveSettings()">Сохранить настройки</button>
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
+    </div>
+
+    <!-- ЭКРАН 8: Прочее -->
+    <div id="misc-page" class="page">
+        <div class="card">
+            <h2>🧰 Прочее</h2>
+            <p class="subtitle">Вспомогательные утилиты</p>
+        </div>
+
+        <div class="card">
+            <h2>Скачать TikTok (Без водяного знака)</h2>
+            <p class="subtitle">Вставьте ссылку на клип или видео</p>
+            <input type="text" id="tiktok-url-input" placeholder="https://vm.tiktok.com/... или https://www.tiktok.com/@...">
+            <button class="btn" onclick="downloadTikTokVideo(this)">🔍 Получить видео</button>
+            
+            <div id="tiktok-result" class="hidden" style="margin-top: 14px;">
+                <video id="tiktok-video-preview" controls playsinline style="width: 100%; border-radius: 12px; margin-bottom: 10px; background: #000; max-height: 380px;"></video>
+                <div id="tiktok-title" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; word-break: break-word;"></div>
+                
+                <button id="tiktok-file-download-btn" class="btn btn-success" onclick="forceDownloadTikTokFile(this)">⬇️ Скачать видеофайл (.MP4)</button>
+                <a id="tiktok-open-browser-btn" href="#" target="_blank" class="btn btn-secondary" style="margin-top: 4px;">🌐 Открыть в браузере</a>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
+    </div>
+
+    <!-- ЭКРАН 9: Выгрузка отчетов (CSV) -->
+    <div id="export-page" class="page">
+        <div class="card">
+            <h2>📊 Выгрузка отчетов</h2>
+            <p class="subtitle">Экспорт логов питания, воды, шагов, настроения и смен в формате CSV</p>
+            <div class="quick-grid">
+                <button class="btn btn-secondary" onclick="exportDataPeriod(7)">🗓 За 7 дней</button>
+                <button class="btn btn-secondary" onclick="exportDataPeriod(30)">🗓 За 30 дней</button>
+            </div>
+            <button class="btn btn-secondary" onclick="exportDataPeriod('all')">📁 За всё время</button>
+        </div>
+
+        <div class="card">
+            <h2>📅 Свой период</h2>
+            <p class="subtitle">Укажите диапазон дат</p>
+            <div class="quick-grid">
+                <div><span class="subtitle">С даты:</span><input type="date" id="export-start-date"></div>
+                <div><span class="subtitle">По дату:</span><input type="date" id="export-end-date"></div>
+            </div>
+            <button class="btn btn-success" onclick="exportCustomPeriod()">📥 Сформировать и скачать CSV</button>
+        </div>
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
+    </div>
+
+    <script>
+        let data = {
+            days: {}, shifts: {}, tasks: [], debts: [], vault: [],
+            geminiApiKey: '', githubToken: '', githubRepo: '',
+            salaryRates: { day: 0, night: 0 }
+        };
+
+        let masterKey = "";
+        let currentDateStr = getFormattedDate(new Date());
+        let calCurrentDate = new Date();
+        let currentTikTokCleanUrl = "";
+
+        // --- Встроенный алгоритм TOTP (2FA) на CryptoJS ---
+        function base32ToHex(base32) {
+            const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            let bits = "";
+            let hex = "";
+            let cleaned = base32.replace(/=+$/, '').toUpperCase().replace(/\s+/g, '');
+            for (let i = 0; i < cleaned.length; i++) {
+                let val = base32chars.indexOf(cleaned.charAt(i));
+                if (val === -1) continue;
+                bits += val.toString(2).padStart(5, '0');
+            }
+            for (let i = 0; i + 4 <= bits.length; i += 4) {
+                let chunk = bits.substr(i, 4);
+                hex += parseInt(chunk, 2).toString(16);
+            }
+            return hex;
+        }
+
+        function generateTOTP(secret) {
+            if (!secret) return null;
+            try {
+                let keyHex = base32ToHex(secret);
+                if (!keyHex) return null;
+                
+                let epoch = Math.floor(Date.now() / 1000);
+                let timeHex = Math.floor(epoch / 30).toString(16).padStart(16, '0');
+                
+                let key = CryptoJS.enc.Hex.parse(keyHex);
+                let msg = CryptoJS.enc.Hex.parse(timeHex);
+                let hmac = CryptoJS.HmacSHA1(msg, key).toString(CryptoJS.enc.Hex);
+                
+                let offset = parseInt(hmac.slice(-1), 16);
+                let truncatedHash = parseInt(hmac.substr(offset * 2, 8), 16) & 0x7fffffff;
+                let code = (truncatedHash % 1000000).toString().padStart(6, '0');
+                return code;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function getFormattedDate(date) {
+            let year = date.getFullYear();
+            let month = String(date.getMonth() + 1).padStart(2, '0');
+            let day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getTodayData() {
+            if (!data.days[currentDateStr]) {
+                data.days[currentDateStr] = { 
+                    calories: 0, water: 0, steps: 0, mood: '—', 
+                    meals: [], waterList: [], stepsList: [], moodList: [] 
+                };
+            }
+            let d = data.days[currentDateStr];
+            if (!d.meals) d.meals = [];
+            if (!d.waterList) d.waterList = [];
+            if (!d.stepsList) d.stepsList = [];
+            if (!d.moodList) {
+                d.moodList = [];
+                if (d.mood && d.mood !== '—') d.moodList.push({ emoji: d.mood, time: '--:--' });
+            }
+            return d;
+        }
+
+        function showSection(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if (pageId === 'dashboard-page') updateUI();
+            if (pageId === 'export-page') {
+                document.getElementById('export-end-date').value = getFormattedDate(new Date());
+                let d = new Date(); d.setDate(d.getDate() - 7);
+                document.getElementById('export-start-date').value = getFormattedDate(d);
+            }
+        }
+
+        function unlockVault() {
+            const pwd = document.getElementById('master-password').value;
+            if(!pwd) return alert("Введите мастер-пароль");
+
+            const encrypted = localStorage.getItem('encMasterData');
+            if (!encrypted) {
+                masterKey = pwd;
+                saveEncrypted();
+                document.getElementById('master-password').value = "";
+                showSection('dashboard-page');
+                return;
+            }
+
+            try {
+                const bytes = CryptoJS.AES.decrypt(encrypted, pwd);
+                const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+                if (!decryptedStr) throw new Error("Неверный ключ");
+                
+                data = JSON.parse(decryptedStr);
+                if(!data.salaryRates) data.salaryRates = { day: 0, night: 0 };
+                if(!data.days) data.days = {};
+                if(!data.shifts) data.shifts = {};
+                if(!data.tasks) data.tasks = [];
+                if(!data.debts) data.debts = [];
+                if(!data.vault) data.vault = [];
+
+                masterKey = pwd;
+                document.getElementById('master-password').value = "";
+                showSection('dashboard-page');
+            } catch (e) {
+                alert("Неверный мастер-пароль!");
+            }
+        }
+
+        function lockVault() {
+            masterKey = "";
+            data = { days: {}, shifts: {}, tasks: [], debts: [], vault: [], geminiApiKey: '', githubToken: '', githubRepo: '', salaryRates: { day: 0, night: 0 } };
+            showSection('auth-page');
+        }
+
+        function resetVault() {
+            if(confirm("Внимание! Все локальные данные будут стерты безвозвратно. Продолжить?")) {
+                localStorage.removeItem('encMasterData');
+                location.reload();
+            }
+        }
+
+        function saveEncrypted() {
+            if(!masterKey) return;
+            const encryptedStr = CryptoJS.AES.encrypt(JSON.stringify(data), masterKey).toString();
+            localStorage.setItem('encMasterData', encryptedStr);
+        }
+
+        function updateUI() {
+            let dayData = getTodayData();
+            document.getElementById('cal-value').innerText = dayData.calories || 0;
+            document.getElementById('water-value').innerText = dayData.water || 0;
+            document.getElementById('steps-value').innerText = dayData.steps || 0;
+
+            if (dayData.moodList && dayData.moodList.length > 0) {
+                document.getElementById('current-mood').innerText = dayData.moodList.map(m => m.emoji).join(' ➔ ');
+            } else {
+                document.getElementById('current-mood').innerText = '—';
+            }
+            
+            const lastEmoji = (dayData.moodList && dayData.moodList.length > 0) ? dayData.moodList[dayData.moodList.length - 1].emoji : null;
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                if (lastEmoji && btn.innerText.trim() === lastEmoji) {
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.background = 'rgba(46, 139, 87, 0.35)';
+                } else {
+                    btn.style.borderColor = 'var(--border)';
+                    btn.style.background = 'rgba(255, 255, 255, 0.05)';
+                }
+            });
+
+            if (document.getElementById('api-key-input')) document.getElementById('api-key-input').value = data.geminiApiKey || '';
+            if (document.getElementById('gh-token-input')) document.getElementById('gh-token-input').value = data.githubToken || '';
+            if (document.getElementById('gh-repo-input')) document.getElementById('gh-repo-input').value = data.githubRepo || '';
+
+            let todayStr = getFormattedDate(new Date());
+            let displayLabel = "Сегодня";
+            if (currentDateStr !== todayStr) {
+                let p = currentDateStr.split('-');
+                displayLabel = `${p[2]}.${p[1]}.${p[0]}`;
+            }
+            document.getElementById('date-display').innerText = displayLabel;
+            
+            renderDailyHistory();
+            renderVault();
+        }
+
+        function changeDate(offset) {
+            let [y, m, d] = currentDateStr.split('-').map(Number);
+            let dt = new Date(y, m - 1, d);
+            dt.setDate(dt.getDate() + offset);
+            currentDateStr = getFormattedDate(dt);
+            updateUI();
+        }
+
+        function addMoodEntry(emoji) {
+            let d = getTodayData();
+            let now = new Date();
+            let timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            d.moodList.push({ emoji: emoji, time: timeStr });
+            d.mood = d.moodList.map(m => m.emoji).join(' ➔ ');
+            saveEncrypted();
+            updateUI();
+        }
+
+        function deleteMoodEntry(idx) {
+            let d = getTodayData();
+            d.moodList.splice(idx, 1);
+            d.mood = d.moodList.length ? d.moodList.map(m => m.emoji).join(' ➔ ') : '—';
+            saveEncrypted();
+            updateUI();
+        }
+
+        function renderDailyHistory() {
+            let dData = getTodayData();
+            let container = document.getElementById('daily-history-list');
+            if (!container) return;
+            let html = '';
+
+            (dData.moodList || []).forEach((m, idx) => {
+                html += `<div class="list-item">
+                    <div style="flex:1;">
+                        🎭 <strong>Настроение</strong> <span style="font-size:18px; vertical-align:middle; margin-left:4px;">${m.emoji}</span><br>
+                        <span style="font-size:12px; color:var(--text-secondary);">Время: ${m.time}</span>
+                    </div>
+                    <button class="del-btn" onclick="deleteMoodEntry(${idx})">✕</button>
+                </div>`;
+            });
+
+            (dData.meals || []).forEach((m, idx) => {
+                html += `<div class="list-item"><div style="flex:1;">🥗 <strong>${m.name}</strong><br><span style="font-size:12px; color:var(--text-secondary);">${m.cal} ккал</span></div><button class="del-btn" onclick="deleteMeal(${idx})">✕</button></div>`;
+            });
+            (dData.waterList || []).forEach((w, idx) => {
+                html += `<div class="list-item"><div style="flex:1;">💧 <strong>Вода</strong><br><span style="font-size:12px; color:var(--text-secondary);">${w} мл</span></div><button class="del-btn" onclick="deleteWater(${idx})">✕</button></div>`;
+            });
+            (dData.stepsList || []).forEach((s, idx) => {
+                html += `<div class="list-item"><div style="flex:1;">👟 <strong>Шаги</strong><br><span style="font-size:12px; color:var(--text-secondary);">${s}</span></div><button class="del-btn" onclick="deleteSteps(${idx})">✕</button></div>`;
+            });
+
+            if(html === '') container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; font-size:14px; padding: 10px 0;">Пока нет записей за этот день</p>';
+            else container.innerHTML = html;
+        }
+
+        function deleteMeal(idx) { let d = getTodayData(); d.calories = Math.max(0, d.calories - d.meals[idx].cal); d.meals.splice(idx, 1); saveEncrypted(); updateUI(); }
+        function deleteWater(idx) { let d = getTodayData(); d.water = Math.max(0, d.water - d.waterList[idx]); d.waterList.splice(idx, 1); saveEncrypted(); updateUI(); }
+        function deleteSteps(idx) { let d = getTodayData(); d.steps = Math.max(0, d.steps - d.stepsList[idx]); d.stepsList.splice(idx, 1); saveEncrypted(); updateUI(); }
+
+        function addCustomWater() { 
+            let amt = prompt("Количество воды (мл):", "250"); 
+            if (amt && !isNaN(amt) && parseInt(amt) > 0) { 
+                let val = parseInt(amt); 
+                let d = getTodayData(); 
+                d.water += val; 
+                d.waterList.push(val); 
+                saveEncrypted(); 
+                updateUI(); 
+            } 
+        }
+
+        function addCustomSteps() { 
+            let amt = prompt("Количество шагов:", "1000"); 
+            if (amt && !isNaN(amt) && parseInt(amt) > 0) { 
+                let val = parseInt(amt); 
+                let d = getTodayData(); 
+                d.steps += val; 
+                d.stepsList.push(val); 
+                saveEncrypted(); 
+                updateUI(); 
+            } 
+        }
+
+        function saveSettings() {
+            data.geminiApiKey = document.getElementById('api-key-input').value.trim();
+            data.githubToken = document.getElementById('gh-token-input').value.trim();
+            let repo = document.getElementById('gh-repo-input').value.trim();
+            data.githubRepo = repo.replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').trim();
+            saveEncrypted(); 
+            alert("Настройки успешно сохранены!"); 
+            showSection('dashboard-page');
+        }
+
+        function changeCalMonth(offset) {
+            calCurrentDate.setMonth(calCurrentDate.getMonth() + offset);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('cal-grid'); 
+            grid.innerHTML = ''; 
+            const year = calCurrentDate.getFullYear();
+            const month = calCurrentDate.getMonth();
+            
+            document.getElementById('month-name').innerText = calCurrentDate.toLocaleString('ru', { month: 'long', year: 'numeric' });
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
+            let firstDay = new Date(year, month, 1).getDay(); 
+            firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+            for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
+            
+            for(let i=1; i<=daysInMonth; i++) {
+                let dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                let shift = data.shifts[dateStr] || 'none';
+                let cls = 'cal-day', emoji = '';
+                if (shift === 'day') { cls += ' shift-day'; emoji = '☀️ '; }
+                if (shift === 'night') { cls += ' shift-night'; emoji = '🌙 '; }
+                if (shift === 'off') { cls += ' shift-off'; emoji = '🌴 '; }
+                grid.innerHTML += `<div class="${cls}" onclick="toggleShift('${dateStr}')">${emoji ? emoji + '<br>' : ''}${i}</div>`;
+            }
+
+            if(!document.getElementById('template-start-date').value) {
+                document.getElementById('template-start-date').value = getFormattedDate(new Date());
+            }
+            if(data.salaryRates) { 
+                document.getElementById('rate-day').value = data.salaryRates.day || ''; 
+                document.getElementById('rate-night').value = data.salaryRates.night || ''; 
+            }
+            calculateSalary();
+        }
+
+        function calculateSalary() {
+            let rDay = parseFloat(document.getElementById('rate-day').value) || 0;
+            let rNight = parseFloat(document.getElementById('rate-night').value) || 0;
+            data.salaryRates = { day: rDay, night: rNight };
+            saveEncrypted();
+
+            let countDays = 0, countNights = 0;
+            const year = calCurrentDate.getFullYear();
+            const month = calCurrentDate.getMonth();
+
+            for (let dateStr in data.shifts) {
+                let [y, m, d] = dateStr.split('-').map(Number);
+                if (y === year && (m - 1) === month) {
+                    if (data.shifts[dateStr] === 'day') countDays++;
+                    if (data.shifts[dateStr] === 'night') countNights++;
+                }
+            }
+            let total = (countDays * rDay) + (countNights * rNight);
+            document.getElementById('count-days').innerText = countDays;
+            document.getElementById('count-nights').innerText = countNights;
+            document.getElementById('total-salary').innerText = `Итого: ${total.toLocaleString('ru-RU')} ₽`;
+        }
+
+        function toggleShift(dateStr) { 
+            let cur = data.shifts[dateStr]; 
+            if (!cur || cur === 'none') data.shifts[dateStr] = 'day'; 
+            else if (cur === 'day') data.shifts[dateStr] = 'night'; 
+            else if (cur === 'night') data.shifts[dateStr] = 'off'; 
+            else if (cur === 'off') delete data.shifts[dateStr]; 
+            saveEncrypted(); 
+            renderCalendar(); 
+        }
+
+        function applyShiftTemplate() {
+            let sDate = document.getElementById('template-start-date').value; 
+            if (!sDate) return alert("Выберите дату начала!");
+            let pattern = [document.getElementById('t-1').value, document.getElementById('t-2').value, document.getElementById('t-3').value, document.getElementById('t-4').value].filter(s => s !== 'none');
+            if (!pattern.length) return alert("Шаблон пуст! Выберите хотя бы одну смену.");
+            
+            let [y, m, d] = sDate.split('-').map(Number); 
+            let dt = new Date(y, m - 1, d);
+            for (let i = 0; i < 90; i++) { 
+                data.shifts[getFormattedDate(dt)] = pattern[i % pattern.length]; 
+                dt.setDate(dt.getDate() + 1); 
+            }
+            saveEncrypted(); 
+            renderCalendar(); 
+            alert("Шаблон успешно применен на 90 дней!");
+        }
+
+        function renderPlanner() {
+            const tList = document.getElementById('tasks-list');
+            tList.innerHTML = (data.tasks || []).map((t, i) => `<div class="list-item ${t.done ? 'done' : ''}"><div class="task-content" onclick="toggleTask(${i})"><input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask(${i});"><span>${t.text}</span></div><button class="del-btn" onclick="deleteTask(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-secondary); text-align:center; padding:10px 0;">Нет активных задач</p>';
+            
+            const dList = document.getElementById('debts-list');
+            dList.innerHTML = (data.debts || []).map((d, i) => `<div class="list-item"><div class="task-content"><span>${d.who}</span><span class="${d.amount >= 0 ? 'debt-positive' : 'debt-negative'}">${d.amount >= 0 ? '+' + d.amount : d.amount} ₽</span></div><button class="del-btn" onclick="deleteDebt(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-secondary); text-align:center; padding:10px 0;">Нет записей о долгах</p>';
+        }
+
+        function addTask() { 
+            const inp = document.getElementById('task-input'); 
+            if (inp.value.trim()) { 
+                data.tasks.push({ text: inp.value.trim(), done: false }); 
+                inp.value = ''; 
+                saveEncrypted(); 
+                renderPlanner(); 
+            } 
+        }
+        function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveEncrypted(); renderPlanner(); }
+        function deleteTask(i) { data.tasks.splice(i, 1); saveEncrypted(); renderPlanner(); }
+        
+        function addDebt() { 
+            const who = document.getElementById('debt-who').value.trim(); 
+            const amt = parseInt(document.getElementById('debt-amount').value); 
+            if (who && !isNaN(amt)) { 
+                data.debts.push({ who, amount: amt }); 
+                document.getElementById('debt-who').value = ''; 
+                document.getElementById('debt-amount').value = ''; 
+                saveEncrypted(); 
+                renderPlanner(); 
+            } else {
+                alert("Укажите имя и сумму долга");
+            }
+        }
+        function deleteDebt(i) { data.debts.splice(i, 1); saveEncrypted(); renderPlanner(); }
+
+        function previewImage(e) { 
+            const f = e.target.files[0], prev = document.getElementById('image-preview'); 
+            if (f) { 
+                prev.src = URL.createObjectURL(f); 
+                prev.style.display = 'block'; 
+            } else { 
+                prev.style.display = 'none'; 
+            } 
+        }
+
+        function fileToBase64(file) { 
+            return new Promise((res, rej) => { 
+                const r = new FileReader(); 
+                r.readAsDataURL(file); 
+                r.onload = () => res(r.result.split(',')[1]); 
+                r.onerror = err => rej(err); 
+            }); 
+        }
+
+        async function analyzeFood() {
+            const txt = document.getElementById('food-input').value.trim(); 
+            const fInput = document.getElementById('food-image');
+            if (!txt && !fInput.files.length) return alert("Введите описание еды или выберите фото!");
+            if (!data.geminiApiKey) {
+                alert("Укажите API ключ в Настройках!");
+                showSection('settings-page');
+                return;
+            }
+
+            const btn = document.getElementById('analyze-btn'), resBox = document.getElementById('food-result');
+            btn.innerText = "⏳ Анализ..."; 
+            btn.disabled = true; 
+            resBox.classList.add('hidden');
+
+            let parts = [{ text: `Ты эксперт-нутрициолог. Рассчитай общую калорийность и БЖУ для описания/изображения блюда. Описание: "${txt}". Верни ТОЛЬКО валидный JSON без markdown-разметки: {"name":"Краткое название","cal":350,"p":20,"f":12,"c":40}` }];
+            if (fInput.files.length) {
+                try {
+                    let b64 = await fileToBase64(fInput.files[0]);
+                    parts.push({ inline_data: { mime_type: fInput.files[0].type || "image/jpeg", data: b64 } });
+                } catch(e) {
+                    alert("Ошибка чтения фото");
+                    btn.innerText = "✨ Рассчитать и записать"; btn.disabled = false;
+                    return;
+                }
+            }
+
+            try {
+                let resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${data.geminiApiKey}`, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.1 } })
+                });
+                let j = await resp.json(); 
+                if (!resp.ok) throw new Error(j.error?.message || `HTTP ${resp.status}`);
+                
+                let rawAiTxt = j.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                let jsonMatch = rawAiTxt.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("Не удалось разобрать ответ");
+                
+                let meal = JSON.parse(jsonMatch[0]);
+                meal.cal = Number(meal.cal) || 0;
+                meal.p = Number(meal.p) || 0;
+                meal.f = Number(meal.f) || 0;
+                meal.c = Number(meal.c) || 0;
+                meal.name = meal.name || "Прием пищи";
+
+                let dData = getTodayData(); 
+                dData.calories += meal.cal; 
+                dData.meals.push({ name: meal.name, cal: meal.cal }); 
+                saveEncrypted(); 
+                updateUI();
+
+                resBox.innerHTML = `<strong>${meal.name}</strong><br>🔥 ${meal.cal} ккал | Б: ${meal.p}г • Ж: ${meal.f}г • У: ${meal.c}г<br><em style="font-size:12px; color:var(--accent);">✓ Добавлено за ${document.getElementById('date-display').innerText}!</em>`;
+                resBox.classList.remove('hidden'); 
+                document.getElementById('food-input').value = ''; 
+                fInput.value = ''; 
+                document.getElementById('image-preview').style.display = 'none';
+            } catch(e) { 
+                alert("Ошибка анализа: " + e.message); 
+            } finally { 
+                btn.innerText = "✨ Рассчитать и записать"; 
+                btn.disabled = false; 
+            }
+        }
+
+        function renderVault() {
+            const q = (document.getElementById('search-box')?.value || '').toLowerCase(); 
+            const container = document.getElementById('vault-list'); 
+            if (!container) return;
+
+            const filtered = (data.vault || []).filter(i => (i.name || '').toLowerCase().includes(q) || (i.user || '').toLowerCase().includes(q));
+            if (!filtered.length) { 
+                container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:10px 0;">Нет сохраненных записей</p>'; 
+                return; 
+            }
+
+            container.innerHTML = filtered.map((item, idx) => {
+                let codeHtml = "";
+                if (item.secret) {
+                    let token = generateTOTP(item.secret);
+                    if (token) {
+                        codeHtml = `<span class="code-badge" onclick="copyText('${token}')">${token}</span>`;
+                    } else {
+                        codeHtml = `<span style="color:var(--danger); font-size:11px;">2FA Err</span>`;
+                    }
+                }
+                return `<div class="list-item"><div style="min-width:0; flex:1;"><strong>${item.name}</strong><br><span style="font-size:12px; color:var(--text-secondary); word-break:break-all;">${item.user || '—'}</span></div><div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">${codeHtml}<button class="btn" style="width:auto; padding:6px 10px; font-size:12px; margin:0;" onclick="copyPwd(${idx})">Пароль</button><button class="del-btn" onclick="deleteVaultItem(${idx})">✕</button></div></div>`;
+            }).join('');
+        }
+
+        function copyPwd(idx) { copyText(data.vault[idx].pwd); }
+        function copyText(txt) {
+            if (!txt) return;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(txt).then(() => alert("Скопировано в буфер!")).catch(() => fallbackCopy(txt));
+            } else {
+                fallbackCopy(txt);
+            }
+        }
+        function fallbackCopy(text) {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+                document.execCommand('copy');
+                alert("Скопировано!");
+            } catch(e) {
+                prompt("Скопируйте вручную:", text);
+            }
+            document.body.removeChild(ta);
+        }
+
+        function deleteVaultItem(idx) { 
+            if (confirm(`Удалить запись "${data.vault[idx].name}"?`)) { 
+                data.vault.splice(idx, 1); 
+                saveEncrypted(); 
+                renderVault(); 
+            } 
+        }
+
+        function saveNewCredential() {
+            const name = document.getElementById('add-name').value.trim(); 
+            const user = document.getElementById('add-user').value.trim(); 
+            const pwd = document.getElementById('add-pwd').value; 
+            const secret = document.getElementById('add-secret').value.trim();
+            if (!name || !pwd) return alert("Заполните хотя бы название сервиса и пароль!");
+            
+            data.vault.push({ name, user, pwd, secret }); 
+            saveEncrypted();
+            document.getElementById('add-name').value = ''; 
+            document.getElementById('add-user').value = ''; 
+            document.getElementById('add-pwd').value = ''; 
+            document.getElementById('add-secret').value = ''; 
+            showSection('dashboard-page');
+        }
+
+        setInterval(() => {
+            if (document.getElementById('dashboard-page').classList.contains('active')) {
+                let secLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
+                const timerEl = document.getElementById('totp-timer');
+                if (timerEl) timerEl.innerText = `Смена 2FA: ${secLeft}с`;
+                if (secLeft === 30 || secLeft === 1) renderVault();
+            }
+        }, 1000);
+
+        // --- ВЫГРУЗКА ДАННЫХ В CSV ---
+        function exportDataPeriod(period) {
+            let today = new Date();
+            let endStr = getFormattedDate(today);
+            let startStr = "2020-01-01";
+            if (period === 7) {
+                let dt = new Date(); dt.setDate(dt.getDate() - 7);
+                startStr = getFormattedDate(dt);
+            } else if (period === 30) {
+                let dt = new Date(); dt.setDate(dt.getDate() - 30);
+                startStr = getFormattedDate(dt);
+            }
+            generateAndDownloadCSV(startStr, endStr);
+        }
+
+        function exportCustomPeriod() {
+            let sDate = document.getElementById('export-start-date').value;
+            let eDate = document.getElementById('export-end-date').value;
+            if (!sDate || !eDate) return alert("Укажите обе даты!");
+            if (sDate > eDate) { let tmp = sDate; sDate = eDate; eDate = tmp; }
+            generateAndDownloadCSV(sDate, eDate);
+        }
+
+        function generateAndDownloadCSV(startStr, endStr) {
+            let rows = [
+                ["Дата", "Статус смены", "Калории (ккал)", "Вода (мл)", "Шаги", "Настроение (Таймлайн)", "Приемы пищи"]
+            ];
+
+            let [sy, sm, sd] = startStr.split('-').map(Number);
+            let [ey, em, ed] = endStr.split('-').map(Number);
+            let cur = new Date(sy, sm - 1, sd);
+            let end = new Date(ey, em - 1, ed);
+
+            while (cur <= end) {
+                let dStr = getFormattedDate(cur);
+                let dData = data.days[dStr] || { calories: 0, water: 0, steps: 0, moodList: [], meals: [] };
+                let shift = data.shifts[dStr] || 'none';
+                let shiftLabel = "Выходной";
+                if (shift === 'day') shiftLabel = "Дневная смена";
+                if (shift === 'night') shiftLabel = "Ночная смена";
+                if (shift === 'off') shiftLabel = "Выходной";
+
+                let moodTimeline = (dData.moodList && dData.moodList.length) 
+                    ? dData.moodList.map(m => `[${m.time}] ${m.emoji}`).join(' | ') 
+                    : (dData.mood || "-");
+
+                let mealsStr = (dData.meals && dData.meals.length) 
+                    ? dData.meals.map(m => `${m.name} (${m.cal}ккал)`).join('; ') 
+                    : "-";
+
+                rows.push([
+                    dStr,
+                    shiftLabel,
+                    dData.calories || 0,
+                    dData.water || 0,
+                    dData.steps || 0,
+                    moodTimeline,
+                    mealsStr
+                ]);
+
+                cur.setDate(cur.getDate() + 1);
+            }
+
+            let csvContent = "\uFEFF" + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(";")).join("\n");
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `health_report_${startStr}_to_${endStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- УТИЛИТА: TIKTOK ЗАГРУЗЧИК ---
+        async function downloadTikTokVideo(btn) {
+            const input = document.getElementById('tiktok-url-input');
+            const url = input.value.trim();
+            const resultBox = document.getElementById('tiktok-result');
+            const videoEl = document.getElementById('tiktok-video-preview');
+            const titleEl = document.getElementById('tiktok-title');
+            const openBrowserBtn = document.getElementById('tiktok-open-browser-btn');
+
+            if (!url) return alert("Вставьте ссылку на видео TikTok!");
+
+            const origText = btn.innerText;
+            btn.innerText = "⏳ Загрузка видео...";
+            btn.disabled = true;
+            resultBox.classList.add('hidden');
+
+            try {
+                const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
+                const res = await response.json();
+
+                if (res.code === 0 && res.data) {
+                    const videoData = res.data;
+                    currentTikTokCleanUrl = videoData.play || videoData.wmplay;
+                    
+                    videoEl.src = currentTikTokCleanUrl;
+                    titleEl.innerText = videoData.title || "TikTok Video";
+                    openBrowserBtn.href = currentTikTokCleanUrl;
+                    
+                    resultBox.classList.remove('hidden');
+                } else {
+                    alert("Не удалось найти видео. Проверьте корректность ссылки.");
+                }
+            } catch (err) {
+                alert("Ошибка при получении видео: " + err.message);
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
+        }
+
+        async function forceDownloadTikTokFile(btn) {
+            if (!currentTikTokCleanUrl) return alert("Сначала выполните поиск видео!");
+            const origText = btn.innerText;
+            btn.innerText = "⏳ Сохранение в память...";
+            btn.disabled = true;
+            try {
+                const resp = await fetch(currentTikTokCleanUrl);
+                const blob = await resp.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `tiktok_${Date.now()}.mp4`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+            } catch (e) {
+                window.open(currentTikTokCleanUrl, '_blank');
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- GITHUB СИНХРОНИЗАЦИЯ ---
+        async function syncToGitHub(btn) {
+            if (!data.githubToken || !data.githubRepo) { 
+                alert("Укажите GitHub токен и репозиторий в Настройках!"); 
+                showSection('settings-page'); 
+                return; 
+            }
+            let origTxt = btn.innerText; 
+            btn.innerText = "⏳ Отправка...";
+            try {
+                let encStr = localStorage.getItem('encMasterData');
+                if(!encStr) throw new Error("Нет данных для синхронизации");
+
+                let path = "encrypted_helper_backup.json";
+                let sha = "";
+                let getRes = await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/${path}`, { 
+                    headers: { 'Authorization': `token ${data.githubToken}`, 'Accept': 'application/vnd.github.v3+json' } 
+                });
+                if (getRes.ok) {
+                    let fileData = await getRes.json();
+                    sha = fileData.sha;
+                }
+
+                let body = { message: `Backup update ${getFormattedDate(new Date())}`, content: btoa(unescape(encodeURIComponent(encStr))) };
+                if (sha) body.sha = sha;
+
+                let putRes = await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/${path}`, {
+                    method: 'PUT', 
+                    headers: { 'Authorization': `token ${data.githubToken}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' }, 
+                    body: JSON.stringify(body)
+                });
+                
+                if (putRes.ok) alert("Бэкап успешно отправлен на GitHub!"); 
+                else {
+                    let errJ = await putRes.json();
+                    alert("Ошибка GitHub: " + (errJ.message || putRes.statusText));
+                }
+            } catch(e) { 
+                alert("Ошибка синхронизации: " + e.message); 
+            } finally { 
+                btn.innerText = origTxt; 
+            }
+        }
+
+        async function importFromGitHub(btn) {
+            if (!data.githubToken || !data.githubRepo) { 
+                alert("Укажите GitHub токен и репозиторий в Настройках!"); 
+                showSection('settings-page'); 
+                return; 
+            }
+            if (!confirm("Внимание! Текущие данные приложения будут перезаписаны бэкапом с GitHub. Продолжить?")) return;
+            
+            let origTxt = btn.innerText; 
+            btn.innerText = "⏳ Загрузка...";
+            try {
+                let getRes = await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/encrypted_helper_backup.json`, { 
+                    headers: { 'Authorization': `token ${data.githubToken}`, 'Accept': 'application/vnd.github.v3+json' } 
+                });
+                if (getRes.ok) {
+                    let json = await getRes.json();
+                    let encStr = decodeURIComponent(escape(atob(json.content)));
+                    
+                    try {
+                        const bytes = CryptoJS.AES.decrypt(encStr, masterKey);
+                        const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+                        if (!decryptedStr) throw new Error();
+                        
+                        localStorage.setItem('encMasterData', encStr);
+                        data = JSON.parse(decryptedStr);
+                        alert("Данные успешно восстановлены!");
+                        updateUI();
+                    } catch(e) { 
+                        alert("Ошибка! Скачанный бэкап зашифрован другим мастер-паролем."); 
+                    }
+                } else { 
+                    alert("Файл бэкапа не найден в репозитории."); 
+                }
+            } catch(e) { 
+                alert("Ошибка сети: " + e.message); 
+            } finally { 
+                btn.innerText = origTxt; 
+            }
+        }
+
+        async function restoreFromGitHubAuth() {
+            const token = prompt("Введите GitHub Personal Access Token:");
+            if (!token) return;
+            let repo = prompt("Введите репозиторий (например: username/helper-backup):");
+            if (!repo) return;
+            repo = repo.replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').trim();
+
+            try {
+                let getRes = await fetch(`https://api.github.com/repos/${repo}/contents/encrypted_helper_backup.json`, { 
+                    headers: { 'Authorization': `token ${token.trim()}`, 'Accept': 'application/vnd.github.v3+json' } 
+                });
+                if (getRes.ok) {
+                    let json = await getRes.json();
+                    let encStr = decodeURIComponent(escape(atob(json.content)));
+                    localStorage.setItem('encMasterData', encStr);
+                    alert("Бэкап загружен в хранилище! Теперь введите ваш мастер-пароль для расшифровки базы.");
+                } else { 
+                    alert("Бэкап не найден. Проверьте права токена и имя репозитория."); 
+                }
+            } catch(e) { 
+                alert("Ошибка соединения: " + e.message); 
+            }
+        }
+    </script>
+</body>
+</html>
