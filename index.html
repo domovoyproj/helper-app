@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#07090e">
     <title>Helper</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="IMG_0676.png">
+    <link rel="icon" type="image/png" href="IMG_0676.png">
     <!-- Библиотека шифрования (CryptoJS) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
@@ -24,6 +28,7 @@
             --border-focus: rgba(59, 130, 246, 0.6);
             --radius-lg: 20px;
             --radius-md: 14px;
+            --radius-sm: 8px;
             --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -92,6 +97,41 @@
         textarea { resize: none; height: 80px; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.06); box-shadow: 0 0 16px var(--accent-glow); transform: translateY(-1px); }
 
+        /* Поле ввода с кнопкой-иконкой (глаз / генератор) */
+        .input-with-action {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .input-with-action input {
+            margin-bottom: 0;
+            padding-right: 48px;
+        }
+        .input-action-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        .input-action-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
         .btn {
             padding: 14px 18px; border-radius: var(--radius-md); border: none; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
             color: #ffffff; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 8px; transition: all 0.2s var(--ease-spring);
@@ -143,15 +183,195 @@
         .task-content { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; font-size: 14px; }
         .task-content span { word-break: break-word; }
         .list-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; flex-shrink: 0; }
-        .del-btn { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.18); width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-weight: 600; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .del-btn { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.18); width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-weight: 600; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
+        .del-btn:hover { background: rgba(244, 63, 94, 0.22); transform: scale(1.05); }
 
-        .code-badge { background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 8px; border-radius: 8px; font-family: ui-monospace, monospace; font-weight: 600; color: #60a5fa; font-size: 13px; cursor: pointer; }
+        .code-badge { background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 8px; border-radius: 8px; font-family: ui-monospace, monospace; font-weight: 600; color: #60a5fa; font-size: 13px; cursor: pointer; transition: 0.15s; user-select: all; }
+        .code-badge:hover { background: rgba(59, 130, 246, 0.22); border-color: rgba(59, 130, 246, 0.5); }
         .debt-positive { color: #34d399; font-weight: 600; font-variant-numeric: tabular-nums; }
         .debt-negative { color: #f87171; font-weight: 600; font-variant-numeric: tabular-nums; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+
+        /* Карточка записи пароля в хранилище */
+        .vault-card {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.2s ease;
+            animation: itemFade 0.25s var(--ease-smooth) forwards;
+        }
+        .vault-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.035);
+        }
+        .vault-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .vault-service-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+        .vault-username {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            word-break: break-all;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        .vault-username:hover { color: var(--accent); }
+        
+        .vault-pwd-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 7px 10px;
+            gap: 8px;
+        }
+        .vault-pwd-text {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            color: #e2e8f0;
+            overflow-x: auto;
+            white-space: nowrap;
+            user-select: text;
+            flex: 1;
+        }
+        .vault-pwd-text.masked {
+            letter-spacing: 3px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .icon-btn-sm {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .icon-btn-sm:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .icon-btn-sm.active {
+            color: #60a5fa;
+            border-color: rgba(96, 165, 250, 0.4);
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        /* Виджет генератора паролей */
+        .generator-widget {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+        .gen-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .gen-slider-row input[type="range"] {
+            flex: 1;
+            margin-bottom: 0;
+            accent-color: var(--accent);
+            cursor: pointer;
+            padding: 0;
+            height: 6px;
+        }
+        .gen-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .gen-option-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+        .gen-option-label input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+        .gen-option-label:hover { color: var(--text-main); }
+        
+        .gen-strength-meter {
+            height: 4px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .gen-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* Плавающее уведомление (Toast) */
+        #toast-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-30px);
+            background: rgba(15, 23, 42, 0.95);
+            color: #f8fafc;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s var(--ease-spring);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #toast-box.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
+
+    <!-- Всплывающий Toast -->
+    <div id="toast-box"><span>✓</span> <span id="toast-msg">Скопировано</span></div>
 
     <!-- ЭКРАН 1: Авторизация -->
     <div id="auth-page" class="page active">
@@ -159,13 +379,24 @@
             <div style="font-size: 32px; margin-bottom: 8px; animation: bounceFloat 2.5s infinite ease-in-out;">🛡️</div>
             <h2 style="justify-content: center; font-size: 20px;">Helper</h2>
             <p class="subtitle">Мастер-пароль для расшифровки локальной базы</p>
-            <input type="password" id="master-password" placeholder="Мастер-пароль" onkeydown="if(event.key==='Enter') unlockVault()" style="text-align: center; letter-spacing: 2px;">
+            
+            <div class="input-with-action">
+                <input type="password" id="master-password" placeholder="Мастер-пароль" onkeydown="if(event.key==='Enter') unlockVault()" style="text-align: center; letter-spacing: 2px;">
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('master-password', this)" title="Показать/скрыть">👁️</button>
+            </div>
+            
             <button class="btn" onclick="unlockVault()">Разблокировать</button>
-            <button class="btn btn-github" onclick="restoreFromGitHubAuth()" style="margin-top: 6px;">⬇️ Восстановить с GitHub</button>
+            
+            <div class="quick-grid" style="margin-top: 6px;">
+                <button class="btn btn-github" onclick="restoreFromGitHubAuth()" style="margin-bottom:0; font-size:13px;">⬇️ С GitHub</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('auth-import-file').click()" style="margin-bottom:0; font-size:13px;">📂 Из файла</button>
+                <input type="file" id="auth-import-file" accept=".json,.txt" style="display:none;" onchange="importBackupFileFromAuth(event)">
+            </div>
+            
             <button class="btn btn-danger" onclick="resetVault()" style="margin-top: 10px; font-size: 13px; padding: 10px;">Сбросить локальные данные</button>
             
             <p style="margin-top: 22px; font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace; letter-spacing: 0.5px; opacity: 0.7;">
-                Version 1.5.0
+                Version 1.6.0
             </p>
         </div>
     </div>
@@ -227,7 +458,7 @@
             </div>
             <div class="quick-grid">
                 <button class="btn btn-secondary" onclick="showSection('export-page')">📑 CSV Отчеты</button>
-                <button class="btn btn-secondary" onclick="showSection('misc-page'); renderUploads();">🧰 Прочее</button>
+                <button class="btn btn-secondary" onclick="showSection('misc-page');">🧰 Прочее & Пароли</button>
             </div>
         </div>
 
@@ -237,22 +468,17 @@
         </div>
 
         <div class="card">
-            <div class="card-header" style="margin-bottom: 8px;">
-                <h2 style="margin-bottom:0;">🔐 Хранилище</h2>
-                <span id="totp-timer" style="font-size:11px; color:var(--text-muted); font-family: ui-monospace, monospace;"></span>
-            </div>
-            <input type="text" id="search-box" placeholder="🔍 Поиск логинов и паролей..." oninput="renderVault()" style="margin-bottom: 8px;">
-            <div id="vault-list" class="list-container" style="margin-bottom: 10px;"></div>
-            <button class="btn" onclick="showSection('add-vault-page')">+ Добавить запись / 2FA</button>
-        </div>
-
-        <div class="card">
             <h2>☁️ Резервное копирование</h2>
             <div class="quick-grid" style="margin-top: 10px;">
                 <button class="btn btn-success" onclick="syncToGitHub(this)">Отправить на GitHub</button>
                 <button class="btn btn-github" onclick="importFromGitHub(this)">Скачать с GitHub</button>
             </div>
-            <button class="btn btn-secondary" onclick="showSection('settings-page')">⚙️ Настройки API & GitHub</button>
+            <div class="quick-grid" style="margin-top: 4px;">
+                <button class="btn btn-secondary" onclick="exportBackupFile()">💾 Экспорт бэкапа (файл)</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('dash-import-file').click()">📂 Импорт бэкапа (файл)</button>
+                <input type="file" id="dash-import-file" accept=".json,.txt" style="display:none;" onchange="importBackupFile(event)">
+            </div>
+            <button class="btn btn-secondary" style="margin-top: 4px;" onclick="showSection('settings-page')">⚙️ Настройки API & GitHub</button>
         </div>
     </div>
 
@@ -328,16 +554,32 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 6: Пароли -->
+    <!-- ЭКРАН 6: Добавление / Редактирование записи в Хранилище -->
     <div id="add-vault-page" class="page">
         <div class="card">
-            <h2>Новая запись</h2>
-            <input type="text" id="add-name" placeholder="Сервис (например, GitHub)">
-            <input type="text" id="add-user" placeholder="Логин / Email">
-            <input type="password" id="add-pwd" placeholder="Пароль">
-            <input type="text" id="add-secret" placeholder="2FA Secret Base32 (опционально)">
-            <button class="btn" onclick="saveNewCredential()">Сохранить запись</button>
-            <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Отмена</button>
+            <h2 id="vault-modal-title">🔐 Новая запись</h2>
+            <p class="subtitle">Данные шифруются мастер-ключом перед сохранением</p>
+            
+            <input type="text" id="add-name" placeholder="Сервис / Сайт (например, GitHub)">
+            <input type="text" id="add-user" placeholder="Логин / Email / Телефон">
+            
+            <div class="input-with-action">
+                <input type="password" id="add-pwd" placeholder="Пароль" oninput="checkFormPasswordStrength()">
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('add-pwd', this)" title="Показать/скрыть пароль">👁️</button>
+            </div>
+            
+            <div class="quick-grid" style="margin-bottom: 10px;">
+                <button type="button" class="btn btn-secondary" style="font-size:13px; margin:0; padding:10px;" onclick="generatePasswordForForm()">🎲 Сгенерировать пароль</button>
+            </div>
+
+            <div id="form-pwd-strength" class="gen-strength-meter" style="margin-bottom: 12px; display:none;">
+                <div id="form-pwd-strength-bar" class="gen-strength-bar"></div>
+            </div>
+            
+            <input type="text" id="add-secret" placeholder="2FA Secret Base32 (опционально, для кодов)">
+            
+            <button class="btn" id="save-vault-btn" onclick="saveNewCredential()">Сохранить запись</button>
+            <button class="btn btn-secondary" onclick="showSection('misc-page')">Отмена</button>
         </div>
     </div>
 
@@ -345,10 +587,17 @@
     <div id="settings-page" class="page">
         <div class="card">
             <h2>Системные API ключи</h2>
-            <p class="subtitle">Google AI Studio (Для анализа еды)</p>
-            <input type="password" id="api-key-input" placeholder="AIzaSy...">
+            <p class="subtitle">Google AI Studio (Для анализа еды по фото и тексту)</p>
+            <div class="input-with-action">
+                <input type="password" id="api-key-input" placeholder="AIzaSy...">
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('api-key-input', this)" title="Показать/скрыть">👁️</button>
+            </div>
+            
             <p class="subtitle">GitHub Personal Access Token (права `repo`)</p>
-            <input type="password" id="gh-token-input" placeholder="ghp_...">
+            <div class="input-with-action">
+                <input type="password" id="gh-token-input" placeholder="ghp_...">
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('gh-token-input', this)" title="Показать/скрыть">👁️</button>
+            </div>
         </div>
         <div class="card">
             <h2>Репозитории GitHub</h2>
@@ -361,10 +610,64 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 8: Прочее (Файлообменник и TikTok) -->
+    <!-- ЭКРАН 8: Прочее (Хранилище паролей, Генератор, Файлообменник, TikTok) -->
     <div id="misc-page" class="page">
+        <!-- Блок 1: Хранилище паролей и 2FA (перенесено из дашборда) -->
         <div class="card">
-            <h2>🧰 Прочее</h2>
+            <div class="card-header" style="margin-bottom: 8px;">
+                <h2 style="margin-bottom:0;">🔐 Хранилище паролей & 2FA</h2>
+                <span id="totp-timer" style="font-size:11px; color:var(--text-muted); font-family: ui-monospace, monospace;"></span>
+            </div>
+            <p class="subtitle">Безопасное зашифрованное хранилище с просмотром без копирования</p>
+            
+            <input type="text" id="search-box" placeholder="🔍 Поиск по сервису или логину..." oninput="renderVault()" style="margin-bottom: 10px;">
+            
+            <div id="vault-list" class="list-container" style="margin-bottom: 12px;"></div>
+            
+            <div class="quick-grid">
+                <button class="btn" onclick="openAddVaultModal()">+ Новая запись / 2FA</button>
+                <button class="btn btn-secondary" onclick="togglePasswordGenerator()">🎲 Генератор</button>
+            </div>
+            
+            <!-- Интерактивный генератор паролей -->
+            <div id="generator-widget-box" class="generator-widget hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-weight:600; font-size:14px; color:var(--text-main);">🎲 Генератор паролей</span>
+                    <span id="gen-length-display" style="font-size:12px; color:var(--accent); font-weight:600;">16 символов</span>
+                </div>
+                
+                <div class="vault-pwd-row" style="margin-bottom: 8px;">
+                    <div id="gen-result-text" class="vault-pwd-text" style="color:#60a5fa; font-weight:600;">—</div>
+                    <button class="icon-btn-sm" onclick="copyGeneratedPassword()" title="Скопировать">📋 Копировать</button>
+                </div>
+                
+                <div id="gen-strength-bar" class="gen-strength-meter">
+                    <div id="gen-strength-fill" class="gen-strength-bar" style="width: 80%; background-color: var(--success);"></div>
+                </div>
+                
+                <div class="gen-slider-row" style="margin-top:10px;">
+                    <span style="font-size:12px; color:var(--text-muted);">8</span>
+                    <input type="range" id="gen-len-slider" min="8" max="32" value="16" oninput="onGenLengthChange()">
+                    <span style="font-size:12px; color:var(--text-muted);">32</span>
+                </div>
+                
+                <div class="gen-options-grid">
+                    <label class="gen-option-label"><input type="checkbox" id="gen-opt-upper" checked onchange="generateRandomPassword()"> A-Z (Заглавные)</label>
+                    <label class="gen-option-label"><input type="checkbox" id="gen-opt-lower" checked onchange="generateRandomPassword()"> a-z (Строчные)</label>
+                    <label class="gen-option-label"><input type="checkbox" id="gen-opt-numbers" checked onchange="generateRandomPassword()"> 0-9 (Цифры)</label>
+                    <label class="gen-option-label"><input type="checkbox" id="gen-opt-symbols" checked onchange="generateRandomPassword()"> !@#$%^&* (Спецсимволы)</label>
+                </div>
+                
+                <div class="quick-grid" style="margin-bottom:0;">
+                    <button class="btn btn-secondary" style="margin-bottom:0; font-size:13px; padding:10px;" onclick="generateRandomPassword()">🔄 Обновить</button>
+                    <button class="btn btn-secondary" style="margin-bottom:0; font-size:13px; padding:10px;" onclick="useGeneratedForNewVault()">➕ Создать запись</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Блок 2: Файлообменник -->
+        <div class="card">
+            <h2>☁️ Публичный файлообменник</h2>
             <p class="subtitle">Загрузка файлов в открытый репозиторий с выдачей короткой ссылки (до 15 МБ)</p>
             <input type="file" id="public-file-upload" style="margin-bottom: 8px;">
             <button class="btn" id="upload-file-btn" onclick="uploadPublicFile(this)">🚀 Загрузить и получить ссылку</button>
@@ -372,6 +675,7 @@
             <div id="uploads-list" class="list-container" style="margin-top: 14px;"></div>
         </div>
 
+        <!-- Блок 3: TikTok Загрузчик -->
         <div class="card">
             <h2>🎬 Скачать видео TikTok</h2>
             <p class="subtitle">Вставьте ссылку на клип или видео</p>
@@ -385,7 +689,8 @@
                 <a id="tiktok-open-browser-btn" href="#" target="_blank" class="btn btn-secondary" style="margin-top: 4px;">🌐 Открыть оригинал в браузере</a>
             </div>
         </div>
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
+        
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
     </div>
 
     <!-- ЭКРАН 9: Выгрузка отчетов (CSV) -->
@@ -464,12 +769,48 @@
         let calCurrentDate = new Date();
         let currentTikTokCleanUrl = "";
         let currentTikTokBlob = null;
+        let editingVaultIndex = null;
+        let visibleVaultPasswords = {}; // Хранит видимость паролей по индексам
+
+        // --- Утилиты безопасности и интерфейса ---
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-box');
+            const msgEl = document.getElementById('toast-msg');
+            if (!toast || !msgEl) return;
+            msgEl.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2200);
+        }
+
+        function toggleInputVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerText = '🙈';
+            } else {
+                input.type = 'password';
+                btn.innerText = '👁️';
+            }
+        }
 
         // Встроенный TOTP (2FA)
         function base32ToHex(base32) {
             const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
             let bits = "", hex = "";
-            let cleaned = base32.replace(/=+$/, '').toUpperCase().replace(/\s+/g, '');
+            let cleaned = (base32 || '').replace(/=+$/, '').toUpperCase().replace(/\s+/g, '');
             for (let i = 0; i < cleaned.length; i++) {
                 let val = base32chars.indexOf(cleaned.charAt(i));
                 if (val === -1) continue;
@@ -530,7 +871,13 @@
                 let d = new Date(); d.setDate(d.getDate() - 7);
                 document.getElementById('export-start-date').value = getFormattedDate(d);
             }
-            if (pageId === 'misc-page') renderUploads();
+            if (pageId === 'misc-page') {
+                renderVault();
+                renderUploads();
+                if (!document.getElementById('gen-result-text').innerText || document.getElementById('gen-result-text').innerText === '—') {
+                    generateRandomPassword();
+                }
+            }
         }
 
         function unlockVault() {
@@ -552,7 +899,7 @@
                 if (!decryptedStr) throw new Error("Неверный ключ");
                 
                 data = JSON.parse(decryptedStr);
-                // Миграция старых данных
+                // Миграция структуры данных
                 if(!data.salaryRates) data.salaryRates = { day: 0, night: 0 };
                 if(!data.days) data.days = {};
                 if(!data.shifts) data.shifts = {};
@@ -573,6 +920,7 @@
         function lockVault() {
             masterKey = "";
             data = { days: {}, shifts: {}, tasks: [], debts: [], vault: [], uploads: [], geminiApiKey: '', githubToken: '', githubRepo: '', publicRepo: '', salaryRates: { day: 0, night: 0 }, profile: {} };
+            visibleVaultPasswords = {};
             showSection('auth-page');
         }
 
@@ -672,7 +1020,6 @@
             document.getElementById('date-display').innerText = displayLabel;
             
             renderDailyHistory();
-            renderVault();
         }
 
         function changeDate(offset) {
@@ -708,21 +1055,21 @@
             (dData.moodList || []).forEach((m, idx) => {
                 html += `<div class="list-item">
                     <div style="flex:1;">
-                        <span style="font-size:16px; margin-right:4px;">${m.emoji}</span> <strong>Настроение</strong><br>
-                        <span style="font-size:12px; color:var(--text-muted);">Время: ${m.time}</span>
+                        <span style="font-size:16px; margin-right:4px;">${escapeHtml(m.emoji)}</span> <strong>Настроение</strong><br>
+                        <span style="font-size:12px; color:var(--text-muted);">Время: ${escapeHtml(m.time)}</span>
                     </div>
                     <button class="del-btn" onclick="deleteMoodEntry(${idx})">✕</button>
                 </div>`;
             });
 
             (dData.meals || []).forEach((m, idx) => {
-                html += `<div class="list-item"><div style="flex:1;">🥗 <strong>${m.name}</strong><br><span style="font-size:12px; color:var(--text-muted);">${m.cal} ккал</span></div><button class="del-btn" onclick="deleteMeal(${idx})">✕</button></div>`;
+                html += `<div class="list-item"><div style="flex:1;">🥗 <strong>${escapeHtml(m.name)}</strong><br><span style="font-size:12px; color:var(--text-muted);">${escapeHtml(m.cal)} ккал</span></div><button class="del-btn" onclick="deleteMeal(${idx})">✕</button></div>`;
             });
             (dData.waterList || []).forEach((w, idx) => {
-                html += `<div class="list-item"><div style="flex:1;">💧 <strong>Вода</strong><br><span style="font-size:12px; color:var(--text-muted);">${w} мл</span></div><button class="del-btn" onclick="deleteWater(${idx})">✕</button></div>`;
+                html += `<div class="list-item"><div style="flex:1;">💧 <strong>Вода</strong><br><span style="font-size:12px; color:var(--text-muted);">${escapeHtml(w)} мл</span></div><button class="del-btn" onclick="deleteWater(${idx})">✕</button></div>`;
             });
             (dData.stepsList || []).forEach((s, idx) => {
-                html += `<div class="list-item"><div style="flex:1;">👟 <strong>Шаги</strong><br><span style="font-size:12px; color:var(--text-muted);">${s}</span></div><button class="del-btn" onclick="deleteSteps(${idx})">✕</button></div>`;
+                html += `<div class="list-item"><div style="flex:1;">👟 <strong>Шаги</strong><br><span style="font-size:12px; color:var(--text-muted);">${escapeHtml(s)}</span></div><button class="del-btn" onclick="deleteSteps(${idx})">✕</button></div>`;
             });
 
             if(html === '') container.innerHTML = '<p style="color:var(--text-muted); text-align:center; font-size:13px; padding: 10px 0;">Записей за этот день нет</p>';
@@ -829,10 +1176,10 @@
 
         function renderPlanner() {
             const tList = document.getElementById('tasks-list');
-            tList.innerHTML = (data.tasks || []).map((t, i) => `<div class="list-item ${t.done ? 'done' : ''}"><div class="task-content" onclick="toggleTask(${i})"><input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask(${i});"><span>${t.text}</span></div><button class="del-btn" onclick="deleteTask(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Активных задач нет</p>';
+            tList.innerHTML = (data.tasks || []).map((t, i) => `<div class="list-item ${t.done ? 'done' : ''}"><div class="task-content" onclick="toggleTask(${i})"><input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask(${i});"><span>${escapeHtml(t.text)}</span></div><button class="del-btn" onclick="deleteTask(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Активных задач нет</p>';
             
             const dList = document.getElementById('debts-list');
-            dList.innerHTML = (data.debts || []).map((d, i) => `<div class="list-item"><div class="task-content"><span>${d.who}</span><span class="${d.amount >= 0 ? 'debt-positive' : 'debt-negative'}">${d.amount >= 0 ? '+' + d.amount : d.amount} ₽</span></div><button class="del-btn" onclick="deleteDebt(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Записей о долгах нет</p>';
+            dList.innerHTML = (data.debts || []).map((d, i) => `<div class="list-item"><div class="task-content"><span>${escapeHtml(d.who)}</span><span class="${d.amount >= 0 ? 'debt-positive' : 'debt-negative'}">${d.amount >= 0 ? '+' + d.amount : d.amount} ₽</span></div><button class="del-btn" onclick="deleteDebt(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Записей о долгах нет</p>';
         }
 
         function addTask() { 
@@ -877,7 +1224,7 @@
                 } catch(e) { alert("Ошибка чтения фото"); btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; return; }
             }
 
-            const modelsToTry = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3-flash-preview"];
+            const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite", "gemini-2.5-pro", "gemini-1.5-pro", "gemini-3.0-flash", "gemini-3.5-flash"];
             let lastError = null, successfulData = null;
 
             for (let modelName of modelsToTry) {
@@ -905,64 +1252,369 @@
 
                 let dData = getTodayData(); dData.calories += meal.cal; dData.meals.push({ name: meal.name, cal: meal.cal }); saveEncrypted(); updateUI();
 
-                resBox.innerHTML = `<strong>${meal.name}</strong><br>🔥 ${meal.cal} ккал | Б: ${meal.p}г • Ж: ${meal.f}г • У: ${meal.c}г<br><em style="font-size:12px; color:#60a5fa;">✓ Добавлено за ${document.getElementById('date-display').innerText}!</em>`;
+                resBox.innerHTML = `<strong>${escapeHtml(meal.name)}</strong><br>🔥 ${meal.cal} ккал | Б: ${meal.p}г • Ж: ${meal.f}г • У: ${meal.c}г<br><em style="font-size:12px; color:#60a5fa;">✓ Добавлено за ${escapeHtml(document.getElementById('date-display').innerText)}!</em>`;
                 resBox.classList.remove('hidden'); document.getElementById('food-input').value = ''; fInput.value = ''; document.getElementById('image-preview').style.display = 'none';
             } catch(e) { alert("Ошибка: " + e.message); } finally { btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; }
         }
 
+        // --- ХРАНИЛИЩЕ ПАРОЛЕЙ И 2FA ---
         function renderVault() {
-            const q = (document.getElementById('search-box')?.value || '').toLowerCase(); 
+            const q = (document.getElementById('search-box')?.value || '').toLowerCase().trim(); 
             const container = document.getElementById('vault-list'); 
             if (!container) return;
 
-            const filtered = (data.vault || []).filter(i => (i.name || '').toLowerCase().includes(q) || (i.user || '').toLowerCase().includes(q));
-            if (!filtered.length) { container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Сохраненных записей нет</p>'; return; }
+            const vaultItems = data.vault || [];
+            const filtered = vaultItems.map((item, originalIndex) => ({ item, originalIndex }))
+                .filter(({ item }) => (item.name || '').toLowerCase().includes(q) || (item.user || '').toLowerCase().includes(q));
 
-            container.innerHTML = filtered.map((item, idx) => {
+            if (!filtered.length) { 
+                container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:12px 0; font-size:13px;">Сохраненных записей нет</p>'; 
+                return; 
+            }
+
+            container.innerHTML = filtered.map(({ item, originalIndex }) => {
+                const isVisible = !!visibleVaultPasswords[originalIndex];
+                const displayPwd = isVisible ? escapeHtml(item.pwd) : '••••••••••••';
+                const pwdClass = isVisible ? 'vault-pwd-text' : 'vault-pwd-text masked';
+                const eyeIcon = isVisible ? '🙈 Скрыть' : '👁️ Показать';
+                const eyeClass = isVisible ? 'icon-btn-sm active' : 'icon-btn-sm';
+
                 let codeHtml = "";
                 if (item.secret) {
                     let token = generateTOTP(item.secret);
-                    if (token) codeHtml = `<span class="code-badge" onclick="copyText('${token}')">${token}</span>`;
-                    else codeHtml = `<span style="color:var(--danger); font-size:11px;">2FA Err</span>`;
+                    if (token) {
+                        codeHtml = `<span class="code-badge" onclick="copyTOTP(${originalIndex})" title="Нажмите, чтобы скопировать 2FA код">🔑 ${token}</span>`;
+                    } else {
+                        codeHtml = `<span style="color:var(--danger); font-size:11px;">2FA Err</span>`;
+                    }
                 }
-                return `<div class="list-item"><div style="min-width:0; flex:1;"><strong>${item.name}</strong><br><span style="font-size:12px; color:var(--text-muted); word-break:break-all;">${item.user || '—'}</span></div><div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">${codeHtml}<button class="btn" style="width:auto; padding:6px 10px; font-size:12px; margin:0;" onclick="copyText('${item.pwd}')">Пароль</button><button class="del-btn" onclick="deleteVaultItem(${idx})">✕</button></div></div>`;
+
+                return `
+                <div class="vault-card">
+                    <div class="vault-card-top">
+                        <div style="min-width:0; flex:1;">
+                            <div class="vault-service-name">${escapeHtml(item.name)}</div>
+                            <div class="vault-username" onclick="copyVaultUser(${originalIndex})" title="Нажмите, чтобы скопировать логин">
+                                <span>👤 ${escapeHtml(item.user || '—')}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                            ${codeHtml}
+                            <button class="icon-btn-sm" onclick="editVaultItem(${originalIndex})" title="Редактировать">✏️</button>
+                            <button class="del-btn" onclick="deleteVaultItem(${originalIndex})" title="Удалить">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div class="vault-pwd-row">
+                        <div class="${pwdClass}" id="vault-pwd-val-${originalIndex}">${displayPwd}</div>
+                        <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+                            <button class="${eyeClass}" onclick="toggleVaultPasswordVisibility(${originalIndex})" title="Показать/скрыть пароль">${eyeIcon}</button>
+                            <button class="icon-btn-sm" onclick="copyVaultPassword(${originalIndex})" title="Скопировать пароль">📋</button>
+                        </div>
+                    </div>
+                </div>`;
             }).join('');
         }
 
-        function copyText(txt) {
-            if (!txt) return;
-            if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(txt).then(() => alert("Скопировано!")).catch(() => fallbackCopy(txt)); } else { fallbackCopy(txt); }
+        function toggleVaultPasswordVisibility(idx) {
+            visibleVaultPasswords[idx] = !visibleVaultPasswords[idx];
+            renderVault();
         }
-        function fallbackCopy(text) {
+
+        function copyVaultPassword(idx) {
+            const item = data.vault[idx];
+            if (!item || !item.pwd) return;
+            copyText(item.pwd, "Пароль скопирован!");
+        }
+
+        function copyVaultUser(idx) {
+            const item = data.vault[idx];
+            if (!item || !item.user) return;
+            copyText(item.user, "Логин скопирован!");
+        }
+
+        function copyTOTP(idx) {
+            const item = data.vault[idx];
+            if (!item || !item.secret) return;
+            const token = generateTOTP(item.secret);
+            if (token) copyText(token, "2FA код скопирован!");
+        }
+
+        function copyText(txt, successMsg) {
+            if (!txt) return;
+            if (navigator.clipboard && window.isSecureContext) { 
+                navigator.clipboard.writeText(txt).then(() => showToast(successMsg || "Скопировано!")).catch(() => fallbackCopy(txt, successMsg)); 
+            } else { 
+                fallbackCopy(txt, successMsg); 
+            }
+        }
+
+        function fallbackCopy(text, successMsg) {
             const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
             document.body.appendChild(ta); ta.focus(); ta.select();
-            try { document.execCommand('copy'); alert("Скопировано!"); } catch(e) { prompt("Скопируйте:", text); }
+            try { 
+                document.execCommand('copy'); 
+                showToast(successMsg || "Скопировано!"); 
+            } catch(e) { 
+                prompt("Скопируйте:", text); 
+            }
             document.body.removeChild(ta);
         }
 
         function deleteVaultItem(idx) { 
-            if (confirm(`Удалить запись "${data.vault[idx].name}"?`)) { data.vault.splice(idx, 1); saveEncrypted(); renderVault(); } 
+            const item = data.vault[idx];
+            if (!item) return;
+            if (confirm(`Удалить запись "${item.name}"?`)) { 
+                data.vault.splice(idx, 1); 
+                delete visibleVaultPasswords[idx];
+                saveEncrypted(); 
+                renderVault(); 
+                showToast("Запись удалена");
+            } 
+        }
+
+        function openAddVaultModal() {
+            editingVaultIndex = null;
+            document.getElementById('vault-modal-title').innerText = "🔐 Новая запись";
+            document.getElementById('save-vault-btn').innerText = "Сохранить запись";
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-user').value = '';
+            document.getElementById('add-pwd').value = '';
+            document.getElementById('add-secret').value = '';
+            document.getElementById('form-pwd-strength').style.display = 'none';
+            showSection('add-vault-page');
+        }
+
+        function editVaultItem(idx) {
+            const item = data.vault[idx];
+            if (!item) return;
+            editingVaultIndex = idx;
+            document.getElementById('vault-modal-title').innerText = "✏️ Редактирование записи";
+            document.getElementById('save-vault-btn').innerText = "Обновить запись";
+            document.getElementById('add-name').value = item.name || '';
+            document.getElementById('add-user').value = item.user || '';
+            document.getElementById('add-pwd').value = item.pwd || '';
+            document.getElementById('add-secret').value = item.secret || '';
+            checkFormPasswordStrength();
+            showSection('add-vault-page');
         }
 
         function saveNewCredential() {
-            const name = document.getElementById('add-name').value.trim(); const user = document.getElementById('add-user').value.trim(); 
-            const pwd = document.getElementById('add-pwd').value; const secret = document.getElementById('add-secret').value.trim();
-            if (!name || !pwd) return alert("Заполните название и пароль!");
+            const name = document.getElementById('add-name').value.trim(); 
+            const user = document.getElementById('add-user').value.trim(); 
+            const pwd = document.getElementById('add-pwd').value; 
+            const secret = document.getElementById('add-secret').value.trim();
             
-            data.vault.push({ name, user, pwd, secret }); saveEncrypted();
-            document.getElementById('add-name').value = ''; document.getElementById('add-user').value = ''; 
-            document.getElementById('add-pwd').value = ''; document.getElementById('add-secret').value = ''; 
-            showSection('dashboard-page');
+            if (!name || !pwd) return alert("Заполните название сервиса и пароль!");
+            
+            if (editingVaultIndex !== null && data.vault[editingVaultIndex]) {
+                data.vault[editingVaultIndex] = { name, user, pwd, secret };
+                showToast("Запись обновлена!");
+            } else {
+                if (!data.vault) data.vault = [];
+                data.vault.push({ name, user, pwd, secret });
+                showToast("Запись сохранена!");
+            }
+            
+            saveEncrypted();
+            document.getElementById('add-name').value = ''; 
+            document.getElementById('add-user').value = ''; 
+            document.getElementById('add-pwd').value = ''; 
+            document.getElementById('add-secret').value = ''; 
+            editingVaultIndex = null;
+            showSection('misc-page');
         }
 
+        // --- ГЕНЕРАТОР ПАРОЛЕЙ ---
+        function togglePasswordGenerator() {
+            const widget = document.getElementById('generator-widget-box');
+            if (!widget) return;
+            widget.classList.toggle('hidden');
+            if (!widget.classList.contains('hidden')) {
+                generateRandomPassword();
+            }
+        }
+
+        function onGenLengthChange() {
+            const len = document.getElementById('gen-len-slider').value;
+            document.getElementById('gen-length-display').innerText = `${len} символов`;
+            generateRandomPassword();
+        }
+
+        function generateRandomPassword() {
+            const len = parseInt(document.getElementById('gen-len-slider')?.value || 16);
+            const useUpper = document.getElementById('gen-opt-upper')?.checked ?? true;
+            const useLower = document.getElementById('gen-opt-lower')?.checked ?? true;
+            const useNumbers = document.getElementById('gen-opt-numbers')?.checked ?? true;
+            const useSymbols = document.getElementById('gen-opt-symbols')?.checked ?? true;
+
+            const uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const lowers = "abcdefghijklmnopqrstuvwxyz";
+            const nums = "0123456789";
+            const syms = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+            let chars = "";
+            let requiredChars = [];
+
+            if (useUpper) { chars += uppers; requiredChars.push(uppers[Math.floor(Math.random() * uppers.length)]); }
+            if (useLower) { chars += lowers; requiredChars.push(lowers[Math.floor(Math.random() * lowers.length)]); }
+            if (useNumbers) { chars += nums; requiredChars.push(nums[Math.floor(Math.random() * nums.length)]); }
+            if (useSymbols) { chars += syms; requiredChars.push(syms[Math.floor(Math.random() * syms.length)]); }
+
+            if (!chars) chars = lowers + nums;
+
+            let result = [...requiredChars];
+            for (let i = result.length; i < len; i++) {
+                result.push(chars[Math.floor(Math.random() * chars.length)]);
+            }
+
+            // Перемешивание (Fisher-Yates)
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+
+            const finalPwd = result.join('');
+            const resEl = document.getElementById('gen-result-text');
+            if (resEl) resEl.innerText = finalPwd;
+
+            updateStrengthBar(finalPwd, 'gen-strength-fill');
+            return finalPwd;
+        }
+
+        function copyGeneratedPassword() {
+            const pwd = document.getElementById('gen-result-text')?.innerText;
+            if (pwd && pwd !== '—') {
+                copyText(pwd, "Сгенерированный пароль скопирован!");
+            }
+        }
+
+        function useGeneratedForNewVault() {
+            const pwd = document.getElementById('gen-result-text')?.innerText;
+            if (pwd && pwd !== '—') {
+                openAddVaultModal();
+                document.getElementById('add-pwd').value = pwd;
+                checkFormPasswordStrength();
+            }
+        }
+
+        function generatePasswordForForm() {
+            const uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const lowers = "abcdefghijklmnopqrstuvwxyz";
+            const nums = "0123456789";
+            const syms = "!@#$%^&*";
+            const all = uppers + lowers + nums + syms;
+            let pwd = [
+                uppers[Math.floor(Math.random() * uppers.length)],
+                lowers[Math.floor(Math.random() * lowers.length)],
+                nums[Math.floor(Math.random() * nums.length)],
+                syms[Math.floor(Math.random() * syms.length)]
+            ];
+            for(let i=4; i<16; i++) {
+                pwd.push(all[Math.floor(Math.random() * all.length)]);
+            }
+            for (let i = pwd.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+            }
+            const res = pwd.join('');
+            document.getElementById('add-pwd').value = res;
+            checkFormPasswordStrength();
+            showToast("Надежный пароль сгенерирован!");
+        }
+
+        function checkFormPasswordStrength() {
+            const pwd = document.getElementById('add-pwd').value;
+            const container = document.getElementById('form-pwd-strength');
+            if (!container) return;
+            if (!pwd) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+            updateStrengthBar(pwd, 'form-pwd-strength-bar');
+        }
+
+        function updateStrengthBar(pwd, barId) {
+            const bar = document.getElementById(barId);
+            if (!bar) return;
+            let score = 0;
+            if (pwd.length >= 8) score += 25;
+            if (pwd.length >= 14) score += 25;
+            if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score += 20;
+            if (/[0-9]/.test(pwd)) score += 15;
+            if (/[^A-Za-z0-9]/.test(pwd)) score += 15;
+
+            bar.style.width = `${Math.min(100, score)}%`;
+            if (score < 40) {
+                bar.style.backgroundColor = 'var(--danger)';
+            } else if (score < 75) {
+                bar.style.backgroundColor = '#f59e0b';
+            } else {
+                bar.style.backgroundColor = 'var(--success)';
+            }
+        }
+
+        // Таймер для TOTP
         setInterval(() => {
-            if (document.getElementById('dashboard-page').classList.contains('active')) {
+            if (document.getElementById('misc-page').classList.contains('active')) {
                 let secLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
                 const timerEl = document.getElementById('totp-timer');
                 if (timerEl) timerEl.innerText = `TOTP: ${secLeft}s`;
                 if (secLeft === 30 || secLeft === 1) renderVault();
             }
         }, 1000);
+
+        // --- ЛОКАЛЬНЫЙ ЭКСПОРТ И ИМПОРТ БЭКАПА (ФАЙЛ) ---
+        function exportBackupFile() {
+            const encStr = localStorage.getItem('encMasterData');
+            if (!encStr) return alert("Нет данных для экспорта!");
+            const blob = new Blob([encStr], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `helper_backup_${getFormattedDate(new Date())}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Файл бэкапа сохранен!");
+        }
+
+        function importBackupFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const encStr = e.target.result.trim();
+                try {
+                    const bytes = CryptoJS.AES.decrypt(encStr, masterKey);
+                    const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+                    if (!decryptedStr) throw new Error("Неверный мастер-пароль");
+                    
+                    data = JSON.parse(decryptedStr);
+                    localStorage.setItem('encMasterData', encStr);
+                    updateUI();
+                    renderVault();
+                    alert("Данные успешно импортированы из файла!");
+                } catch(err) {
+                    alert("Ошибка импорта! Файл поврежден или зашифрован другим паролем.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function importBackupFileFromAuth(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const encStr = e.target.result.trim();
+                localStorage.setItem('encMasterData', encStr);
+                alert("Бэкап загружен! Теперь введите мастер-пароль для входа.");
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
 
         // CSV Экспорт
         function exportDataPeriod(period) {
@@ -1006,6 +1658,7 @@
         // --- ФАЙЛООБМЕННИК ---
         function renderUploads() {
             const container = document.getElementById('uploads-list');
+            if (!container) return;
             if (!data.uploads || !data.uploads.length) {
                 container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Загруженных файлов нет</p>';
                 return;
@@ -1013,15 +1666,21 @@
             container.innerHTML = data.uploads.map((f, idx) => `
                 <div class="list-item">
                     <div style="min-width:0; flex:1;">
-                        <strong style="word-break:break-all; font-size:13px;">${f.name}</strong><br>
-                        <span style="font-size:11px; color:var(--text-muted);">${f.date}</span>
+                        <strong style="word-break:break-all; font-size:13px;">${escapeHtml(f.name)}</strong><br>
+                        <span style="font-size:11px; color:var(--text-muted);">${escapeHtml(f.date)}</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                        <button class="btn btn-secondary" style="width:auto; padding:6px 10px; font-size:12px; margin:0;" onclick="copyText('${f.shortUrl || f.url}')">Копировать Link</button>
+                        <button class="btn btn-secondary" style="width:auto; padding:6px 10px; font-size:12px; margin:0;" onclick="copyUploadLink(${idx})">Ссылка</button>
                         <button class="del-btn" onclick="deleteUpload(${idx})">✕</button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function copyUploadLink(idx) {
+            const f = data.uploads[idx];
+            if (!f) return;
+            copyText(f.shortUrl || f.url, "Ссылка на файл скопирована!");
         }
 
         async function uploadPublicFile(btn) {
@@ -1103,7 +1762,7 @@
                 data.uploads.splice(idx, 1);
                 saveEncrypted();
                 renderUploads();
-                alert("Файл удален из репозитория и вашей локальной базы.");
+                showToast("Файл удален");
             } catch (e) {
                 if (confirm(`Ошибка удаления с GitHub: ${e.message}\nУдалить только запись из локального списка?`)) {
                     data.uploads.splice(idx, 1);
@@ -1177,12 +1836,13 @@
                 let getRes = await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/encrypted_helper_backup.json`, { headers: { 'Authorization': `token ${data.githubToken}`, 'Accept': 'application/vnd.github.v3+json' } });
                 if (getRes.ok) {
                     let json = await getRes.json();
-                    let encStr = decodeURIComponent(escape(atob(json.content)));
+                    let rawBase64 = (json.content || '').replace(/\s+/g, '');
+                    let encStr = decodeURIComponent(escape(atob(rawBase64)));
                     try {
                         const bytes = CryptoJS.AES.decrypt(encStr, masterKey); const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
                         if (!decryptedStr) throw new Error();
                         localStorage.setItem('encMasterData', encStr); data = JSON.parse(decryptedStr);
-                        alert("Данные успешно восстановлены!"); updateUI();
+                        alert("Данные успешно восстановлены!"); updateUI(); renderVault();
                     } catch(e) { alert("Ошибка! Скачанный бэкап зашифрован другим мастер-паролем."); }
                 } else { alert("Файл бэкапа не найден в репозитории."); }
             } catch(e) { alert("Ошибка сети: " + e.message); } finally { btn.innerText = origTxt; }
@@ -1196,7 +1856,8 @@
                 let getRes = await fetch(`https://api.github.com/repos/${repo}/contents/encrypted_helper_backup.json`, { headers: { 'Authorization': `token ${token.trim()}`, 'Accept': 'application/vnd.github.v3+json' } });
                 if (getRes.ok) {
                     let json = await getRes.json();
-                    let encStr = decodeURIComponent(escape(atob(json.content)));
+                    let rawBase64 = (json.content || '').replace(/\s+/g, '');
+                    let encStr = decodeURIComponent(escape(atob(rawBase64)));
                     localStorage.setItem('encMasterData', encStr);
                     alert("Бэкап загружен! Введите мастер-пароль для расшифровки.");
                 } else { alert("Бэкап не найден. Проверьте репозиторий и токен."); }
