@@ -775,6 +775,163 @@
         }
         .budget-stat-number.green { color: #34d399; }
         .budget-stat-number.red { color: #fb7185; }
+        .budget-all-time-note {
+            font-size: 11.5px;
+            color: var(--text-dim);
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .budget-all-time-note span {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Финансовый календарь бюджета */
+        .budget-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .bcal-day-name {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 10.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding-bottom: 4px;
+        }
+        .bcal-day-name.weekend {
+            color: #fb7185;
+            opacity: 0.85;
+        }
+        .bcal-empty-slot {
+            pointer-events: none;
+            opacity: 0;
+        }
+        .bcal-day {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            min-height: 52px;
+            padding: 4px 3px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s var(--ease-spring);
+            position: relative;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bcal-day:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            z-index: 2;
+        }
+        .bcal-day:active {
+            transform: scale(0.96);
+        }
+        .bcal-day.bcal-today {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent), 0 0 10px var(--accent-glow);
+        }
+        .bcal-day.bcal-selected {
+            border-color: #60a5fa !important;
+            background: rgba(59, 130, 246, 0.2) !important;
+            box-shadow: 0 0 0 2px #3b82f6, 0 0 16px var(--accent-glow) !important;
+            transform: scale(1.04);
+            z-index: 3;
+        }
+        .bcal-day.bcal-has-expense {
+            background: rgba(244, 63, 94, 0.06);
+            border-color: rgba(244, 63, 94, 0.25);
+        }
+        .bcal-day.bcal-has-income {
+            background: rgba(16, 185, 129, 0.06);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+        .bcal-day.bcal-has-both {
+            background: linear-gradient(145deg, rgba(16, 185, 129, 0.09) 0%, rgba(244, 63, 94, 0.09) 100%);
+            border-color: rgba(139, 92, 246, 0.35);
+        }
+        .bcal-day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            line-height: 1;
+            padding: 0 1px;
+        }
+        .bcal-num {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .bcal-today-dot {
+            color: var(--accent);
+            font-size: 10px;
+            line-height: 1;
+        }
+        .bcal-indicators {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 3px;
+            width: 100%;
+        }
+        .bcal-tag {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 2px;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-variant-numeric: tabular-nums;
+        }
+        .bcal-tag.exp {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.35);
+        }
+        .bcal-tag.inc {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+        .budget-cal-legend {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .bcal-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .bcal-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .bcal-dot.exp { background: #f43f5e; box-shadow: 0 0 6px rgba(244, 63, 94, 0.6); }
+        .bcal-dot.inc { background: #10b981; box-shadow: 0 0 6px rgba(168, 85, 247, 0.6); }
+        .bcal-dot.both { background: #a855f7; box-shadow: 0 0 6px rgba(168, 85, 247, 0.6); }
 
         /* Сегментированный переключатель (Segmented Control) */
         .segmented-control {
@@ -1221,8 +1378,8 @@
         <div class="budget-hero-card">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
-                    <div class="budget-balance-label">💎 Общий баланс</div>
-                    <div class="budget-balance-val" id="budget-total-balance">0 ₽</div>
+                    <div class="budget-balance-label" id="budget-balance-label">💎 Баланс за месяц</div>
+                    <div class="budget-balance-val" id="budget-month-balance">0 ₽</div>
                 </div>
                 <button class="icon-btn-sm" onclick="toggleBudgetLimitForm()" title="Настроить лимит на месяц">🎯 Лимит</button>
             </div>
@@ -1245,6 +1402,11 @@
                 </div>
             </div>
 
+            <div class="budget-all-time-note" id="budget-all-time-note">
+                <span>Общий баланс за все время:</span>
+                <span id="budget-all-time-val">0 ₽</span>
+            </div>
+
             <!-- Прогресс лимита расходов -->
             <div id="budget-limit-wrapper" class="budget-limit-box" style="display:none;">
                 <div class="budget-limit-header">
@@ -1265,6 +1427,26 @@
                     <button class="btn btn-success" style="width:auto; padding:0 14px; margin-bottom:0; font-size:13px;" onclick="saveBudgetMonthlyLimit()">ОК</button>
                     <button class="btn btn-secondary" style="width:auto; padding:0 10px; margin-bottom:0; font-size:13px;" onclick="toggleBudgetLimitForm()">✕</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- КАРТОЧКА: КАЛЕНДАРЬ РАСХОДОВ И ДОХОДОВ ЗА МЕСЯЦ -->
+        <div class="card" id="budget-calendar-card">
+            <div class="card-header" style="margin-bottom:4px;">
+                <h2>📅 Календарь за месяц</h2>
+                <span id="budget-cal-active-badge" style="display:none; font-size:11px; padding:3px 8px; border-radius:6px; font-weight:600; background:rgba(59,130,246,0.2); color:#93c5fd; cursor:pointer;" onclick="resetBudgetCalDateFilter()" title="Сбросить фильтр по дате"></span>
+            </div>
+            <div class="subtitle" style="margin-bottom:8px;">Нажмите на день, чтобы отфильтровать операции или записать трату на эту дату</div>
+
+            <!-- Сетка календаря -->
+            <div class="budget-calendar-grid" id="budget-cal-grid"></div>
+
+            <!-- Легенда календаря -->
+            <div class="budget-cal-legend">
+                <div class="bcal-legend-item"><span class="bcal-dot exp"></span> Расход</div>
+                <div class="bcal-legend-item"><span class="bcal-dot inc"></span> Доход</div>
+                <div class="bcal-legend-item"><span class="bcal-dot both"></span> Доход + Расход</div>
+                <div id="budget-cal-stats-hint" style="margin-left:auto; font-size:11px; color:var(--text-muted);"></div>
             </div>
         </div>
 
@@ -1316,7 +1498,10 @@
         <div class="card">
             <div class="card-header" style="margin-bottom:8px;">
                 <h2>📋 История операций</h2>
-                <span id="tx-count-badge" style="font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted);">0 шт</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span id="tx-date-filter-tag" style="display:none; font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; background:rgba(59,130,246,0.2); color:#93c5fd; cursor:pointer;" onclick="resetBudgetCalDateFilter()" title="Сбросить фильтр по дате"></span>
+                    <span id="tx-count-badge" style="font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted);">0 шт</span>
+                </div>
             </div>
 
             <!-- Фильтр табов -->
@@ -1333,6 +1518,7 @@
 
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
     </div>
+
 
     <!-- ЭКРАН 7: Добавление / Редактирование записи в Хранилище -->
     <div id="add-vault-page" class="page">
@@ -1558,6 +1744,7 @@
         let activeBudgetTxType = 'expense'; // 'expense' | 'income'
         let selectedBudgetCategory = { name: 'Еда и продукты', icon: '🍔' };
         let activeBudgetFilterTab = 'all'; // 'all' | 'expense' | 'income'
+        let selectedBudgetCalDate = null; // Выбранный день в календаре бюджета (YYYY-MM-DD)
 
         const EXPENSE_CATEGORIES = [
             { name: 'Еда и продукты', icon: '🍔' },
@@ -2236,6 +2423,14 @@
         }
 
         // --- БЮДЖЕТ & ФИНАНСЫ (ФУНКЦИИ) ---
+        function formatCompactBudget(num) {
+            if (!num || isNaN(num)) return '0';
+            if (num < 1000) return String(Math.round(num));
+            if (num < 10000) return (num / 1000).toFixed(1).replace('.0', '') + 'k';
+            if (num < 1000000) return Math.round(num / 1000) + 'k';
+            return (num / 1000000).toFixed(1).replace('.0', '') + 'M';
+        }
+
         function renderBudgetCategoryChips() {
             const container = document.getElementById('category-chips-container');
             if (!container) return;
@@ -2287,6 +2482,7 @@
 
         function changeBudgetMonth(offset) {
             budgetCurrentDate.setMonth(budgetCurrentDate.getMonth() + offset);
+            selectedBudgetCalDate = null;
             renderBudget();
         }
 
@@ -2299,6 +2495,26 @@
                 }
             });
             renderBudgetTransactionsList();
+        }
+
+        function resetBudgetCalDateFilter() {
+            selectedBudgetCalDate = null;
+            renderBudget();
+            showToast("Показаны все операции за месяц");
+        }
+
+        function onBudgetCalDayClick(dateStr) {
+            if (selectedBudgetCalDate === dateStr) {
+                selectedBudgetCalDate = null;
+                showToast("Показаны все операции за месяц");
+            } else {
+                selectedBudgetCalDate = dateStr;
+                const txDateInp = document.getElementById('tx-date');
+                if (txDateInp) txDateInp.value = dateStr;
+                const [y, m, d] = dateStr.split('-');
+                showToast(`Выбран день: ${d}.${m}.${y}`);
+            }
+            renderBudget();
         }
 
         function toggleBudgetLimitForm() {
@@ -2377,6 +2593,125 @@
             }
         }
 
+        function renderBudgetCalendar() {
+            const grid = document.getElementById('budget-cal-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const year = budgetCurrentDate.getFullYear();
+            const month = budgetCurrentDate.getMonth(); // 0-indexed
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Заголовки дней недели
+            const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            dayNames.forEach((d, idx) => {
+                const isWeekend = idx >= 5;
+                grid.innerHTML += `<div class="bcal-day-name ${isWeekend ? 'weekend' : ''}">${d}</div>`;
+            });
+
+            // Отступ для первого дня месяца (0 = Пн, 6 = Вс)
+            let firstDay = new Date(year, month, 1).getDay();
+            firstDay = firstDay === 0 ? 6 : firstDay - 1;
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += `<div class="bcal-empty-slot"></div>`;
+            }
+
+            const todayStr = getFormattedDate(new Date());
+            const txs = (data.budget && data.budget.transactions) ? data.budget.transactions : [];
+
+            // Группировка транзакций по дням
+            const dayDataMap = {};
+            let totalDaysWithExp = 0;
+            let totalDaysWithInc = 0;
+
+            txs.forEach(t => {
+                if (!t.date) return;
+                const [ty, tm] = t.date.split('-').map(Number);
+                if (ty === year && (tm - 1) === month) {
+                    if (!dayDataMap[t.date]) {
+                        dayDataMap[t.date] = { income: 0, expense: 0, count: 0 };
+                    }
+                    const amt = Number(t.amount) || 0;
+                    if (t.type === 'income') {
+                        dayDataMap[t.date].income += amt;
+                    } else {
+                        dayDataMap[t.date].expense += amt;
+                    }
+                    dayDataMap[t.date].count++;
+                }
+            });
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const dayInfo = dayDataMap[dateStr] || { income: 0, expense: 0, count: 0 };
+                const hasInc = dayInfo.income > 0;
+                const hasExp = dayInfo.expense > 0;
+                const isToday = (dateStr === todayStr);
+                const isSelected = (selectedBudgetCalDate === dateStr);
+
+                if (hasExp) totalDaysWithExp++;
+                if (hasInc) totalDaysWithInc++;
+
+                let cls = 'bcal-day';
+                if (isSelected) cls += ' bcal-selected';
+                else if (isToday) cls += ' bcal-today';
+
+                if (hasInc && hasExp) cls += ' bcal-has-both';
+                else if (hasInc) cls += ' bcal-has-income';
+                else if (hasExp) cls += ' bcal-has-expense';
+
+                let indicatorsHtml = '';
+                if (hasInc && hasExp) {
+                    indicatorsHtml = `
+                        <div class="bcal-indicators">
+                            <span class="bcal-tag inc" title="Доход: +${dayInfo.income.toLocaleString('ru-RU')} ₽">+ ${formatCompactBudget(dayInfo.income)}</span>
+                            <span class="bcal-tag exp" title="Расход: -${dayInfo.expense.toLocaleString('ru-RU')} ₽">- ${formatCompactBudget(dayInfo.expense)}</span>
+                        </div>
+                    `;
+                } else if (hasInc) {
+                    indicatorsHtml = `
+                        <div class="bcal-indicators">
+                            <span class="bcal-tag inc" title="Доход: +${dayInfo.income.toLocaleString('ru-RU')} ₽">+ ${formatCompactBudget(dayInfo.income)}</span>
+                        </div>
+                    `;
+                } else if (hasExp) {
+                    indicatorsHtml = `
+                        <div class="bcal-indicators">
+                            <span class="bcal-tag exp" title="Расход: -${dayInfo.expense.toLocaleString('ru-RU')} ₽">- ${formatCompactBudget(dayInfo.expense)}</span>
+                        </div>
+                    `;
+                } else {
+                    indicatorsHtml = `<div class="bcal-indicators empty"></div>`;
+                }
+
+                grid.innerHTML += `
+                    <div class="${cls}" onclick="onBudgetCalDayClick('${dateStr}')" title="${dateStr}: ${hasExp ? 'Расход: ' + dayInfo.expense.toLocaleString('ru-RU') + ' ₽. ' : ''}${hasInc ? 'Доход: ' + dayInfo.income.toLocaleString('ru-RU') + ' ₽.' : ''}">
+                        <div class="bcal-day-header">
+                            <span class="bcal-num">${i}</span>
+                            ${isToday ? '<span class="bcal-today-dot" title="Сегодня">●</span>' : ''}
+                        </div>
+                        ${indicatorsHtml}
+                    </div>
+                `;
+            }
+
+            const calActiveBadge = document.getElementById('budget-cal-active-badge');
+            if (calActiveBadge) {
+                if (selectedBudgetCalDate) {
+                    const [y, m, d] = selectedBudgetCalDate.split('-');
+                    calActiveBadge.innerHTML = `📅 ${d}.${m}.${y} ✕`;
+                    calActiveBadge.style.display = 'inline-block';
+                } else {
+                    calActiveBadge.style.display = 'none';
+                }
+            }
+
+            const statsHint = document.getElementById('budget-cal-stats-hint');
+            if (statsHint) {
+                statsHint.innerText = `${totalDaysWithExp} дн. с тратами • ${totalDaysWithInc} с доходом`;
+            }
+        }
+
         function renderBudget() {
             if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
             if (!data.budget.transactions) data.budget.transactions = [];
@@ -2395,25 +2730,11 @@
             const month = budgetCurrentDate.getMonth(); // 0-indexed
 
             const monthName = budgetCurrentDate.toLocaleString('ru', { month: 'long', year: 'numeric' });
+            const monthNameCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
             const monthDisplay = document.getElementById('budget-month-display');
-            if (monthDisplay) monthDisplay.innerText = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+            if (monthDisplay) monthDisplay.innerText = monthNameCapitalized;
 
-            // 1. Общий баланс за все время
-            let totalIncomeAll = 0;
-            let totalExpenseAll = 0;
-            txs.forEach(t => {
-                const amt = Number(t.amount) || 0;
-                if (t.type === 'income') totalIncomeAll += amt;
-                else totalExpenseAll += amt;
-            });
-            const netBalance = totalIncomeAll - totalExpenseAll;
-            const totalBalanceEl = document.getElementById('budget-total-balance');
-            if (totalBalanceEl) {
-                totalBalanceEl.innerText = `${netBalance >= 0 ? '' : '-'}${Math.abs(netBalance).toLocaleString('ru-RU')} ₽`;
-                totalBalanceEl.style.color = netBalance >= 0 ? '#ffffff' : '#fb7185';
-            }
-
-            // 2. Доходы и расходы за выбранный месяц
+            // 1. Доходы и расходы за выбранный месяц
             let monthIncome = 0;
             let monthExpense = 0;
             const categorySums = {}; // Распределение расходов по категориям
@@ -2437,12 +2758,48 @@
                 }
             });
 
+            // 2. Баланс за выбранный месяц (Доходы минус Расходы за этот месяц)
+            const monthNet = monthIncome - monthExpense;
+            const monthBalanceEl = document.getElementById('budget-month-balance');
+            const balanceLabelEl = document.getElementById('budget-balance-label');
+            if (balanceLabelEl) {
+                balanceLabelEl.innerText = `💎 Баланс за ${monthNameCapitalized}`;
+            }
+            if (monthBalanceEl) {
+                if (monthNet > 0) {
+                    monthBalanceEl.innerText = `+ ${monthNet.toLocaleString('ru-RU')} ₽`;
+                    monthBalanceEl.style.color = '#34d399';
+                } else if (monthNet < 0) {
+                    monthBalanceEl.innerText = `- ${Math.abs(monthNet).toLocaleString('ru-RU')} ₽`;
+                    monthBalanceEl.style.color = '#fb7185';
+                } else {
+                    monthBalanceEl.innerText = `0 ₽`;
+                    monthBalanceEl.style.color = '#ffffff';
+                }
+            }
+
+            // 3. Общий баланс за все время (под карточкой)
+            let totalIncomeAll = 0;
+            let totalExpenseAll = 0;
+            txs.forEach(t => {
+                const amt = Number(t.amount) || 0;
+                if (t.type === 'income') totalIncomeAll += amt;
+                else totalExpenseAll += amt;
+            });
+            const totalNetAll = totalIncomeAll - totalExpenseAll;
+            const allTimeValEl = document.getElementById('budget-all-time-val');
+            if (allTimeValEl) {
+                const sign = totalNetAll > 0 ? '+ ' : (totalNetAll < 0 ? '- ' : '');
+                allTimeValEl.innerText = `${sign}${Math.abs(totalNetAll).toLocaleString('ru-RU')} ₽`;
+                allTimeValEl.style.color = totalNetAll > 0 ? '#34d399' : (totalNetAll < 0 ? '#fb7185' : 'var(--text-main)');
+            }
+
             const monthIncomeEl = document.getElementById('budget-month-income');
             const monthExpenseEl = document.getElementById('budget-month-expense');
             if (monthIncomeEl) monthIncomeEl.innerText = `+ ${monthIncome.toLocaleString('ru-RU')} ₽`;
             if (monthExpenseEl) monthExpenseEl.innerText = `- ${monthExpense.toLocaleString('ru-RU')} ₽`;
 
-            // 3. Лимит расходов на месяц
+            // 4. Лимит расходов на месяц
             const limit = Number(data.budget.monthlyLimit) || 0;
             const limitWrapper = document.getElementById('budget-limit-wrapper');
             if (limitWrapper) {
@@ -2476,7 +2833,10 @@
                 }
             }
 
-            // 4. Аналитика расходов по категориям
+            // 5. Рендер финансового календаря
+            renderBudgetCalendar();
+
+            // 6. Аналитика расходов по категориям
             const catContainer = document.getElementById('budget-category-breakdown');
             const catTotalHeader = document.getElementById('budget-cat-total');
             if (catTotalHeader) catTotalHeader.innerText = `${monthExpense.toLocaleString('ru-RU')} ₽`;
@@ -2506,13 +2866,14 @@
                 }
             }
 
-            // 5. Рендер списка операций
+            // 7. Рендер списка операций
             renderBudgetTransactionsList();
         }
 
         function renderBudgetTransactionsList() {
             const listEl = document.getElementById('budget-transactions-list');
             const badgeEl = document.getElementById('tx-count-badge');
+            const filterTagEl = document.getElementById('tx-date-filter-tag');
             if (!listEl) return;
 
             const q = (document.getElementById('tx-search-input')?.value || '').toLowerCase().trim();
@@ -2525,6 +2886,10 @@
                 if (t.date) {
                     const [ty, tm] = t.date.split('-').map(Number);
                     if (ty !== year || (tm - 1) !== month) return false;
+                }
+                // Фильтр по выбранному дню из календаря
+                if (selectedBudgetCalDate && t.date !== selectedBudgetCalDate) {
+                    return false;
                 }
                 // Фильтр по табу (Все / Расходы / Доходы)
                 if (activeBudgetFilterTab === 'expense' && t.type !== 'expense') return false;
@@ -2539,8 +2904,23 @@
 
             if (badgeEl) badgeEl.innerText = `${filtered.length} шт`;
 
+            if (filterTagEl) {
+                if (selectedBudgetCalDate) {
+                    const [y, m, d] = selectedBudgetCalDate.split('-');
+                    filterTagEl.innerHTML = `📅 ${d}.${m}.${y} ✕`;
+                    filterTagEl.style.display = 'inline-block';
+                } else {
+                    filterTagEl.style.display = 'none';
+                }
+            }
+
             if (filtered.length === 0) {
-                listEl.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:14px 0; font-size:13px;">Операций не найдено</p>';
+                if (selectedBudgetCalDate) {
+                    const [y, m, d] = selectedBudgetCalDate.split('-');
+                    listEl.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:14px 0; font-size:13px;">Операций за ${d}.${m}.${y} не найдено<br><button class="btn btn-secondary" style="width:auto; margin-top:8px; font-size:12px; padding:6px 12px;" onclick="resetBudgetCalDateFilter()">Показать все за месяц</button></div>`;
+                } else {
+                    listEl.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:14px 0; font-size:13px;">Операций не найдено</p>';
+                }
                 return;
             }
 
@@ -2575,6 +2955,7 @@
                 `;
             }).join('');
         }
+
 
         // --- ХРАНИЛИЩЕ ПАРОЛЕЙ И 2FA ---
         function renderVault() {
