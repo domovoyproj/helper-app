@@ -15,20 +15,31 @@
     <style>
         :root {
             --bg-base: #07090e;
-            --card-bg: rgba(18, 21, 31, 0.75);
-            --card-bg-elevated: rgba(24, 28, 43, 0.85);
+            --bg-surface: #0f1422;
+            --card-bg: rgba(16, 22, 36, 0.72);
+            --card-bg-elevated: rgba(22, 30, 48, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-border-hover: rgba(99, 102, 241, 0.3);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --text-dim: #64748b;
             --accent: #3b82f6;
             --accent-hover: #2563eb;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             --accent-glow: rgba(59, 130, 246, 0.35);
             --danger: #f43f5e;
+            --danger-gradient: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
             --success: #10b981;
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
             --border: rgba(255, 255, 255, 0.08);
             --border-focus: rgba(59, 130, 246, 0.6);
-            --radius-lg: 20px;
-            --radius-md: 14px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 12px;
             --radius-sm: 8px;
+            --radius-pill: 9999px;
             --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -38,15 +49,18 @@
         body {
             background-color: var(--bg-base);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.14) 0px, transparent 48%),
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 42%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.10) 0px, transparent 48%),
+                radial-gradient(at 0% 100%, rgba(244, 63, 94, 0.08) 0px, transparent 45%);
             background-attachment: fixed;
             color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
             padding: 20px 16px;
-            padding-bottom: max(24px, env(safe-area-inset-bottom));
+            padding-bottom: max(32px, env(safe-area-inset-bottom));
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
         .page { 
@@ -70,34 +84,76 @@
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: var(--radius-lg);
             padding: 20px;
             margin-bottom: 14px;
-            box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 36px -6px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.09);
             border: 1px solid var(--border);
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: transform 0.2s var(--ease-smooth), border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .card:hover { border-color: rgba(255, 255, 255, 0.14); }
+        .card:hover { 
+            border-color: rgba(255, 255, 255, 0.16); 
+        }
 
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-        h1, h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-        .subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 14px; 
+        }
+
+        h1, h2 { 
+            font-size: 17px; 
+            font-weight: 700; 
+            letter-spacing: -0.01em; 
+            color: var(--text-main); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+
+        .subtitle { 
+            color: var(--text-muted); 
+            font-size: 13px; 
+            margin-bottom: 12px; 
+            line-height: 1.45; 
+        }
 
         input, select, textarea {
-            width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); color: var(--text-main);
-            padding: 13px 15px; margin-bottom: 10px; border-radius: var(--radius-md); font-size: 15px; outline: none; transition: all 0.25s var(--ease-smooth);
+            width: 100%; 
+            background: rgba(255, 255, 255, 0.035); 
+            border: 1px solid var(--border); 
+            color: var(--text-main);
+            padding: 13px 15px; 
+            margin-bottom: 10px; 
+            border-radius: var(--radius-md); 
+            font-size: 15px; 
+            outline: none; 
+            transition: all 0.22s var(--ease-smooth);
+            font-family: inherit;
         }
 
-        select option { background: #12151f; color: #fff; }
+        select option { background: #121624; color: #fff; }
         textarea { resize: none; height: 80px; }
-        input:focus, select:focus, textarea:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.06); box-shadow: 0 0 16px var(--accent-glow); transform: translateY(-1px); }
+        
+        input:focus, select:focus, textarea:focus { 
+            border-color: var(--accent); 
+            background: rgba(255, 255, 255, 0.065); 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 0 16px var(--accent-glow); 
+            transform: translateY(-1px); 
+        }
 
-        /* Поле ввода с кнопкой-иконкой (глаз / генератор) */
+        /* Поле ввода с кнопкой-иконкой */
         .input-with-action {
             position: relative;
             display: flex;
@@ -133,63 +189,310 @@
         }
 
         .btn {
-            padding: 14px 18px; border-radius: var(--radius-md); border: none; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-            color: #ffffff; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 8px; transition: all 0.2s var(--ease-spring);
-            display: inline-flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+            padding: 14px 18px; 
+            border-radius: var(--radius-md); 
+            border: none; 
+            background: var(--accent-gradient);
+            color: #ffffff; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-bottom: 8px; 
+            transition: all 0.2s var(--ease-spring);
+            display: inline-flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 4px 18px rgba(59, 130, 246, 0.32);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45); }
-        .btn:active { transform: scale(0.96) translateY(0); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2); }
-        .btn:disabled { opacity: 0.6; pointer-events: none; }
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 24px rgba(59, 130, 246, 0.45); 
+        }
+        .btn:active { 
+            transform: scale(0.97) translateY(0); 
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2); 
+        }
+        .btn:disabled { 
+            opacity: 0.6; 
+            pointer-events: none; 
+        }
 
-        .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--border); box-shadow: none; }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.18); }
-        .btn-danger { background: rgba(244, 63, 94, 0.12); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.25); box-shadow: none; }
-        .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3); }
-        .btn-github { background: #1e293b; color: #f1f5f9; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: none; }
+        .btn-secondary { 
+            background: rgba(255, 255, 255, 0.045); 
+            color: var(--text-main); 
+            border: 1px solid var(--border); 
+            box-shadow: none; 
+        }
+        .btn-secondary:hover { 
+            background: rgba(255, 255, 255, 0.09); 
+            border-color: rgba(255, 255, 255, 0.2); 
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+        
+        .btn-danger { 
+            background: rgba(244, 63, 94, 0.12); 
+            color: #fb7185; 
+            border: 1px solid rgba(244, 63, 94, 0.25); 
+            box-shadow: none; 
+        }
+        .btn-danger:hover {
+            background: rgba(244, 63, 94, 0.22);
+            border-color: rgba(244, 63, 94, 0.4);
+            box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25);
+        }
+        
+        .btn-success { 
+            background: var(--success-gradient); 
+            color: #ffffff; 
+            box-shadow: 0 4px 18px rgba(16, 185, 129, 0.32); 
+        }
+        .btn-success:hover {
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
+        }
 
-        .date-navigator { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg-elevated); padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 14px; border: 1px solid var(--border); }
-        .date-navigator button { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 4px 10px; border-radius: 8px; transition: all 0.2s var(--ease-spring); }
-        .date-navigator button:hover { color: var(--text-main); background: rgba(255,255,255,0.08); }
-        .date-navigator span { font-size: 14px; font-weight: 600; }
+        .btn-github { 
+            background: #1e293b; 
+            color: #f1f5f9; 
+            border: 1px solid rgba(255, 255, 255, 0.12); 
+            box-shadow: none; 
+        }
 
-        .stats-vertical { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; margin-bottom: 12px; }
-        .stat-bar-card { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; transition: 0.2s; }
-        .stat-bar-card:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.15); }
-        .stat-bar-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-        .progress-track { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden; }
-        .progress-fill { height: 100%; width: 0%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .date-navigator { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: var(--card-bg-elevated); 
+            padding: 10px 14px; 
+            border-radius: var(--radius-md); 
+            margin-bottom: 14px; 
+            border: 1px solid var(--border); 
+            backdrop-filter: blur(12px);
+        }
+        .date-navigator button { 
+            background: none; 
+            border: none; 
+            color: var(--text-muted); 
+            font-size: 16px; 
+            cursor: pointer; 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            transition: all 0.2s var(--ease-spring); 
+        }
+        .date-navigator button:hover { 
+            color: var(--text-main); 
+            background: rgba(255, 255, 255, 0.08); 
+        }
+        .date-navigator span { 
+            font-size: 14px; 
+            font-weight: 700; 
+            letter-spacing: -0.01em;
+        }
+
+        .stats-vertical { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            margin-top: 10px; 
+            margin-bottom: 12px; 
+        }
+        .stat-bar-card { 
+            background: rgba(255, 255, 255, 0.025); 
+            border: 1px solid var(--border); 
+            border-radius: var(--radius-md); 
+            padding: 11px 14px; 
+            transition: 0.2s; 
+        }
+        .stat-bar-card:hover { 
+            background: rgba(255, 255, 255, 0.045); 
+            border-color: rgba(255, 255, 255, 0.16); 
+        }
+        .stat-bar-header { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin-bottom: 7px; 
+        }
+        .progress-track { 
+            width: 100%; 
+            height: 7px; 
+            background: rgba(255, 255, 255, 0.08); 
+            border-radius: 4px; 
+            overflow: hidden; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            width: 0%; 
+            border-radius: 4px; 
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
         .fill-cal { background: linear-gradient(90deg, #f59e0b, #ef4444); }
         .fill-water { background: linear-gradient(90deg, #38bdf8, #3b82f6); }
         .fill-steps { background: linear-gradient(90deg, #34d399, #10b981); }
 
-        .mood-selector { display: flex; justify-content: space-between; gap: 6px; margin-top: 10px; }
-        .mood-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 20px; flex: 1; padding: 9px 0; cursor: pointer; transition: all 0.2s var(--ease-spring); }
-        .mood-btn:hover { transform: scale(1.12) translateY(-2px); background: rgba(255, 255, 255, 0.08); }
-        .mood-btn:active { transform: scale(0.92); }
+        .mood-selector { 
+            display: flex; 
+            justify-content: space-between; 
+            gap: 6px; 
+            margin-top: 10px; 
+        }
+        .mood-btn { 
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid var(--border); 
+            border-radius: var(--radius-md); 
+            font-size: 20px; 
+            flex: 1; 
+            padding: 10px 0; 
+            cursor: pointer; 
+            transition: all 0.2s var(--ease-spring); 
+            user-select: none;
+        }
+        .mood-btn:hover { 
+            transform: scale(1.12) translateY(-2px); 
+            background: rgba(255, 255, 255, 0.09); 
+        }
+        .mood-btn:active { 
+            transform: scale(0.92); 
+        }
 
-        .quick-grid { display: flex; gap: 8px; margin-bottom: 8px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .cal-day { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 10px; text-align: center; font-weight: 600; font-size: 12px; cursor: pointer; min-height: 46px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.2s var(--ease-spring); }
-        .cal-day:hover { transform: scale(1.05); z-index: 2; border-color: rgba(255, 255, 255, 0.25); }
-        .cal-day-name { text-align: center; color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+        .quick-grid { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 8px; 
+        }
+        .quick-grid .btn {
+            margin-bottom: 0;
+        }
+        
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 5px; 
+            margin-top: 10px; 
+        }
+        .cal-day { 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid var(--border); 
+            border-radius: 10px; 
+            text-align: center; 
+            font-weight: 600; 
+            font-size: 12px; 
+            cursor: pointer; 
+            min-height: 46px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            transition: all 0.2s var(--ease-spring); 
+        }
+        .cal-day:hover { 
+            transform: scale(1.05); 
+            z-index: 2; 
+            border-color: rgba(255, 255, 255, 0.25); 
+        }
+        .cal-day-name { 
+            text-align: center; 
+            color: var(--text-muted); 
+            font-size: 10px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            margin-bottom: 4px; 
+        }
         .shift-day { background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.45); color: #fbbf24; }
         .shift-night { background: rgba(99, 102, 241, 0.18); border-color: rgba(99, 102, 241, 0.45); color: #818cf8; }
         .shift-off { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; }
 
-        .list-container { display: flex; flex-direction: column; gap: 6px; }
-        .list-item { border: 1px solid var(--border); background: rgba(255, 255, 255, 0.02); padding: 12px 14px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 10px; animation: itemFade 0.25s var(--ease-smooth) forwards; }
-        @keyframes itemFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        .list-item.done { opacity: 0.35; text-decoration: line-through; }
-        .task-content { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; font-size: 14px; }
+        .list-container { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        .list-item { 
+            border: 1px solid var(--border); 
+            background: rgba(255, 255, 255, 0.025); 
+            padding: 12px 14px; 
+            border-radius: var(--radius-md); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 10px; 
+            animation: itemFade 0.25s var(--ease-smooth) forwards; 
+            transition: all 0.2s ease;
+        }
+        .list-item:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.038);
+        }
+        @keyframes itemFade { 
+            from { opacity: 0; transform: translateY(6px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .list-item.done { 
+            opacity: 0.38; 
+            text-decoration: line-through; 
+        }
+        .task-content { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            flex: 1; 
+            min-width: 0; 
+            cursor: pointer; 
+            font-size: 14px; 
+        }
         .task-content span { word-break: break-word; }
-        .list-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; flex-shrink: 0; }
-        .del-btn { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.18); width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-weight: 600; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
-        .del-btn:hover { background: rgba(244, 63, 94, 0.22); transform: scale(1.05); }
+        .list-item input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: var(--accent); 
+            margin: 0; 
+            flex-shrink: 0; 
+            cursor: pointer;
+        }
+        .del-btn { 
+            background: rgba(244, 63, 94, 0.1); 
+            color: var(--danger); 
+            border: 1px solid rgba(244, 63, 94, 0.18); 
+            width: 28px; 
+            height: 28px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            flex-shrink: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.15s; 
+        }
+        .del-btn:hover { 
+            background: rgba(244, 63, 94, 0.22); 
+            transform: scale(1.08); 
+            border-color: rgba(244, 63, 94, 0.4);
+        }
 
-        .code-badge { background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 8px; border-radius: 8px; font-family: ui-monospace, monospace; font-weight: 600; color: #60a5fa; font-size: 13px; cursor: pointer; transition: 0.15s; user-select: all; }
-        .code-badge:hover { background: rgba(59, 130, 246, 0.22); border-color: rgba(59, 130, 246, 0.5); }
-        .debt-positive { color: #34d399; font-weight: 600; font-variant-numeric: tabular-nums; }
-        .debt-negative { color: #f87171; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .code-badge { 
+            background: rgba(59, 130, 246, 0.12); 
+            border: 1px solid rgba(59, 130, 246, 0.3); 
+            padding: 4px 8px; 
+            border-radius: 8px; 
+            font-family: ui-monospace, monospace; 
+            font-weight: 600; 
+            color: #60a5fa; 
+            font-size: 13px; 
+            cursor: pointer; 
+            transition: 0.15s; 
+            user-select: all; 
+        }
+        .code-badge:hover { 
+            background: rgba(59, 130, 246, 0.22); 
+            border-color: rgba(59, 130, 246, 0.5); 
+        }
+        .debt-positive { color: #34d399; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .debt-negative { color: #fb7185; font-weight: 700; font-variant-numeric: tabular-nums; }
         .hidden { display: none !important; }
 
         /* Карточка записи пароля в хранилище */
@@ -205,8 +508,8 @@
             animation: itemFade 0.25s var(--ease-smooth) forwards;
         }
         .vault-card:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            background: rgba(255, 255, 255, 0.035);
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.04);
         }
         .vault-card-top {
             display: flex;
@@ -216,7 +519,7 @@
         }
         .vault-service-name {
             font-size: 15px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-main);
             word-break: break-word;
         }
@@ -239,14 +542,14 @@
             background: rgba(0, 0, 0, 0.35);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 10px;
-            padding: 7px 10px;
+            padding: 8px 10px;
             gap: 8px;
         }
         .vault-pwd-text {
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 13px;
             font-weight: 500;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             color: #e2e8f0;
             overflow-x: auto;
             white-space: nowrap;
@@ -262,8 +565,8 @@
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 5px 8px;
-            border-radius: 6px;
+            padding: 5px 9px;
+            border-radius: 7px;
             cursor: pointer;
             font-size: 12px;
             font-weight: 500;
@@ -272,6 +575,7 @@
             gap: 4px;
             transition: all 0.15s ease;
             flex-shrink: 0;
+            user-select: none;
         }
         .icon-btn-sm:hover {
             color: var(--text-main);
@@ -286,7 +590,7 @@
 
         /* Виджет генератора паролей */
         .generator-widget {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.65);
             border: 1px solid rgba(59, 130, 246, 0.25);
             border-radius: var(--radius-md);
             padding: 14px;
@@ -338,6 +642,7 @@
             width: 0%;
             transition: width 0.3s ease, background-color 0.3s ease;
         }
+
         /* Баланс рациона и бейджи полезности еды */
         .diet-split-track {
             width: 100%;
@@ -369,7 +674,7 @@
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            padding: 8px 10px;
+            padding: 9px 11px;
             font-size: 12px;
         }
         .diet-metric-box.healthy {
@@ -386,7 +691,7 @@
             gap: 4px;
             font-size: 11px;
             font-weight: 600;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 6px;
             cursor: pointer;
             user-select: none;
@@ -411,6 +716,254 @@
             background: rgba(244, 63, 94, 0.25);
             border-color: #fb7185;
         }
+
+        /* --- СТИЛИ ДЛЯ БЮДЖЕТА & ФИНАНСОВ --- */
+        .budget-hero-card {
+            background: linear-gradient(145deg, rgba(26, 38, 66, 0.85) 0%, rgba(15, 23, 42, 0.85) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+        .budget-balance-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .budget-balance-val {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 14px;
+        }
+        .budget-stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .budget-stat-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+        }
+        .budget-stat-box.income {
+            border-left: 3px solid #10b981;
+        }
+        .budget-stat-box.expense {
+            border-left: 3px solid #f43f5e;
+        }
+        .budget-stat-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        .budget-stat-number {
+            font-size: 16px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .budget-stat-number.green { color: #34d399; }
+        .budget-stat-number.red { color: #fb7185; }
+
+        /* Сегментированный переключатель (Segmented Control) */
+        .segmented-control {
+            display: flex;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            gap: 4px;
+        }
+        .segmented-btn {
+            flex: 1;
+            padding: 9px 0;
+            text-align: center;
+            border-radius: 9px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-smooth);
+            user-select: none;
+        }
+        .segmented-btn.active-expense {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            box-shadow: 0 2px 8px rgba(244, 63, 94, 0.2);
+        }
+        .segmented-btn.active-income {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+        .segmented-btn.active-tab {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        /* Чипы быстрых сумм */
+        .chip-grid {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+        .chip-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .chip-btn:hover {
+            background: rgba(255, 255, 255, 0.09);
+            color: var(--text-main);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .chip-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Сетка категорий */
+        .category-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .cat-chip {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-spring);
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        .cat-chip .cat-icon { font-size: 18px; }
+        .cat-chip .cat-label { font-size: 10px; font-weight: 600; color: var(--text-muted); word-break: break-word; }
+        .cat-chip:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .cat-chip.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        .cat-chip.selected .cat-label { color: #93c5fd; }
+
+        /* Строка операции транзакции */
+        .tx-item {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.025);
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: all 0.2s ease;
+            animation: itemFade 0.25s var(--ease-smooth) forwards;
+        }
+        .tx-item:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .tx-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .tx-icon-box.expense { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
+        .tx-icon-box.income { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
+        
+        .tx-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .tx-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+        .tx-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .tx-amount {
+            font-size: 14px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .tx-amount.expense { color: #fb7185; }
+        .tx-amount.income { color: #34d399; }
+
+        /* Прогресс-бар лимита бюджета */
+        .budget-limit-box {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            margin-top: 10px;
+        }
+        .budget-limit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        /* Список распределения по категориям */
+        .cat-stat-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 13px;
+        }
+        .cat-stat-row:last-child { border-bottom: none; }
 
         /* Плавающее уведомление (Toast) */
         #toast-box {
@@ -448,28 +1001,28 @@
 
     <!-- ЭКРАН 1: Авторизация -->
     <div id="auth-page" class="page active">
-        <div class="card" style="margin-top: 60px; text-align: center; padding: 28px 20px;">
-            <div style="font-size: 32px; margin-bottom: 8px; animation: bounceFloat 2.5s infinite ease-in-out;">🛡️</div>
-            <h2 style="justify-content: center; font-size: 20px;">Helper</h2>
+        <div class="card" style="margin-top: 60px; text-align: center; padding: 32px 22px;">
+            <div style="font-size: 38px; margin-bottom: 10px; animation: floatSlow 3s infinite ease-in-out;">🛡️</div>
+            <h2 style="justify-content: center; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;">Helper</h2>
             <p class="subtitle">Мастер-пароль для расшифровки локальной базы</p>
             
-            <div class="input-with-action">
+            <div class="input-with-action" style="margin-top: 14px;">
                 <input type="password" id="master-password" placeholder="Мастер-пароль" onkeydown="if(event.key==='Enter') unlockVault()" style="text-align: center; letter-spacing: 2px;">
                 <button type="button" class="input-action-btn" onclick="toggleInputVisibility('master-password', this)" title="Показать/скрыть">👁️</button>
             </div>
             
-            <button class="btn" onclick="unlockVault()">Разблокировать</button>
+            <button class="btn" onclick="unlockVault()" style="margin-top: 4px;">Разблокировать</button>
             
-            <div class="quick-grid" style="margin-top: 6px;">
+            <div class="quick-grid" style="margin-top: 8px;">
                 <button class="btn btn-github" onclick="restoreFromGitHubAuth()" style="margin-bottom:0; font-size:13px;">⬇️ С GitHub</button>
                 <button class="btn btn-secondary" onclick="document.getElementById('auth-import-file').click()" style="margin-bottom:0; font-size:13px;">📂 Из файла</button>
                 <input type="file" id="auth-import-file" accept=".json,.txt" style="display:none;" onchange="importBackupFileFromAuth(event)">
             </div>
             
-            <button class="btn btn-danger" onclick="resetVault()" style="margin-top: 10px; font-size: 13px; padding: 10px;">Сбросить локальные данные</button>
+            <button class="btn btn-danger" onclick="resetVault()" style="margin-top: 12px; font-size: 13px; padding: 11px;">Сбросить локальные данные</button>
             
-            <p style="margin-top: 22px; font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace; letter-spacing: 0.5px; opacity: 0.7;">
-                Version 1.7.0
+            <p style="margin-top: 24px; font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace; letter-spacing: 0.5px; opacity: 0.7;">
+                Version 1.8.0
             </p>
         </div>
     </div>
@@ -478,7 +1031,7 @@
     <div id="dashboard-page" class="page">
         <div class="card card-header" style="padding: 14px 18px; margin-bottom: 12px;">
             <h2>⚡ Helper</h2>
-            <button class="btn btn-secondary" style="width: auto; margin:0; padding: 6px 12px; font-size: 12px;" onclick="lockVault()">Блокировка</button>
+            <button class="btn btn-secondary" style="width: auto; margin:0; padding: 7px 14px; font-size: 12px;" onclick="lockVault()">Блокировка</button>
         </div>
 
         <div class="date-navigator">
@@ -490,7 +1043,7 @@
         <div class="card">
             <div class="card-header" style="margin-bottom:4px;">
                 <h2>📊 Прогресс дня и нормы</h2>
-                <button class="btn btn-secondary" style="width:auto; margin:0; padding:4px 8px; font-size:11px;" onclick="showSection('profile-page')">🎯 Мои нормы</button>
+                <button class="btn btn-secondary" style="width:auto; margin:0; padding:5px 10px; font-size:11px;" onclick="showSection('profile-page')">🎯 Мои нормы</button>
             </div>
             <div class="stats-vertical">
                 <div class="stat-bar-card">
@@ -517,11 +1070,12 @@
                 <button class="mood-btn" onclick="addMoodEntry('🤬')">🤬</button>
             </div>
         </div>
+
         <!-- БАЛАНС РАЦИОНА (ПОЛЕЗНАЯ VS ВРЕДНАЯ ЕДА) -->
         <div class="card" id="diet-balance-card">
             <div class="card-header" style="margin-bottom:4px;">
                 <h2>🥗 Баланс рациона (ИИ)</h2>
-                <span id="diet-status-badge" style="font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">—</span>
+                <span id="diet-status-badge" style="font-size:11px; padding:3px 9px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">—</span>
             </div>
             <p class="subtitle" style="margin-bottom:6px;">Соотношение полезной и вредной еды за день</p>
             
@@ -548,6 +1102,7 @@
             </div>
         </div>
 
+        <!-- ИНСТРУМЕНТЫ И ДЕЙСТВИЯ -->
         <div class="card">
             <h2>🛠 Инструменты & Действия</h2>
             <button class="btn" onclick="showSection('food-page')" style="margin-top: 10px;">📸 Записать прием пищи</button>
@@ -559,10 +1114,13 @@
                 <button class="btn btn-secondary" onclick="showSection('calendar-page'); renderCalendar();">📅 График смен</button>
                 <button class="btn btn-secondary" onclick="showSection('planner-page'); renderPlanner();">✅ Задачи & Долги</button>
             </div>
+            <!-- Линия с кнопкой "Бюджет" перед "Прочее" -->
             <div class="quick-grid">
                 <button class="btn btn-secondary" onclick="showSection('export-page')">📑 CSV Отчеты</button>
-                <button class="btn btn-secondary" onclick="showSection('misc-page');">🧰 Другое</button>
+                <button class="btn btn-secondary" onclick="showSection('budget-page'); renderBudget();">💰 Бюджет</button>
             </div>
+            <!-- "Прочее" перемещено на отдельную линию вниз -->
+            <button class="btn btn-secondary" style="margin-top: 2px;" onclick="showSection('misc-page');">🧰 Прочее</button>
         </div>
 
         <div class="card">
@@ -657,7 +1215,126 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 6: Добавление / Редактирование записи в Хранилище -->
+    <!-- ЭКРАН 6: БЮДЖЕТ & ФИНАНСЫ (НОВЫЙ ЭКРАН) -->
+    <div id="budget-page" class="page">
+        <!-- Главная карточка баланса -->
+        <div class="budget-hero-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="budget-balance-label">💎 Общий баланс</div>
+                    <div class="budget-balance-val" id="budget-total-balance">0 ₽</div>
+                </div>
+                <button class="icon-btn-sm" onclick="toggleBudgetLimitForm()" title="Настроить лимит на месяц">🎯 Лимит</button>
+            </div>
+
+            <!-- Навигатор месяца -->
+            <div class="date-navigator" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.06); margin-bottom: 12px; padding: 8px 12px;">
+                <button onclick="changeBudgetMonth(-1)">◀</button>
+                <span id="budget-month-display">Август 2026</span>
+                <button onclick="changeBudgetMonth(1)">▶</button>
+            </div>
+
+            <div class="budget-stats-row">
+                <div class="budget-stat-box income">
+                    <div class="budget-stat-title"><span>🟢 Доходы</span></div>
+                    <div class="budget-stat-number green" id="budget-month-income">+ 0 ₽</div>
+                </div>
+                <div class="budget-stat-box expense">
+                    <div class="budget-stat-title"><span>🔴 Расходы</span></div>
+                    <div class="budget-stat-number red" id="budget-month-expense">- 0 ₽</div>
+                </div>
+            </div>
+
+            <!-- Прогресс лимита расходов -->
+            <div id="budget-limit-wrapper" class="budget-limit-box" style="display:none;">
+                <div class="budget-limit-header">
+                    <span style="color:var(--text-muted);">Лимит расходов на месяц:</span>
+                    <strong id="budget-limit-text" style="color:var(--text-main);">0 / 0 ₽</strong>
+                </div>
+                <div class="progress-track" style="height: 6px;">
+                    <div id="budget-limit-bar" class="progress-fill" style="width: 0%; background: linear-gradient(90deg, #10b981, #3b82f6);"></div>
+                </div>
+                <div id="budget-limit-remaining" style="font-size:11px; color:var(--text-muted); margin-top:6px; text-align:right;"></div>
+            </div>
+
+            <!-- Форма настройки лимита (скрытая) -->
+            <div id="budget-limit-form" class="hidden" style="margin-top:12px; padding:10px; background:rgba(0,0,0,0.3); border-radius:10px; border:1px solid var(--border);">
+                <div style="font-size:12px; font-weight:600; margin-bottom:6px; color:var(--text-main);">🎯 Установить месячный лимит расходов (₽)</div>
+                <div class="quick-grid" style="margin-bottom:0;">
+                    <input type="number" id="budget-limit-input" placeholder="Например: 50000" style="margin-bottom:0;">
+                    <button class="btn btn-success" style="width:auto; padding:0 14px; margin-bottom:0; font-size:13px;" onclick="saveBudgetMonthlyLimit()">ОК</button>
+                    <button class="btn btn-secondary" style="width:auto; padding:0 10px; margin-bottom:0; font-size:13px;" onclick="toggleBudgetLimitForm()">✕</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Добавить операцию -->
+        <div class="card">
+            <h2>➕ Новая операция</h2>
+            
+            <!-- Переключатель Расход / Доход -->
+            <div class="segmented-control" style="margin-top: 10px;">
+                <button type="button" class="segmented-btn active-expense" id="btn-tx-expense" onclick="setBudgetTxType('expense')">🔴 Расход</button>
+                <button type="button" class="segmented-btn" id="btn-tx-income" onclick="setBudgetTxType('income')">🟢 Доход</button>
+            </div>
+
+            <!-- Ввод суммы -->
+            <input type="number" id="tx-amount" placeholder="Сумма (₽)" style="font-size: 18px; font-weight: 700; letter-spacing: 0.5px;">
+
+            <!-- Быстрые чипы добавления суммы -->
+            <div class="chip-grid">
+                <button type="button" class="chip-btn" onclick="quickAddBudgetAmount(100)">+100 ₽</button>
+                <button type="button" class="chip-btn" onclick="quickAddBudgetAmount(500)">+500 ₽</button>
+                <button type="button" class="chip-btn" onclick="quickAddBudgetAmount(1000)">+1 000 ₽</button>
+                <button type="button" class="chip-btn" onclick="quickAddBudgetAmount(5000)">+5 000 ₽</button>
+                <button type="button" class="chip-btn" onclick="document.getElementById('tx-amount').value=''">Сброс</button>
+            </div>
+
+            <!-- Категории -->
+            <div class="subtitle" style="margin-bottom:6px; margin-top:4px;">Категория:</div>
+            <div class="category-selector-grid" id="category-chips-container">
+                <!-- Заполняется JS -->
+            </div>
+
+            <!-- Описание и дата -->
+            <input type="text" id="tx-note" placeholder="Комментарий / Заметка (необязательно)">
+            <input type="date" id="tx-date" style="margin-bottom: 12px;">
+
+            <button class="btn" onclick="addBudgetTransaction()">💾 Записать операцию</button>
+        </div>
+
+        <!-- Распределение по категориям за месяц -->
+        <div class="card" id="budget-analytics-card">
+            <div class="card-header" style="margin-bottom:6px;">
+                <h2>📊 Расходы по категориям</h2>
+                <span id="budget-cat-total" style="font-size:12px; font-weight:700; color:#fb7185;">0 ₽</span>
+            </div>
+            <div id="budget-category-breakdown" style="margin-top: 6px;"></div>
+        </div>
+
+        <!-- История операций -->
+        <div class="card">
+            <div class="card-header" style="margin-bottom:8px;">
+                <h2>📋 История операций</h2>
+                <span id="tx-count-badge" style="font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted);">0 шт</span>
+            </div>
+
+            <!-- Фильтр табов -->
+            <div class="segmented-control" style="margin-bottom: 10px;">
+                <button type="button" class="segmented-btn active-tab" id="filter-tx-all" onclick="setBudgetFilterTab('all')">Все</button>
+                <button type="button" class="segmented-btn" id="filter-tx-expense" onclick="setBudgetFilterTab('expense')">Расходы</button>
+                <button type="button" class="segmented-btn" id="filter-tx-income" onclick="setBudgetFilterTab('income')">Доходы</button>
+            </div>
+
+            <input type="text" id="tx-search-input" placeholder="🔍 Поиск по названию или заметке..." oninput="renderBudget()" style="margin-bottom: 10px; padding: 10px 14px; font-size: 13px;">
+
+            <div id="budget-transactions-list" class="list-container"></div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
+    </div>
+
+    <!-- ЭКРАН 7: Добавление / Редактирование записи в Хранилище -->
     <div id="add-vault-page" class="page">
         <div class="card">
             <h2 id="vault-modal-title">🔐 Новая запись</h2>
@@ -686,7 +1363,7 @@
         </div>
     </div>
 
-    <!-- ЭКРАН 7: Настройки -->
+    <!-- ЭКРАН 8: Настройки -->
     <div id="settings-page" class="page">
         <div class="card">
             <h2>Системные API ключи</h2>
@@ -713,9 +1390,34 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 8: Прочее (Хранилище паролей, Генератор, Файлообменник, TikTok) -->
+    <!-- ЭКРАН 9: Прочее (Файлообменник, TikTok, и Хранилище паролей в самом низу) -->
     <div id="misc-page" class="page">
-        <!-- Блок 1: Хранилище паролей и 2FA (перенесено из дашборда) -->
+        <!-- Блок 1: Файлообменник -->
+        <div class="card">
+            <h2>☁️ Публичный файлообменник</h2>
+            <p class="subtitle">Загрузка файлов в открытый репозиторий с выдачей короткой ссылки (до 15 МБ)</p>
+            <input type="file" id="public-file-upload" style="margin-bottom: 8px;">
+            <button class="btn" id="upload-file-btn" onclick="uploadPublicFile(this)">🚀 Загрузить и получить ссылку</button>
+            
+            <div id="uploads-list" class="list-container" style="margin-top: 14px;"></div>
+        </div>
+
+        <!-- Блок 2: TikTok Загрузчик -->
+        <div class="card">
+            <h2>🎬 Скачать видео TikTok</h2>
+            <p class="subtitle">Вставьте ссылку на клип или видео</p>
+            <input type="text" id="tiktok-url-input" placeholder="https://vm.tiktok.com/... или https://www.tiktok.com/@...">
+            <button class="btn" onclick="downloadTikTokVideo(this)">🔍 Найти видео</button>
+            
+            <div id="tiktok-result" class="hidden" style="margin-top: 14px;">
+                <video id="tiktok-video-preview" controls playsinline style="width: 100%; border-radius: 12px; margin-bottom: 10px; background: #000; max-height: 360px;"></video>
+                <div id="tiktok-title" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; word-break: break-word;"></div>
+                <button id="tiktok-file-download-btn" class="btn btn-success" onclick="saveToGallery(this)">📲 Сохранить в Галерею</button>
+                <a id="tiktok-open-browser-btn" href="#" target="_blank" class="btn btn-secondary" style="margin-top: 4px;">🌐 Открыть оригинал в браузере</a>
+            </div>
+        </div>
+
+        <!-- Блок 3: Хранилище паролей & 2FA (ПЕРЕНЕСЕНО В САМЫЙ НИЗ) -->
         <div class="card">
             <div class="card-header" style="margin-bottom: 8px;">
                 <h2 style="margin-bottom:0;">🔐 Хранилище паролей & 2FA</h2>
@@ -767,36 +1469,11 @@
                 </div>
             </div>
         </div>
-
-        <!-- Блок 2: Файлообменник -->
-        <div class="card">
-            <h2>☁️ Публичный файлообменник</h2>
-            <p class="subtitle">Загрузка файлов в открытый репозиторий с выдачей короткой ссылки (до 15 МБ)</p>
-            <input type="file" id="public-file-upload" style="margin-bottom: 8px;">
-            <button class="btn" id="upload-file-btn" onclick="uploadPublicFile(this)">🚀 Загрузить и получить ссылку</button>
-            
-            <div id="uploads-list" class="list-container" style="margin-top: 14px;"></div>
-        </div>
-
-        <!-- Блок 3: TikTok Загрузчик -->
-        <div class="card">
-            <h2>🎬 Скачать видео TikTok</h2>
-            <p class="subtitle">Вставьте ссылку на клип или видео</p>
-            <input type="text" id="tiktok-url-input" placeholder="https://vm.tiktok.com/... или https://www.tiktok.com/@...">
-            <button class="btn" onclick="downloadTikTokVideo(this)">🔍 Найти видео</button>
-            
-            <div id="tiktok-result" class="hidden" style="margin-top: 14px;">
-                <video id="tiktok-video-preview" controls playsinline style="width: 100%; border-radius: 12px; margin-bottom: 10px; background: #000; max-height: 360px;"></video>
-                <div id="tiktok-title" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; word-break: break-word;"></div>
-                <button id="tiktok-file-download-btn" class="btn btn-success" onclick="saveToGallery(this)">📲 Сохранить в Галерею</button>
-                <a id="tiktok-open-browser-btn" href="#" target="_blank" class="btn btn-secondary" style="margin-top: 4px;">🌐 Открыть оригинал в браузере</a>
-            </div>
-        </div>
         
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
     </div>
 
-    <!-- ЭКРАН 9: Выгрузка отчетов (CSV) -->
+    <!-- ЭКРАН 10: Выгрузка отчетов (CSV) -->
     <div id="export-page" class="page">
         <div class="card">
             <h2>📑 Экспорт аналитики</h2>
@@ -819,7 +1496,7 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 10: Калькулятор и профиль норм -->
+    <!-- ЭКРАН 11: Калькулятор и профиль норм -->
     <div id="profile-page" class="page">
         <div class="card">
             <h2>🎯 Расчет суточных норм</h2>
@@ -859,6 +1536,7 @@
     <script>
         let data = {
             days: {}, shifts: {}, tasks: [], debts: [], vault: [], uploads: [],
+            budget: { transactions: [], monthlyLimit: 0 },
             geminiApiKey: '', githubToken: '', githubRepo: '', publicRepo: '',
             salaryRates: { day: 0, night: 0 },
             profile: {
@@ -870,10 +1548,42 @@
         let masterKey = "";
         let currentDateStr = getFormattedDate(new Date());
         let calCurrentDate = new Date();
+        let budgetCurrentDate = new Date(); // Текущий выбранный месяц для бюджета
         let currentTikTokCleanUrl = "";
         let currentTikTokBlob = null;
         let editingVaultIndex = null;
         let visibleVaultPasswords = {}; // Хранит видимость паролей по индексам
+        
+        // Переменные состояния для бюджета
+        let activeBudgetTxType = 'expense'; // 'expense' | 'income'
+        let selectedBudgetCategory = { name: 'Еда и продукты', icon: '🍔' };
+        let activeBudgetFilterTab = 'all'; // 'all' | 'expense' | 'income'
+
+        const EXPENSE_CATEGORIES = [
+            { name: 'Еда и продукты', icon: '🍔' },
+            { name: 'Транспорт & Авто', icon: '🚗' },
+            { name: 'Жилье & ЖКХ', icon: '🏠' },
+            { name: 'Покупки & Одежда', icon: '🛍️' },
+            { name: 'Развлечения & Отдых', icon: '🎮' },
+            { name: 'Здоровье & Аптека', icon: '💊' },
+            { name: 'Кафе & Рестораны', icon: '☕' },
+            { name: 'Учеба & Книги', icon: '📚' },
+            { name: 'Связь & Интернет', icon: '📱' },
+            { name: 'Подписки & Сервисы', icon: '💳' },
+            { name: 'Подарки & Семья', icon: '🎁' },
+            { name: 'Другое / Прочее', icon: '📦' }
+        ];
+
+        const INCOME_CATEGORIES = [
+            { name: 'Зарплата', icon: '💼' },
+            { name: 'Аванс', icon: '💵' },
+            { name: 'Подработка / Фриланс', icon: '⚡' },
+            { name: 'Инвестиции & Вклады', icon: '📈' },
+            { name: 'Подарок / Перевод', icon: '🎁' },
+            { name: 'Возврат долга', icon: '🤝' },
+            { name: 'Продажа вещей', icon: '🏷️' },
+            { name: 'Другой доход', icon: '💰' }
+        ];
 
         // --- Утилиты безопасности и интерфейса ---
         function escapeHtml(str) {
@@ -966,9 +1676,12 @@
 
         function showSection(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
+            
             if (pageId === 'dashboard-page') updateUI();
             if (pageId === 'profile-page') loadProfileInputs();
+            if (pageId === 'budget-page') renderBudget();
             if (pageId === 'export-page') {
                 document.getElementById('export-end-date').value = getFormattedDate(new Date());
                 let d = new Date(); d.setDate(d.getDate() - 7);
@@ -977,10 +1690,11 @@
             if (pageId === 'misc-page') {
                 renderVault();
                 renderUploads();
-                if (!document.getElementById('gen-result-text').innerText || document.getElementById('gen-result-text').innerText === '—') {
+                if (!document.getElementById('gen-result-text') || !document.getElementById('gen-result-text').innerText || document.getElementById('gen-result-text').innerText === '—') {
                     generateRandomPassword();
                 }
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function unlockVault() {
@@ -990,6 +1704,7 @@
             const encrypted = localStorage.getItem('encMasterData');
             if (!encrypted) {
                 masterKey = pwd;
+                if(!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
                 saveEncrypted();
                 document.getElementById('master-password').value = "";
                 showSection('dashboard-page');
@@ -1010,6 +1725,9 @@
                 if(!data.debts) data.debts = [];
                 if(!data.vault) data.vault = [];
                 if(!data.uploads) data.uploads = [];
+                if(!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
+                if(!data.budget.transactions) data.budget.transactions = [];
+                if(data.budget.monthlyLimit === undefined) data.budget.monthlyLimit = 0;
                 if(!data.profile) data.profile = { gender: 'male', age: 25, height: 175, weight: 70, activity: 1.55, goal: 'maintain', targetCal: 2200, targetWater: 2500, targetSteps: 10000 };
 
                 masterKey = pwd;
@@ -1022,7 +1740,12 @@
 
         function lockVault() {
             masterKey = "";
-            data = { days: {}, shifts: {}, tasks: [], debts: [], vault: [], uploads: [], geminiApiKey: '', githubToken: '', githubRepo: '', publicRepo: '', salaryRates: { day: 0, night: 0 }, profile: {} };
+            data = { 
+                days: {}, shifts: {}, tasks: [], debts: [], vault: [], uploads: [], 
+                budget: { transactions: [], monthlyLimit: 0 },
+                geminiApiKey: '', githubToken: '', githubRepo: '', publicRepo: '', 
+                salaryRates: { day: 0, night: 0 }, profile: {} 
+            };
             visibleVaultPasswords = {};
             showSection('auth-page');
         }
@@ -1512,6 +2235,347 @@
             } catch(e) { alert("Ошибка: " + e.message); } finally { btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; }
         }
 
+        // --- БЮДЖЕТ & ФИНАНСЫ (ФУНКЦИИ) ---
+        function renderBudgetCategoryChips() {
+            const container = document.getElementById('category-chips-container');
+            if (!container) return;
+            const list = activeBudgetTxType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+            
+            // Если выбранная категория не из текущего списка, переключить на первую
+            if (!list.some(c => c.name === selectedBudgetCategory.name)) {
+                selectedBudgetCategory = { ...list[0] };
+            }
+
+            container.innerHTML = list.map(cat => {
+                const isSelected = cat.name === selectedBudgetCategory.name;
+                return `
+                    <div class="cat-chip ${isSelected ? 'selected' : ''}" onclick="selectBudgetCategory('${escapeHtml(cat.name)}', '${escapeHtml(cat.icon)}')">
+                        <span class="cat-icon">${cat.icon}</span>
+                        <span class="cat-label">${escapeHtml(cat.name)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectBudgetCategory(name, icon) {
+            selectedBudgetCategory = { name, icon };
+            renderBudgetCategoryChips();
+        }
+
+        function setBudgetTxType(type) {
+            activeBudgetTxType = type;
+            const btnExp = document.getElementById('btn-tx-expense');
+            const btnInc = document.getElementById('btn-tx-income');
+            if (type === 'expense') {
+                btnExp.className = 'segmented-btn active-expense';
+                btnInc.className = 'segmented-btn';
+                selectedBudgetCategory = { ...EXPENSE_CATEGORIES[0] };
+            } else {
+                btnExp.className = 'segmented-btn';
+                btnInc.className = 'segmented-btn active-income';
+                selectedBudgetCategory = { ...INCOME_CATEGORIES[0] };
+            }
+            renderBudgetCategoryChips();
+        }
+
+        function quickAddBudgetAmount(val) {
+            const inp = document.getElementById('tx-amount');
+            if (!inp) return;
+            let current = parseFloat(inp.value) || 0;
+            inp.value = Math.max(0, current + val);
+        }
+
+        function changeBudgetMonth(offset) {
+            budgetCurrentDate.setMonth(budgetCurrentDate.getMonth() + offset);
+            renderBudget();
+        }
+
+        function setBudgetFilterTab(tab) {
+            activeBudgetFilterTab = tab;
+            ['all', 'expense', 'income'].forEach(t => {
+                const el = document.getElementById(`filter-tx-${t}`);
+                if (el) {
+                    el.className = (t === tab) ? 'segmented-btn active-tab' : 'segmented-btn';
+                }
+            });
+            renderBudgetTransactionsList();
+        }
+
+        function toggleBudgetLimitForm() {
+            const form = document.getElementById('budget-limit-form');
+            if (!form) return;
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                const current = (data.budget && data.budget.monthlyLimit) || 0;
+                document.getElementById('budget-limit-input').value = current || '';
+                document.getElementById('budget-limit-input').focus();
+            }
+        }
+
+        function saveBudgetMonthlyLimit() {
+            const val = parseFloat(document.getElementById('budget-limit-input').value) || 0;
+            if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
+            data.budget.monthlyLimit = Math.max(0, val);
+            saveEncrypted();
+            toggleBudgetLimitForm();
+            renderBudget();
+            showToast(val > 0 ? `Месячный лимит установлен: ${val.toLocaleString('ru-RU')} ₽` : 'Лимит отключен');
+        }
+
+        function addBudgetTransaction() {
+            const amountInp = document.getElementById('tx-amount');
+            const noteInp = document.getElementById('tx-note');
+            const dateInp = document.getElementById('tx-date');
+
+            const amount = parseFloat(amountInp.value);
+            if (!amount || isNaN(amount) || amount <= 0) {
+                alert("Укажите корректную сумму операции!");
+                amountInp.focus();
+                return;
+            }
+
+            const dateVal = dateInp.value || getFormattedDate(new Date());
+            const note = (noteInp.value || '').trim();
+
+            if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
+            if (!data.budget.transactions) data.budget.transactions = [];
+
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            const tx = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                type: activeBudgetTxType,
+                amount: Math.round(amount),
+                category: selectedBudgetCategory.name,
+                categoryIcon: selectedBudgetCategory.icon,
+                note: note,
+                date: dateVal,
+                time: timeStr
+            };
+
+            data.budget.transactions.unshift(tx);
+            saveEncrypted();
+
+            amountInp.value = '';
+            noteInp.value = '';
+            renderBudget();
+            showToast(tx.type === 'income' ? `+ ${tx.amount} ₽ доход добавлен` : `- ${tx.amount} ₽ расход записан`);
+        }
+
+        function deleteBudgetTransaction(id) {
+            if (!data.budget || !data.budget.transactions) return;
+            const idx = data.budget.transactions.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            
+            const tx = data.budget.transactions[idx];
+            if (confirm(`Удалить операцию "${tx.categoryIcon} ${tx.category}" на сумму ${tx.amount} ₽?`)) {
+                data.budget.transactions.splice(idx, 1);
+                saveEncrypted();
+                renderBudget();
+                showToast("Операция удалена");
+            }
+        }
+
+        function renderBudget() {
+            if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
+            if (!data.budget.transactions) data.budget.transactions = [];
+
+            // Инициализация поля даты в форме, если пусто
+            const txDateInp = document.getElementById('tx-date');
+            if (txDateInp && !txDateInp.value) {
+                txDateInp.value = getFormattedDate(new Date());
+            }
+
+            // Обновление чипов категорий
+            renderBudgetCategoryChips();
+
+            const txs = data.budget.transactions;
+            const year = budgetCurrentDate.getFullYear();
+            const month = budgetCurrentDate.getMonth(); // 0-indexed
+
+            const monthName = budgetCurrentDate.toLocaleString('ru', { month: 'long', year: 'numeric' });
+            const monthDisplay = document.getElementById('budget-month-display');
+            if (monthDisplay) monthDisplay.innerText = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+            // 1. Общий баланс за все время
+            let totalIncomeAll = 0;
+            let totalExpenseAll = 0;
+            txs.forEach(t => {
+                const amt = Number(t.amount) || 0;
+                if (t.type === 'income') totalIncomeAll += amt;
+                else totalExpenseAll += amt;
+            });
+            const netBalance = totalIncomeAll - totalExpenseAll;
+            const totalBalanceEl = document.getElementById('budget-total-balance');
+            if (totalBalanceEl) {
+                totalBalanceEl.innerText = `${netBalance >= 0 ? '' : '-'}${Math.abs(netBalance).toLocaleString('ru-RU')} ₽`;
+                totalBalanceEl.style.color = netBalance >= 0 ? '#ffffff' : '#fb7185';
+            }
+
+            // 2. Доходы и расходы за выбранный месяц
+            let monthIncome = 0;
+            let monthExpense = 0;
+            const categorySums = {}; // Распределение расходов по категориям
+
+            txs.forEach(t => {
+                if (!t.date) return;
+                const [ty, tm] = t.date.split('-').map(Number);
+                if (ty === year && (tm - 1) === month) {
+                    const amt = Number(t.amount) || 0;
+                    if (t.type === 'income') {
+                        monthIncome += amt;
+                    } else {
+                        monthExpense += amt;
+                        const catKey = t.category || 'Прочее';
+                        const catIcon = t.categoryIcon || '📦';
+                        if (!categorySums[catKey]) {
+                            categorySums[catKey] = { sum: 0, icon: catIcon };
+                        }
+                        categorySums[catKey].sum += amt;
+                    }
+                }
+            });
+
+            const monthIncomeEl = document.getElementById('budget-month-income');
+            const monthExpenseEl = document.getElementById('budget-month-expense');
+            if (monthIncomeEl) monthIncomeEl.innerText = `+ ${monthIncome.toLocaleString('ru-RU')} ₽`;
+            if (monthExpenseEl) monthExpenseEl.innerText = `- ${monthExpense.toLocaleString('ru-RU')} ₽`;
+
+            // 3. Лимит расходов на месяц
+            const limit = Number(data.budget.monthlyLimit) || 0;
+            const limitWrapper = document.getElementById('budget-limit-wrapper');
+            if (limitWrapper) {
+                if (limit > 0) {
+                    limitWrapper.style.display = 'block';
+                    const pct = Math.min(100, Math.round((monthExpense / limit) * 100));
+                    const remaining = limit - monthExpense;
+                    
+                    document.getElementById('budget-limit-text').innerText = `${monthExpense.toLocaleString('ru-RU')} / ${limit.toLocaleString('ru-RU')} ₽ (${pct}%)`;
+                    
+                    const bar = document.getElementById('budget-limit-bar');
+                    bar.style.width = `${pct}%`;
+                    if (pct >= 100) {
+                        bar.style.background = 'linear-gradient(90deg, #f43f5e, #e11d48)';
+                    } else if (pct >= 80) {
+                        bar.style.background = 'linear-gradient(90deg, #f59e0b, #ef4444)';
+                    } else {
+                        bar.style.background = 'linear-gradient(90deg, #10b981, #3b82f6)';
+                    }
+
+                    const remEl = document.getElementById('budget-limit-remaining');
+                    if (remaining >= 0) {
+                        remEl.innerText = `Осталось потратить: ${remaining.toLocaleString('ru-RU')} ₽`;
+                        remEl.style.color = 'var(--text-muted)';
+                    } else {
+                        remEl.innerText = `⚠️ Лимит превышен на ${Math.abs(remaining).toLocaleString('ru-RU')} ₽!`;
+                        remEl.style.color = '#fb7185';
+                    }
+                } else {
+                    limitWrapper.style.display = 'none';
+                }
+            }
+
+            // 4. Аналитика расходов по категориям
+            const catContainer = document.getElementById('budget-category-breakdown');
+            const catTotalHeader = document.getElementById('budget-cat-total');
+            if (catTotalHeader) catTotalHeader.innerText = `${monthExpense.toLocaleString('ru-RU')} ₽`;
+
+            if (catContainer) {
+                const catEntries = Object.entries(categorySums).sort((a, b) => b[1].sum - a[1].sum);
+                if (catEntries.length === 0) {
+                    catContainer.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:12px 0; font-size:13px;">Расходов в этом месяце нет</p>';
+                } else {
+                    catContainer.innerHTML = catEntries.map(([catName, info]) => {
+                        const pct = monthExpense > 0 ? Math.round((info.sum / monthExpense) * 100) : 0;
+                        return `
+                            <div class="cat-stat-row">
+                                <span style="font-size:18px;">${escapeHtml(info.icon)}</span>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                                        <strong style="font-size:13px; color:var(--text-main);">${escapeHtml(catName)}</strong>
+                                        <span style="font-weight:700; color:var(--text-main); font-variant-numeric:tabular-nums;">${info.sum.toLocaleString('ru-RU')} ₽ <span style="color:var(--text-muted); font-size:11px; font-weight:normal;">(${pct}%)</span></span>
+                                    </div>
+                                    <div class="progress-track" style="height:4px;">
+                                        <div class="progress-fill" style="width:${pct}%; background:linear-gradient(90deg, #3b82f6, #8b5cf6);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // 5. Рендер списка операций
+            renderBudgetTransactionsList();
+        }
+
+        function renderBudgetTransactionsList() {
+            const listEl = document.getElementById('budget-transactions-list');
+            const badgeEl = document.getElementById('tx-count-badge');
+            if (!listEl) return;
+
+            const q = (document.getElementById('tx-search-input')?.value || '').toLowerCase().trim();
+            const txs = data.budget.transactions || [];
+            const year = budgetCurrentDate.getFullYear();
+            const month = budgetCurrentDate.getMonth();
+
+            const filtered = txs.filter(t => {
+                // Фильтр по месяцу
+                if (t.date) {
+                    const [ty, tm] = t.date.split('-').map(Number);
+                    if (ty !== year || (tm - 1) !== month) return false;
+                }
+                // Фильтр по табу (Все / Расходы / Доходы)
+                if (activeBudgetFilterTab === 'expense' && t.type !== 'expense') return false;
+                if (activeBudgetFilterTab === 'income' && t.type !== 'income') return false;
+                // Поиск по ключевому слову
+                if (q) {
+                    const str = `${t.category} ${t.note} ${t.amount}`.toLowerCase();
+                    if (!str.includes(q)) return false;
+                }
+                return true;
+            });
+
+            if (badgeEl) badgeEl.innerText = `${filtered.length} шт`;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:14px 0; font-size:13px;">Операций не найдено</p>';
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(t => {
+                const isInc = t.type === 'income';
+                const sign = isInc ? '+' : '-';
+                const amtClass = isInc ? 'income' : 'expense';
+                const iconBoxClass = isInc ? 'income' : 'expense';
+                const noteHtml = t.note ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px; word-break:break-word;">${escapeHtml(t.note)}</div>` : '';
+                
+                let dateDisplay = t.date || '';
+                if (dateDisplay) {
+                    const [y, m, d] = dateDisplay.split('-');
+                    dateDisplay = `${d}.${m}.${y}`;
+                }
+
+                return `
+                    <div class="tx-item">
+                        <div class="tx-icon-box ${iconBoxClass}">
+                            <span>${escapeHtml(t.categoryIcon || (isInc ? '💵' : '📦'))}</span>
+                        </div>
+                        <div class="tx-info">
+                            <div class="tx-title">${escapeHtml(t.category || 'Операция')}</div>
+                            ${noteHtml}
+                            <div class="tx-sub">📅 ${escapeHtml(dateDisplay)} ${t.time ? '• ' + escapeHtml(t.time) : ''}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                            <div class="tx-amount ${amtClass}">${sign} ${Number(t.amount).toLocaleString('ru-RU')} ₽</div>
+                            <button class="del-btn" onclick="deleteBudgetTransaction('${escapeHtml(t.id)}')" title="Удалить">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // --- ХРАНИЛИЩЕ ПАРОЛЕЙ И 2FA ---
         function renderVault() {
             const q = (document.getElementById('search-box')?.value || '').toLowerCase().trim(); 
@@ -1846,6 +2910,7 @@
                     if (!decryptedStr) throw new Error("Неверный мастер-пароль");
                     
                     data = JSON.parse(decryptedStr);
+                    if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
                     localStorage.setItem('encMasterData', encStr);
                     updateUI();
                     renderVault();
@@ -1887,9 +2952,11 @@
         }
 
         function generateAndDownloadCSV(startStr, endStr) {
-            let rows = [["Дата", "Статус смены", "Калории (ккал)", "Вода (мл)", "Шаги", "Настроение (Таймлайн)", "Приемы пищи"]];
+            let rows = [["Дата", "Статус смены", "Калории (ккал)", "Вода (мл)", "Шаги", "Настроение (Таймлайн)", "Приемы пищи", "Бюджет (Операции)"]];
             let [sy, sm, sd] = startStr.split('-').map(Number); let [ey, em, ed] = endStr.split('-').map(Number);
             let cur = new Date(sy, sm - 1, sd); let end = new Date(ey, em - 1, ed);
+
+            const txs = (data.budget && data.budget.transactions) ? data.budget.transactions : [];
 
             while (cur <= end) {
                 let dStr = getFormattedDate(cur);
@@ -1901,14 +2968,19 @@
                     let tag = (m.health_type === 'healthy' || (!m.health_type && (m.health_score || 7) >= 6)) ? 'Полезное' : 'Вредное';
                     return `${m.name} [${tag}, ${m.cal}ккал]`;
                 }).join('; ') : "-";
-                rows.push([dStr, shiftLabel, dData.calories || 0, dData.water || 0, dData.steps || 0, moodTimeline, mealsStr]);
+
+                // Операции бюджета за этот день
+                let dayTxs = txs.filter(t => t.date === dStr);
+                let txStr = dayTxs.length ? dayTxs.map(t => `${t.type === 'income' ? '+' : '-'}${t.amount}₽ (${t.category}${t.note ? ': ' + t.note : ''})`).join('; ') : "-";
+
+                rows.push([dStr, shiftLabel, dData.calories || 0, dData.water || 0, dData.steps || 0, moodTimeline, mealsStr, txStr]);
                 cur.setDate(cur.getDate() + 1);
             }
 
             let csvContent = "\uFEFF" + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(";")).join("\n");
             let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             let link = document.createElement("a"); link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `health_report_${startStr}_to_${endStr}.csv`);
+            link.setAttribute("download", `helper_report_${startStr}_to_${endStr}.csv`);
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
@@ -2099,6 +3171,7 @@
                         const bytes = CryptoJS.AES.decrypt(encStr, masterKey); const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
                         if (!decryptedStr) throw new Error();
                         localStorage.setItem('encMasterData', encStr); data = JSON.parse(decryptedStr);
+                        if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
                         alert("Данные успешно восстановлены!"); updateUI(); renderVault();
                     } catch(e) { alert("Ошибка! Скачанный бэкап зашифрован другим мастер-паролем."); }
                 } else { alert("Файл бэкапа не найден в репозитории."); }
