@@ -1,15 +1,27 @@
 {
-    "name": "Helper",
+    "name": "Helper — трекер здоровья, финансов и паролей",
     "short_name": "Helper",
+    "description": "Персональный PWA-помощник: трекер калорий, воды, веса и сна, менеджер паролей (AES/TOTP), бюджет и облачный бэкап.",
+    "lang": "ru",
     "start_url": "./index.html",
+    "scope": "./",
     "display": "standalone",
-    "background_color": "#121212",
-    "theme_color": "#121212",
+    "orientation": "portrait",
+    "background_color": "#07090e",
+    "theme_color": "#07090e",
+    "categories": ["health", "productivity", "lifestyle", "finance"],
     "icons": [
         {
             "src": "IMG_0676.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "IMG_0676.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }

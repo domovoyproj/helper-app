@@ -333,6 +333,11 @@
         .fill-cal { background: linear-gradient(90deg, #f59e0b, #ef4444); }
         .fill-water { background: linear-gradient(90deg, #38bdf8, #3b82f6); }
         .fill-steps { background: linear-gradient(90deg, #34d399, #10b981); }
+        .fill-weight { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
+        .weight-spark { width: 100%; height: 46px; margin-top: 12px; display: block; overflow: visible; }
+        .weight-spark polyline { fill: none; stroke: #a78bfa; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+        .weight-spark circle { fill: #c4b5fd; }
+        .weight-spark .spark-last { fill: #8b5cf6; }
 
         .mood-selector { 
             display: flex; 
@@ -1228,6 +1233,25 @@
             </div>
         </div>
 
+        <!-- ОТСЛЕЖИВАНИЕ ВЕСА -->
+        <div class="card" id="weight-card">
+            <div class="card-header" style="margin-bottom:4px;">
+                <h2>⚖️ Вес</h2>
+                <span id="weight-trend-badge" style="font-size:11px; padding:3px 9px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">—</span>
+            </div>
+            <p class="subtitle" style="margin-bottom:6px;">Замеры веса и динамика</p>
+            <div style="display:flex; align-items:baseline; gap:10px;">
+                <strong id="weight-current" style="font-size:28px; font-weight:800; letter-spacing:-0.02em; color:var(--text-main); font-variant-numeric:tabular-nums;">—</strong>
+                <span id="weight-delta" style="font-size:13px; color:var(--text-muted); font-variant-numeric:tabular-nums;"></span>
+            </div>
+            <div id="weight-goal-wrap" class="stat-bar-card" style="display:none; margin-top:10px;">
+                <div class="stat-bar-header"><span style="color:#a78bfa;">🎯 Цель</span><span id="weight-goal-text">—</span></div>
+                <div class="progress-track"><div id="weight-goal-progress" class="progress-fill fill-weight"></div></div>
+            </div>
+            <div id="weight-spark-wrap"></div>
+            <button class="btn btn-secondary" style="margin-top:12px;" onclick="addWeightEntry()">⚖️ Записать вес</button>
+        </div>
+
         <!-- БАЛАНС РАЦИОНА (ПОЛЕЗНАЯ VS ВРЕДНАЯ ЕДА) -->
         <div class="card" id="diet-balance-card">
             <div class="card-header" style="margin-bottom:4px;">
@@ -1266,10 +1290,11 @@
             <div class="quick-grid">
                 <button class="btn btn-secondary" onclick="addCustomWater()">💧 + Вода</button>
                 <button class="btn btn-secondary" onclick="addCustomSteps()">👟 + Шаги</button>
+                <button class="btn btn-secondary" onclick="addWeightEntry()">⚖️ + Вес</button>
             </div>
             <div class="quick-grid">
                 <button class="btn btn-secondary" onclick="showSection('calendar-page'); renderCalendar();">📅 График смен</button>
-                <button class="btn btn-secondary" onclick="showSection('planner-page'); renderPlanner();">✅ Задачи & Долги</button>
+                <button class="btn btn-secondary" onclick="showSection('planner-page'); renderPlanner();">✅ Задачи</button>
             </div>
             <!-- Линия с кнопкой "Бюджет" перед "Прочее" -->
             <div class="quick-grid">
@@ -1324,13 +1349,6 @@
             </div>
             <div id="tasks-list" class="list-container" style="margin-top: 10px;"></div>
         </div>
-        <div class="card">
-            <h2>💳 Учет взаиморасчетов (Долги)</h2>
-            <input type="text" id="debt-who" placeholder="Имя / Контакт">
-            <input type="number" id="debt-amount" placeholder="Сумма (с минусом, если должны вы)">
-            <button class="btn" onclick="addDebt()">Добавить запись</button>
-            <div id="debts-list" class="list-container" style="margin-top: 10px;"></div>
-        </div>
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
@@ -1345,7 +1363,7 @@
                 <select id="t-4"><option value="none" selected>Пусто</option><option value="day">☀️ День</option><option value="night">🌙 Ночь</option><option value="off">🌴 Выходной</option></select>
             </div>
             <input type="date" id="template-start-date" style="margin-bottom: 8px;">
-            <button class="btn" onclick="applyShiftTemplate()">Применить шаблон на 90 дней</button>
+            <button class="btn" onclick="applyShiftTemplate()">Применить шаблон до конца месяца</button>
         </div>
         <div class="card">
             <h2>💰 Расчет дохода</h2>
@@ -1514,6 +1532,39 @@
             <input type="text" id="tx-search-input" placeholder="🔍 Поиск по названию или заметке..." oninput="renderBudget()" style="margin-bottom: 10px; padding: 10px 14px; font-size: 13px;">
 
             <div id="budget-transactions-list" class="list-container"></div>
+        </div>
+
+        <!-- КАРТОЧКА: ДОЛГИ И ВЗАИМОРАСЧЁТЫ -->
+        <div class="card" id="debts-card">
+            <div class="card-header" style="margin-bottom:6px;">
+                <h2>🤝 Долги и взаиморасчёты</h2>
+                <span id="debts-net-badge" style="font-size:12px; font-weight:700; padding:3px 9px; border-radius:6px; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">0 ₽</span>
+            </div>
+            <p class="subtitle" style="margin-bottom:6px;">Кто должен вам и кому должны вы</p>
+
+            <div class="segmented-control" style="margin-top:4px;">
+                <button type="button" class="segmented-btn active-income" id="btn-debt-owed" onclick="setDebtType('owed')">🟢 Мне должны</button>
+                <button type="button" class="segmented-btn" id="btn-debt-owe" onclick="setDebtType('owe')">🔴 Я должен</button>
+            </div>
+
+            <input type="text" id="debt-who" placeholder="Имя / Контакт">
+            <div class="quick-grid" style="margin-bottom:0;">
+                <input type="number" id="debt-amount" placeholder="Сумма (₽)" style="margin-bottom:0;" onkeydown="if(event.key==='Enter') addDebt()">
+                <button class="btn" style="width:auto; margin-bottom:0; padding:0 18px;" onclick="addDebt()">Добавить</button>
+            </div>
+
+            <div class="budget-stats-row" style="margin-top:12px;">
+                <div class="budget-stat-box income">
+                    <div class="budget-stat-title"><span>🟢 Мне должны</span></div>
+                    <div class="budget-stat-number green" id="debts-total-owed">+ 0 ₽</div>
+                </div>
+                <div class="budget-stat-box expense">
+                    <div class="budget-stat-title"><span>🔴 Я должен</span></div>
+                    <div class="budget-stat-number red" id="debts-total-owe">- 0 ₽</div>
+                </div>
+            </div>
+
+            <div id="debts-list" class="list-container" style="margin-top:12px;"></div>
         </div>
 
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
@@ -1714,6 +1765,9 @@
                 <option value="1.725">Высокая (тяжелая работа / спорт)</option>
             </select>
 
+            <p class="subtitle" style="margin-bottom:6px;">Целевой вес (необязательно)</p>
+            <input type="number" step="0.1" id="prof-target-weight" placeholder="Цель по весу (кг)">
+
             <button class="btn" onclick="calculateAndSaveProfile()">💾 Рассчитать и сохранить норму</button>
             <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
         </div>
@@ -1727,7 +1781,7 @@
             salaryRates: { day: 0, night: 0 },
             profile: {
                 gender: 'male', age: 25, height: 175, weight: 70, activity: 1.55, goal: 'maintain',
-                targetCal: 2200, targetWater: 2500, targetSteps: 10000
+                targetCal: 2200, targetWater: 2500, targetSteps: 10000, targetWeight: 0
             }
         };
 
@@ -1848,12 +1902,13 @@
 
         function getTodayData() {
             if (!data.days[currentDateStr]) {
-                data.days[currentDateStr] = { calories: 0, water: 0, steps: 0, mood: '—', meals: [], waterList: [], stepsList: [], moodList: [] };
+                data.days[currentDateStr] = { calories: 0, water: 0, steps: 0, mood: '—', meals: [], waterList: [], stepsList: [], moodList: [], weightList: [] };
             }
             let d = data.days[currentDateStr];
             if (!d.meals) d.meals = [];
             if (!d.waterList) d.waterList = [];
             if (!d.stepsList) d.stepsList = [];
+            if (!d.weightList) d.weightList = [];
             if (!d.moodList) {
                 d.moodList = [];
                 if (d.mood && d.mood !== '—') d.moodList.push({ emoji: d.mood, time: '--:--' });
@@ -1915,7 +1970,8 @@
                 if(!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
                 if(!data.budget.transactions) data.budget.transactions = [];
                 if(data.budget.monthlyLimit === undefined) data.budget.monthlyLimit = 0;
-                if(!data.profile) data.profile = { gender: 'male', age: 25, height: 175, weight: 70, activity: 1.55, goal: 'maintain', targetCal: 2200, targetWater: 2500, targetSteps: 10000 };
+                if(!data.profile) data.profile = { gender: 'male', age: 25, height: 175, weight: 70, activity: 1.55, goal: 'maintain', targetCal: 2200, targetWater: 2500, targetSteps: 10000, targetWeight: 0 };
+                if(data.profile.targetWeight === undefined) data.profile.targetWeight = 0;
 
                 masterKey = pwd;
                 document.getElementById('master-password').value = "";
@@ -1958,6 +2014,7 @@
             document.getElementById('prof-height').value = p.height || '';
             document.getElementById('prof-weight').value = p.weight || '';
             document.getElementById('prof-activity').value = p.activity || '1.55';
+            document.getElementById('prof-target-weight').value = p.targetWeight || '';
         }
 
         function calculateAndSaveProfile() {
@@ -1979,10 +2036,141 @@
             let targetWater = Math.round(weight * 35);
             let targetSteps = 10000;
 
-            data.profile = { gender, goal, age, height, weight, activity, targetCal, targetWater, targetSteps };
+            let targetWeight = parseFloat(document.getElementById('prof-target-weight').value) || 0;
+            data.profile = { gender, goal, age, height, weight, activity, targetCal, targetWater, targetSteps, targetWeight };
             saveEncrypted();
             alert(`Нормы рассчитаны!\n🔥 Калории: ${targetCal} ккал\n💧 Вода: ${targetWater} мл`);
             showSection('dashboard-page');
+        }
+
+        // --- Кэш DOM-элементов (оптимизация: getElementById вызывается один раз на id) ---
+        const EL = {};
+        function el(id) { return EL[id] || (EL[id] = document.getElementById(id)); }
+
+        // --- ОТСЛЕЖИВАНИЕ ВЕСА ---
+        // Собирает по одной (последней) точке веса на каждый день, отсортированной по дате.
+        function getWeightSeries() {
+            const out = [];
+            Object.keys(data.days || {}).sort().forEach(dateStr => {
+                const wl = data.days[dateStr] && data.days[dateStr].weightList;
+                if (wl && wl.length) out.push({ date: dateStr, v: Number(wl[wl.length - 1].v) });
+            });
+            return out;
+        }
+
+        function addWeightEntry() {
+            let d = getTodayData();
+            let last = d.weightList.length ? d.weightList[d.weightList.length - 1].v : (data.profile && data.profile.weight) || '';
+            let raw = prompt("Вес (кг):", last ? String(last) : "70");
+            if (raw === null) return;
+            raw = raw.replace(',', '.').trim();
+            let val = parseFloat(raw);
+            if (isNaN(val) || val <= 0 || val > 500) return alert("Введите корректный вес (кг).");
+            val = Math.round(val * 10) / 10;
+            let now = new Date();
+            let timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            d.weightList.push({ v: val, time: timeStr });
+            // Актуальный вес пользователя => профиль (влияет на расчёт норм КБЖУ)
+            if (data.profile) data.profile.weight = val;
+            saveEncrypted();
+            updateUI();
+            showToast(`Вес записан: ${val} кг`);
+        }
+
+        function deleteWeightEntry(idx) {
+            let d = getTodayData();
+            if (!d.weightList || !d.weightList[idx]) return;
+            d.weightList.splice(idx, 1);
+            // Синхронизируем профиль с самым свежим оставшимся замером
+            let series = getWeightSeries();
+            if (series.length && data.profile) data.profile.weight = series[series.length - 1].v;
+            saveEncrypted();
+            updateUI();
+        }
+
+        function buildSparkline(points) {
+            if (points.length < 2) return '';
+            const vals = points.map(p => p.v);
+            const min = Math.min(...vals), max = Math.max(...vals);
+            const range = (max - min) || 1;
+            const W = 100, H = 40, pad = 4;
+            const n = points.length;
+            const coords = points.map((p, i) => {
+                const x = n === 1 ? W / 2 : pad + (i * (W - 2 * pad)) / (n - 1);
+                const y = pad + (1 - (p.v - min) / range) * (H - 2 * pad);
+                return { x: +x.toFixed(2), y: +y.toFixed(2) };
+            });
+            const poly = coords.map(c => `${c.x},${c.y}`).join(' ');
+            const dots = coords.map((c, i) =>
+                `<circle class="${i === coords.length - 1 ? 'spark-last' : ''}" cx="${c.x}" cy="${c.y}" r="${i === coords.length - 1 ? 2.6 : 1.6}" />`
+            ).join('');
+            return `<svg class="weight-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${poly}" />${dots}</svg>`;
+        }
+
+        function renderWeight() {
+            const series = getWeightSeries();
+            const curEl = el('weight-current');
+            const deltaEl = el('weight-delta');
+            const badgeEl = el('weight-trend-badge');
+            const goalWrap = el('weight-goal-wrap');
+            const sparkWrap = el('weight-spark-wrap');
+            if (!curEl) return;
+
+            // Вес на выбранную дату: последний замер на эту дату или ближайший предыдущий (перенос)
+            let idxForDate = -1;
+            for (let i = 0; i < series.length; i++) { if (series[i].date <= currentDateStr) idxForDate = i; else break; }
+
+            if (idxForDate === -1) {
+                curEl.innerText = '—';
+                deltaEl.innerText = 'Нет замеров';
+                badgeEl.innerText = '—';
+                badgeEl.style.color = 'var(--text-muted)';
+                badgeEl.style.background = 'rgba(255,255,255,0.06)';
+                badgeEl.style.borderColor = 'var(--border)';
+                goalWrap.style.display = 'none';
+                sparkWrap.innerHTML = '';
+                return;
+            }
+
+            const cur = series[idxForDate];
+            const carried = cur.date !== currentDateStr;
+            curEl.innerText = `${cur.v} кг`;
+
+            if (idxForDate > 0) {
+                const prev = series[idxForDate - 1];
+                const diff = Math.round((cur.v - prev.v) * 10) / 10;
+                const arrow = diff < 0 ? '▼' : (diff > 0 ? '▲' : '▬');
+                const color = diff < 0 ? '#34d399' : (diff > 0 ? '#fb7185' : 'var(--text-muted)');
+                deltaEl.innerHTML = `<span style="color:${color};">${arrow} ${diff > 0 ? '+' : ''}${diff} кг</span>` + (carried ? ' <span style="color:var(--text-dim);">(перенос)</span>' : '');
+                badgeEl.innerText = `${arrow} ${Math.abs(diff)} кг`;
+                badgeEl.style.color = color;
+                badgeEl.style.background = diff < 0 ? 'rgba(16,185,129,0.15)' : (diff > 0 ? 'rgba(244,63,94,0.15)' : 'rgba(255,255,255,0.06)');
+                badgeEl.style.borderColor = diff < 0 ? 'rgba(16,185,129,0.3)' : (diff > 0 ? 'rgba(244,63,94,0.3)' : 'var(--border)');
+            } else {
+                deltaEl.innerHTML = 'Первый замер' + (carried ? ' <span style="color:var(--text-dim);">(перенос)</span>' : '');
+                badgeEl.innerText = 'Старт';
+                badgeEl.style.color = 'var(--text-muted)';
+                badgeEl.style.background = 'rgba(255,255,255,0.06)';
+                badgeEl.style.borderColor = 'var(--border)';
+            }
+
+            // Прогресс к целевому весу
+            const target = (data.profile && data.profile.targetWeight) || 0;
+            if (target > 0 && series.length) {
+                const start = series[0].v;
+                const goalText = el('weight-goal-text');
+                const goalBar = el('weight-goal-progress');
+                let pct;
+                if (Math.abs(start - target) < 0.05) pct = 100;
+                else pct = Math.max(0, Math.min(100, Math.round(((start - cur.v) / (start - target)) * 100)));
+                goalText.innerText = `${cur.v} → ${target} кг (${pct}%)`;
+                goalBar.style.width = `${pct}%`;
+                goalWrap.style.display = 'block';
+            } else {
+                goalWrap.style.display = 'none';
+            }
+
+            sparkWrap.innerHTML = buildSparkline(series.slice(-12));
         }
 
         function updateUI() {
@@ -1993,13 +2181,13 @@
             let water = dayData.water || 0;
             let steps = dayData.steps || 0;
 
-            document.getElementById('cal-text').innerText = `${cal} / ${prof.targetCal} ккал`;
-            document.getElementById('water-text').innerText = `${water} / ${prof.targetWater} мл`;
-            document.getElementById('steps-text').innerText = `${steps} / ${prof.targetSteps}`;
+            el('cal-text').innerText = `${cal} / ${prof.targetCal} ккал`;
+            el('water-text').innerText = `${water} / ${prof.targetWater} мл`;
+            el('steps-text').innerText = `${steps} / ${prof.targetSteps}`;
 
-            document.getElementById('cal-progress').style.width = `${Math.min(100, Math.round((cal / prof.targetCal) * 100))}%`;
-            document.getElementById('water-progress').style.width = `${Math.min(100, Math.round((water / prof.targetWater) * 100))}%`;
-            document.getElementById('steps-progress').style.width = `${Math.min(100, Math.round((steps / prof.targetSteps) * 100))}%`;
+            el('cal-progress').style.width = `${Math.min(100, Math.round((cal / prof.targetCal) * 100))}%`;
+            el('water-progress').style.width = `${Math.min(100, Math.round((water / prof.targetWater) * 100))}%`;
+            el('steps-progress').style.width = `${Math.min(100, Math.round((steps / prof.targetSteps) * 100))}%`;
 
             // Расчет баланса полезной и вредной еды
             let meals = dayData.meals || [];
@@ -2022,13 +2210,13 @@
             let healthyPct = totalFoodCal > 0 ? Math.round((healthyCal / totalFoodCal) * 100) : (meals.length > 0 ? Math.round((healthyCount / meals.length) * 100) : 0);
             let unhealthyPct = totalFoodCal > 0 ? (100 - healthyPct) : (meals.length > 0 ? (100 - healthyPct) : 0);
 
-            const elBarH = document.getElementById('diet-bar-healthy');
-            const elBarU = document.getElementById('diet-bar-unhealthy');
-            const elPctH = document.getElementById('diet-pct-healthy');
-            const elPctU = document.getElementById('diet-pct-unhealthy');
-            const elCalH = document.getElementById('diet-cal-healthy');
-            const elCalU = document.getElementById('diet-cal-unhealthy');
-            const elBadge = document.getElementById('diet-status-badge');
+            const elBarH = el('diet-bar-healthy');
+            const elBarU = el('diet-bar-unhealthy');
+            const elPctH = el('diet-pct-healthy');
+            const elPctU = el('diet-pct-unhealthy');
+            const elCalH = el('diet-cal-healthy');
+            const elCalU = el('diet-cal-unhealthy');
+            const elBadge = el('diet-status-badge');
 
             if (elBarH && elBarU) {
                 if (meals.length === 0) {
@@ -2074,11 +2262,11 @@
             }
 
             if (dayData.moodList && dayData.moodList.length > 0) {
-                document.getElementById('current-mood').innerText = dayData.moodList.map(m => m.emoji).join(' ➔ ');
+                el('current-mood').innerText = dayData.moodList.map(m => m.emoji).join(' ➔ ');
             } else {
-                document.getElementById('current-mood').innerText = '—';
+                el('current-mood').innerText = '—';
             }
-            
+
             const lastEmoji = (dayData.moodList && dayData.moodList.length > 0) ? dayData.moodList[dayData.moodList.length - 1].emoji : null;
             document.querySelectorAll('.mood-btn').forEach(btn => {
                 if (lastEmoji && btn.innerText.trim() === lastEmoji) {
@@ -2091,10 +2279,10 @@
             });
 
             // Настройки
-            if (document.getElementById('api-key-input')) document.getElementById('api-key-input').value = data.geminiApiKey || '';
-            if (document.getElementById('gh-token-input')) document.getElementById('gh-token-input').value = data.githubToken || '';
-            if (document.getElementById('gh-repo-input')) document.getElementById('gh-repo-input').value = data.githubRepo || '';
-            if (document.getElementById('gh-public-repo-input')) document.getElementById('gh-public-repo-input').value = data.publicRepo || '';
+            if (el('api-key-input')) el('api-key-input').value = data.geminiApiKey || '';
+            if (el('gh-token-input')) el('gh-token-input').value = data.githubToken || '';
+            if (el('gh-repo-input')) el('gh-repo-input').value = data.githubRepo || '';
+            if (el('gh-public-repo-input')) el('gh-public-repo-input').value = data.publicRepo || '';
 
             let todayStr = getFormattedDate(new Date());
             let displayLabel = "Сегодня";
@@ -2102,8 +2290,9 @@
                 let p = currentDateStr.split('-');
                 displayLabel = `${p[2]}.${p[1]}.${p[0]}`;
             }
-            document.getElementById('date-display').innerText = displayLabel;
-            
+            el('date-display').innerText = displayLabel;
+
+            renderWeight();
             renderDailyHistory();
         }
 
@@ -2175,6 +2364,9 @@
             });
             (dData.stepsList || []).forEach((s, idx) => {
                 html += `<div class="list-item"><div style="flex:1;">👟 <strong>Шаги</strong><br><span style="font-size:12px; color:var(--text-muted);">${escapeHtml(s)}</span></div><button class="del-btn" onclick="deleteSteps(${idx})">✕</button></div>`;
+            });
+            (dData.weightList || []).forEach((w, idx) => {
+                html += `<div class="list-item"><div style="flex:1;">⚖️ <strong>Вес</strong><br><span style="font-size:12px; color:var(--text-muted);">${escapeHtml(w.v)} кг${w.time ? ' • ' + escapeHtml(w.time) : ''}</span></div><button class="del-btn" onclick="deleteWeightEntry(${idx})">✕</button></div>`;
             });
 
             if(html === '') container.innerHTML = '<p style="color:var(--text-muted); text-align:center; font-size:13px; padding: 10px 0;">Записей за этот день нет</p>';
@@ -2284,19 +2476,19 @@
             
             let [y, m, d] = sDate.split('-').map(Number); 
             let dt = new Date(y, m - 1, d);
-            for (let i = 0; i < 90; i++) { 
-                data.shifts[getFormattedDate(dt)] = pattern[i % pattern.length]; 
-                dt.setDate(dt.getDate() + 1); 
+            let startMonth = dt.getMonth();
+            let applied = 0;
+            while (dt.getMonth() === startMonth) {
+                data.shifts[getFormattedDate(dt)] = pattern[applied % pattern.length];
+                dt.setDate(dt.getDate() + 1);
+                applied++;
             }
-            saveEncrypted(); renderCalendar(); alert("Шаблон применен на 90 дней!");
+            saveEncrypted(); renderCalendar(); alert(`Шаблон применён до конца месяца (${applied} дн.)!`);
         }
 
         function renderPlanner() {
             const tList = document.getElementById('tasks-list');
             tList.innerHTML = (data.tasks || []).map((t, i) => `<div class="list-item ${t.done ? 'done' : ''}"><div class="task-content" onclick="toggleTask(${i})"><input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask(${i});"><span>${escapeHtml(t.text)}</span></div><button class="del-btn" onclick="deleteTask(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Активных задач нет</p>';
-            
-            const dList = document.getElementById('debts-list');
-            dList.innerHTML = (data.debts || []).map((d, i) => `<div class="list-item"><div class="task-content"><span>${escapeHtml(d.who)}</span><span class="${d.amount >= 0 ? 'debt-positive' : 'debt-negative'}">${d.amount >= 0 ? '+' + d.amount : d.amount} ₽</span></div><button class="del-btn" onclick="deleteDebt(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Записей о долгах нет</p>';
         }
 
         function addTask() { 
@@ -2306,12 +2498,52 @@
         function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveEncrypted(); renderPlanner(); }
         function deleteTask(i) { data.tasks.splice(i, 1); saveEncrypted(); renderPlanner(); }
         
-        function addDebt() { 
-            const who = document.getElementById('debt-who').value.trim(); 
-            const amt = parseInt(document.getElementById('debt-amount').value); 
-            if (who && !isNaN(amt)) { data.debts.push({ who, amount: amt }); document.getElementById('debt-who').value = ''; document.getElementById('debt-amount').value = ''; saveEncrypted(); renderPlanner(); } else { alert("Укажите имя и корректную сумму"); }
+        // --- ДОЛГИ / ВЗАИМОРАСЧЁТЫ (раздел «Бюджет») ---
+        let activeDebtType = 'owed'; // 'owed' = мне должны | 'owe' = я должен
+
+        function setDebtType(type) {
+            activeDebtType = type;
+            const bOwed = el('btn-debt-owed'), bOwe = el('btn-debt-owe');
+            if (!bOwed || !bOwe) return;
+            bOwed.className = type === 'owed' ? 'segmented-btn active-income' : 'segmented-btn';
+            bOwe.className = type === 'owe' ? 'segmented-btn active-expense' : 'segmented-btn';
         }
-        function deleteDebt(i) { data.debts.splice(i, 1); saveEncrypted(); renderPlanner(); }
+
+        function addDebt() {
+            const whoEl = el('debt-who'), amtEl = el('debt-amount');
+            const who = whoEl.value.trim();
+            let val = parseFloat((amtEl.value || '').replace(',', '.'));
+            if (!who || isNaN(val) || val <= 0) return alert("Укажите имя и положительную сумму.");
+            val = Math.round(val);
+            data.debts.push({ who, amount: activeDebtType === 'owed' ? val : -val });
+            whoEl.value = ''; amtEl.value = '';
+            saveEncrypted(); renderDebts();
+        }
+
+        function deleteDebt(i) { data.debts.splice(i, 1); saveEncrypted(); renderDebts(); }
+
+        function renderDebts() {
+            const list = el('debts-list');
+            if (!list) return;
+            const debts = data.debts || [];
+            let owed = 0, owe = 0;
+            debts.forEach(d => { if (d.amount >= 0) owed += d.amount; else owe += Math.abs(d.amount); });
+            const net = owed - owe;
+            if (el('debts-total-owed')) el('debts-total-owed').innerText = `+ ${owed.toLocaleString('ru-RU')} ₽`;
+            if (el('debts-total-owe')) el('debts-total-owe').innerText = `- ${owe.toLocaleString('ru-RU')} ₽`;
+            const badge = el('debts-net-badge');
+            if (badge) {
+                const good = net > 0, bad = net < 0;
+                badge.innerText = `${net >= 0 ? '+' : '−'} ${Math.abs(net).toLocaleString('ru-RU')} ₽`;
+                badge.style.color = good ? '#34d399' : (bad ? '#fb7185' : 'var(--text-muted)');
+                badge.style.background = good ? 'rgba(16,185,129,0.15)' : (bad ? 'rgba(244,63,94,0.15)' : 'rgba(255,255,255,0.06)');
+                badge.style.borderColor = good ? 'rgba(16,185,129,0.3)' : (bad ? 'rgba(244,63,94,0.3)' : 'var(--border)');
+            }
+            list.innerHTML = debts.map((d, i) => {
+                const pos = d.amount >= 0;
+                return `<div class="list-item"><div class="task-content"><span>${pos ? '🟢' : '🔴'} ${escapeHtml(d.who)}</span><span class="${pos ? 'debt-positive' : 'debt-negative'}">${pos ? '+' : '−'}${Math.abs(d.amount).toLocaleString('ru-RU')} ₽</span></div><button class="del-btn" onclick="deleteDebt(${i})">✕</button></div>`;
+            }).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Записей о долгах нет</p>';
+        }
 
         function previewImage(e) { 
             const f = e.target.files[0], prev = document.getElementById('image-preview'); 
@@ -2868,6 +3100,7 @@
 
             // 7. Рендер списка операций
             renderBudgetTransactionsList();
+            renderDebts();
         }
 
         function renderBudgetTransactionsList() {
@@ -3333,7 +3566,7 @@
         }
 
         function generateAndDownloadCSV(startStr, endStr) {
-            let rows = [["Дата", "Статус смены", "Калории (ккал)", "Вода (мл)", "Шаги", "Настроение (Таймлайн)", "Приемы пищи", "Бюджет (Операции)"]];
+            let rows = [["Дата", "Статус смены", "Калории (ккал)", "Вода (мл)", "Шаги", "Вес (кг)", "Настроение (Таймлайн)", "Приемы пищи", "Бюджет (Операции)"]];
             let [sy, sm, sd] = startStr.split('-').map(Number); let [ey, em, ed] = endStr.split('-').map(Number);
             let cur = new Date(sy, sm - 1, sd); let end = new Date(ey, em - 1, ed);
 
@@ -3341,7 +3574,7 @@
 
             while (cur <= end) {
                 let dStr = getFormattedDate(cur);
-                let dData = data.days[dStr] || { calories: 0, water: 0, steps: 0, moodList: [], meals: [] };
+                let dData = data.days[dStr] || { calories: 0, water: 0, steps: 0, moodList: [], meals: [], weightList: [] };
                 let shift = data.shifts[dStr] || 'none';
                 let shiftLabel = shift === 'day' ? "Дневная смена" : (shift === 'night' ? "Ночная смена" : "Выходной");
                 let moodTimeline = (dData.moodList && dData.moodList.length) ? dData.moodList.map(m => `[${m.time}] ${m.emoji}`).join(' | ') : (dData.mood || "-");
@@ -3354,7 +3587,8 @@
                 let dayTxs = txs.filter(t => t.date === dStr);
                 let txStr = dayTxs.length ? dayTxs.map(t => `${t.type === 'income' ? '+' : '-'}${t.amount}₽ (${t.category}${t.note ? ': ' + t.note : ''})`).join('; ') : "-";
 
-                rows.push([dStr, shiftLabel, dData.calories || 0, dData.water || 0, dData.steps || 0, moodTimeline, mealsStr, txStr]);
+                let weightStr = (dData.weightList && dData.weightList.length) ? dData.weightList[dData.weightList.length - 1].v : "-";
+                rows.push([dStr, shiftLabel, dData.calories || 0, dData.water || 0, dData.steps || 0, weightStr, moodTimeline, mealsStr, txStr]);
                 cur.setDate(cur.getDate() + 1);
             }
 
@@ -3573,6 +3807,13 @@
                     alert("Бэкап загружен! Введите мастер-пароль для расшифровки.");
                 } else { alert("Бэкап не найден. Проверьте репозиторий и токен."); }
             } catch(e) { alert("Ошибка соединения: " + e.message); }
+        }
+
+        // --- Service Worker (офлайн-режим PWA) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed:', err));
+            });
         }
     </script>
 </body>
