@@ -1,18 +1,23 @@
 // Helper PWA Service Worker — офлайн-кэш с версионированием.
 // При изменении статических файлов увеличьте CACHE_VERSION, чтобы сбросить старый кэш.
-const CACHE_VERSION = 'helper-v1';
+const CACHE_VERSION = 'helper-v2.2';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.json',
+  './styles.css',
+  './experience.css',
+  './app.js',
+  './experience.js',
+  './kyd-connector.js',
   './IMG_0676.png',
-  'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js'
+  './vendor/crypto-js.min.js'
 ];
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION)
-      // Кэшируем поштучно: сбой одного ресурса (CDN/офлайн) не должен срывать всю установку.
-      .then((cache) => Promise.allSettled(PRECACHE.map((url) => cache.add(url))))
+      // All runtime files are local. Keep the previous worker if an update is incomplete.
+      .then((cache) => cache.addAll(PRECACHE))
       .then(() => self.skipWaiting())
   );
 });
@@ -20,7 +25,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('helper-') && k !== CACHE_VERSION).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -31,6 +36,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
   // Никогда не кэшируем обращения к API (Gemini, GitHub, TinyURL и т.п.) — только сеть.
+  if (url.pathname.includes('/api/')) return;
   if (url.origin !== self.location.origin && !PRECACHE.includes(req.url)) return;
 
   // Навигация (HTML): network-first, чтобы получать свежую версию, с офлайн-фолбэком.
@@ -38,6 +44,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
+          if (!res.ok) throw new Error('Navigation unavailable');
           const copy = res.clone();
           caches.open(CACHE_VERSION).then((cache) => cache.put('./index.html', copy));
           return res;
@@ -53,6 +60,7 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
         if (res && res.status === 200) {
+          if (!res.ok) throw new Error('Navigation unavailable');
           const copy = res.clone();
           caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
         }
