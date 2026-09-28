@@ -1,6 +1,6 @@
 // Helper PWA Service Worker — офлайн-кэш с версионированием.
 // При изменении статических файлов увеличьте CACHE_VERSION, чтобы сбросить старый кэш.
-const CACHE_VERSION = 'helper-v2.3';
+const CACHE_VERSION = 'helper-v2.4';
 const PRECACHE = [
   './',
   './index.html',

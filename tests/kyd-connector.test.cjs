@@ -7,7 +7,7 @@ test('profile links are normalized, tracking and fragments are discarded', () =>
   assert.deepEqual(profileAddress('https://kyd.example/p/alex/?tracking=1#hello'), { profile:'https://kyd.example/p/alex', endpoint:'https://kyd.example/p/alex' });
 });
 test('rejects insecure links, credentials, and non-profile paths', () => {
-  for (const url of ['http://kyd.example/p/alex', 'https://user:secret@kyd.example/p/alex', 'javascript:alert(1)', 'https://kyd.example/app', 'https://kyd.example/p/a/b', 'https://kyd.example/p/%22onclick']) assert.throws(() => profileAddress(url));
+  for (const url of ['', 'not a URL', 'http://kyd.example/p/alex', 'https://user:secret@kyd.example/p/alex', 'javascript:alert(1)', 'https://kyd.example/app', 'https://kyd.example/p/a/b', 'https://kyd.example/p/%22onclick']) assert.throws(() => profileAddress(url));
   assert.equal(profileAddress('http://localhost:8000/p/test').profile, 'http://localhost:8000/p/test');
 });
 test('privacy overrides incoming balance; unrelated fields never enter storage', () => {
@@ -16,8 +16,57 @@ test('privacy overrides incoming balance; unrelated fields never enter storage',
   assert.equal(result.token, undefined); assert.equal(result.id, undefined); assert.equal(result.debts, undefined);
 });
 test('validates financial fields and protocol before updating a saved snapshot', () => {
-  for (const patch of [{ progressPct:101 }, { progressPct:NaN }, { totalDebtsCount:2.5 }, { totalCurrentBalance:-1 }, { totalCurrentBalance:'1000' }, { currency:'USD' }, { generatedAt:'bad' }, { version:2 }, { debtFreeDate:'<img src=x>' }, { publicShowAmounts:undefined }]) assert.throws(() => validateSnapshot({ ...snapshot(), ...patch }));
+  for (const patch of [{ progressPct:101 }, { progressPct:NaN }, { totalDebtsCount:2.5 }, { totalCurrentBalance:-1 }, { totalCurrentBalance:'1000' }, { currency:'USD' }, { generatedAt:'bad' }, { version:2 }, { debtFreeDate:'<img src=x>' }, { debtFreeDate:'2026-02-31' }, { publicShowAmounts:undefined }]) assert.throws(() => validateSnapshot({ ...snapshot(), ...patch }));
   assert.equal(validateSnapshot({ ...snapshot(), totalCurrentBalance:0, progressPct:100 }).progressPct, 100);
+});
+
+test('official KYD profile falls back to the read-only reader after a browser CORS failure', async () => {
+  const oldFetch = global.fetch;
+  const markdown = `
+Title: KYD — Убей свой долг
+
+Markdown Content:
+Прогресс ликвидации долгов
+
+15
+
+%
+
+Дата свободы
+
+нояб. 2026 г.
+
+Текущий остаток
+
+83 500₽
+
+## Долги участника (6)`;
+  const calls = [];
+  try {
+    global.fetch = async (url, options) => {
+      calls.push({ url, options });
+      if (calls.length === 1) throw new TypeError('Failed to fetch');
+      return new Response(markdown);
+    };
+    const result = await fetchSnapshot('https://domovoy1337.ru/p/domovoy');
+    assert.equal(calls[0].url, 'https://domovoy1337.ru/p/domovoy');
+    assert.equal(calls[1].url, 'https://r.jina.ai/https://domovoy1337.ru/p/domovoy');
+    assert.equal(calls[1].options.credentials, 'omit');
+    assert.equal(result.progressPct, 15);
+    assert.equal(result.totalCurrentBalance, 83500);
+    assert.equal(result.totalDebtsCount, 6);
+    assert.equal(result.debtFreeDate, '2026-11-01');
+  } finally { global.fetch = oldFetch; }
+});
+
+test('CORS fallback is restricted to the official KYD host', async () => {
+  const oldFetch = global.fetch;
+  let calls = 0;
+  try {
+    global.fetch = async () => { calls++; throw new TypeError('Failed to fetch'); };
+    await assert.rejects(fetchSnapshot('https://kyd.example/p/alex'), TypeError);
+    assert.equal(calls, 1);
+  } finally { global.fetch = oldFetch; }
 });
 test('network boundary omits credentials, follows redirects, and discards referrers', async () => {
   const oldFetch = global.fetch;
@@ -99,4 +148,14 @@ test('parseProfile parses Next.js RSC format with flight stream chunks', () => {
   assert.equal(validated.publicShowAmounts, true);
   assert.equal(validated.totalCurrentBalance, 83500);
   assert.equal(validated.debtFreeDate, '2026-11-01');
+});
+
+test('parseProfile accepts an exact ISO forecast date from HTML', () => {
+  const parsed = parseProfile(`
+    <div>Прогресс ликвидации долгов</div><div class="num">75%</div>
+    <div>Дата свободы</div><div class="num">2027-04-15</div>
+    <div>Текущий остаток</div><div class="num">Сумма скрыта</div>
+    <h2>Долги участника (1)</h2>
+  `);
+  assert.equal(parsed.debtFreeDate, '2027-04-15');
 });

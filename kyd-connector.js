@@ -2,7 +2,9 @@
 (function (root) {
     'use strict';
     function profileAddress(value) {
-        const url = new URL(value);
+        let url;
+        try { url = new URL(value); }
+        catch { throw new Error('Вставьте корректную HTTPS-ссылку на публичный профиль KYD.'); }
         const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
         if (url.protocol !== 'https:' && !(local && url.protocol === 'http:')) throw new Error('Нужна HTTPS-ссылка на профиль KYD.');
         if (url.username || url.password) throw new Error('Ссылка не должна содержать пароль.');
@@ -19,7 +21,12 @@
         if (raw.publicShowAmounts && !num(raw.totalCurrentBalance, 1e14)) throw new Error('Некорректный остаток долга.');
         if (typeof raw.generatedAt !== 'string' || !Number.isFinite(Date.parse(raw.generatedAt))) throw new Error('Не указана дата сводки.');
         const date = raw.debtFreeDate;
-        if (date !== null && (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)))) throw new Error('Некорректная дата прогноза.');
+        if (date !== null) {
+            const match = typeof date === 'string' && date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            const parsed = match && new Date(`${date}T00:00:00Z`);
+            const valid = parsed && parsed.getUTCFullYear() === Number(match[1]) && parsed.getUTCMonth() + 1 === Number(match[2]) && parsed.getUTCDate() === Number(match[3]);
+            if (!valid) throw new Error('Некорректная дата прогноза.');
+        }
         return {
             source: 'KYD', version: 1, currency: 'RUB', generatedAt: raw.generatedAt,
             progressPct: raw.progressPct, totalDebtsCount: raw.totalDebtsCount,
@@ -45,18 +52,30 @@
         if (/<title>404|Страница не найдена|Профиль не найден/i.test(content)) {
             throw new Error('Профиль закрыт или не найден в KYD.');
         }
+        const textValueAfter = label => {
+            const index = content.toLocaleLowerCase('ru-RU').indexOf(label.toLocaleLowerCase('ru-RU'));
+            if (index < 0) return null;
+            return content.slice(index + label.length, index + label.length + 300)
+                .split(/\r?\n/)
+                .map(line => line.replace(/^#+\s*/, '').replace(/\*\*/g, '').trim())
+                .find(Boolean) || null;
+        };
         let progressPct = null;
         const progressMatch = content.match(/Прогресс ликвидации долгов[\s\S]{1,300}?(?:num[^>"]*">|children":\[?)\s*(\d+)/i)
                            || content.match(/Прогресс ликвидации долгов[\s\S]{1,500}?width:\s*(\d+)%/i)
                            || content.match(/class="[^"]*num[^"]*"[^>]*>\s*(\d+)\s*(?:<!-- -->)?\s*%/i);
         if (progressMatch) {
             progressPct = parseInt(progressMatch[1], 10);
+        } else {
+            const progressText = textValueAfter('Прогресс ликвидации долгов');
+            const plainProgress = progressText && progressText.match(/^(\d{1,3})$/);
+            if (plainProgress) progressPct = parseInt(plainProgress[1], 10);
         }
         let debtFreeDate = null;
         const dateMatch = content.match(/Дата свободы[\s\S]{1,300}?(?:num[^>"]*">|children":")\s*([^<"]+)/i);
-        if (dateMatch) {
-            const rawDateText = dateMatch[1].trim();
-            if (!/пока нет|—|-/i.test(rawDateText)) {
+        const rawDateText = (dateMatch ? dateMatch[1] : textValueAfter('Дата свободы'))?.trim();
+        if (rawDateText) {
+            if (!/пока нет|^[—-]$/i.test(rawDateText)) {
                 const isoMatch = rawDateText.match(/(\d{4})-(\d{2})(?:-(\d{2}))?/);
                 if (isoMatch) {
                     debtFreeDate = `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3] || '01'}`;
@@ -78,8 +97,9 @@
         let totalCurrentBalance = null;
         let publicShowAmounts = false;
         const balanceMatch = content.match(/Текущий остаток[\s\S]{1,300}?(?:num[^>"]*">|children":")\s*([^<"]+)/i);
-        if (balanceMatch) {
-            const balanceText = balanceMatch[1].replace(/<!--[\s\S]*?-->/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+        const rawBalanceText = balanceMatch ? balanceMatch[1] : textValueAfter('Текущий остаток');
+        if (rawBalanceText) {
+            const balanceText = rawBalanceText.replace(/<!--[\s\S]*?-->/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
             if (/скрыт/i.test(balanceText)) {
                 publicShowAmounts = false;
                 totalCurrentBalance = null;
@@ -117,9 +137,25 @@
             debtFreeDate
         };
     }
+    function readerEndpoint(profile) {
+        const url = new URL(profile);
+        return url.hostname === 'domovoy1337.ru' ? `https://r.jina.ai/${profile}` : null;
+    }
     async function fetchSnapshot(address, signal) {
-        const { endpoint } = profileAddress(address);
-        const response = await fetch(endpoint, { signal, credentials: 'omit', cache: 'no-store', redirect: 'follow', referrerPolicy: 'no-referrer' });
+        const { profile, endpoint } = profileAddress(address);
+        const options = { signal, credentials: 'omit', cache: 'no-store', redirect: 'follow', referrerPolicy: 'no-referrer' };
+        let response;
+        try {
+            response = await fetch(endpoint, options);
+        } catch (error) {
+            const fallback = error instanceof TypeError && readerEndpoint(profile);
+            if (!fallback) throw error;
+            try { response = await fetch(fallback, options); }
+            catch (fallbackError) {
+                if (fallbackError?.name === 'AbortError') throw fallbackError;
+                throw new Error('Браузер не смог получить публичную сводку KYD. Попробуйте позже или загрузите HTML-файл.');
+            }
+        }
         if (response.status === 404) throw new Error('Профиль закрыт или не найден в KYD.');
         if (!response.ok) throw new Error(`KYD недоступен (код ${response.status}). Попробуйте позже.`);
         const text = await response.text();
