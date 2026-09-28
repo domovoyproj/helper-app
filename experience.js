@@ -37,8 +37,8 @@ function setupExperience() {
         grid.append(card);
     }
     grid.insertAdjacentHTML('beforeend', `<section class="card kyd-card"><div class="section-top"><span class="eyebrow">ПОДКЛЮЧЁННЫЙ СЕРВИС</span><span class="source-badge">KYD ↗</span></div><h2>Долги под контролем</h2><div id="kyd-dashboard-summary"></div><button class="text-button" onclick="showSection('settings-page');document.getElementById('kyd-settings').scrollIntoView({behavior:'smooth'})">Настроить подключение ${icon('arrow')}</button></section>`);
-    document.getElementById('settings-page').insertAdjacentHTML('afterbegin', `<section class="card" id="kyd-settings"><div class="section-top"><span class="eyebrow">ИНТЕГРАЦИИ</span><span class="source-badge">KYD</span></div><h2>Сводка из KYD</h2><p class="helper-description">Helper показывает прогресс. Долги, платежи и план остаются в KYD.</p><label for="kyd-profile-url">Ссылка на публичный профиль KYD</label><input type="url" id="kyd-profile-url" placeholder="https://ваш-kyd.ru/p/имя" autocomplete="off"><p class="helper-hint">В KYD должен быть включён публичный профиль и установлен API Helper. Скрытые суммы не передаются. Токены и пароль KYD не нужны.</p><div class="quick-grid"><button class="btn" id="kyd-connect" onclick="connectKYD()">Подключить / обновить</button><button class="btn btn-secondary" onclick="disconnectKYD()">Отключить</button></div><p id="kyd-status" role="status" aria-live="polite"></p><div id="kyd-settings-summary"></div><details><summary>Загрузить сводку из файла</summary><p class="helper-hint">JSON со сводкой API KYD. Файл не включает список долгов и не изменяет локальный бюджет.</p><label for="kyd-import">Файл сводки KYD</label><input id="kyd-import" type="file" accept="application/json,.json" onchange="importKYDSnapshot(event)"></details></section>`);
-    document.getElementById('misc-page').insertAdjacentHTML('afterbegin', `<section class="card"><span class="eyebrow">ИНСТРУМЕНТЫ</span><h2>Всё остальное — под рукой</h2><div class="quick-grid" style="margin-top:18px"><button class="btn btn-secondary" onclick="showSection('export-page')">Отчёты CSV</button><button class="btn btn-secondary" onclick="showSection('profile-page')">Мои нормы</button><button class="btn btn-secondary" onclick="showSection('settings-page')">Настройки</button><button class="btn btn-secondary" onclick="lockVault()">Заблокировать</button></div></section>`);
+    document.getElementById('settings-page').insertAdjacentHTML('afterbegin', `<section class="card" id="kyd-settings"><div class="section-top"><span class="eyebrow">ИНТЕГРАЦИИ</span><span class="source-badge">KYD</span></div><h2>Сводка из KYD</h2><p class="helper-description">Helper показывает прогресс. Долги, платежи и план остаются в KYD.</p><label for="kyd-profile-url">Ссылка на публичный профиль KYD</label><input type="url" id="kyd-profile-url" placeholder="https://domovoy1337.ru/p/domovoy" autocomplete="off"><p class="helper-hint">Вставьте ссылку на публичный профиль KYD (например, https://domovoy1337.ru/p/domovoy). Скрытые суммы не передаются. Токены и пароль KYD не нужны.</p><div class="quick-grid"><button class="btn" id="kyd-connect" onclick="connectKYD()">Подключить / обновить</button><button class="btn btn-secondary" onclick="disconnectKYD()">Отключить</button></div><p id="kyd-status" role="status" aria-live="polite"></p><div id="kyd-settings-summary"></div><details><summary>Загрузить сводку из файла</summary><p class="helper-hint">JSON или сохранённый HTML профиля KYD. Файл не изменяет локальный бюджет.</p><label for="kyd-import">Файл сводки KYD</label><input id="kyd-import" type="file" accept=".json,.html,.htm,application/json,text/html" onchange="importKYDSnapshot(event)"></details></section>`);
+    document.getElementById('misc-page').insertAdjacentHTML('afterbegin', `<section class="card"><span class="eyebrow">ИНСТРУМЕНТЫ</span><h2>Всё остальное — под рукой</h2><div class="tools-grid"><button class="btn btn-secondary" onclick="showSection('export-page')">Отчёты CSV</button><button class="btn btn-secondary" onclick="showSection('profile-page')">Мои нормы</button><button class="btn btn-secondary" onclick="showSection('settings-page')">Настройки</button><button class="btn btn-secondary" onclick="lockVault()">Заблокировать</button></div></section>`);
     const auth = document.querySelector('#auth-page .card');
     auth.firstElementChild.outerHTML = '<div class="auth-brand brand-mark">h<span>·</span></div>';
     auth.querySelector('h2').textContent = 'Меньше суеты. Больше жизни.';
@@ -123,7 +123,7 @@ async function connectKYD(address) {
         if (version !== kydRequestVersion || !masterKey || data !== vaultData) return;
         // Never keep displaying amounts after a failed privacy refresh.
         if (data.kyd?.profileUrl === url) { data.kyd.snapshot = null; saveEncrypted(); renderKYD(); }
-        status.textContent = e.name === 'AbortError' ? 'KYD не ответил за 12 секунд. Попробуйте ещё раз.' : (e instanceof TypeError ? 'Нет соединения с KYD. Проверьте адрес, сеть и установку API.' : e.message);
+        status.textContent = e.name === 'AbortError' ? 'KYD не ответил за 12 секунд. Попробуйте ещё раз.' : (e instanceof TypeError ? 'Нет соединения с KYD. Проверьте адрес и доступность сайта.' : e.message);
         showToast('Не удалось обновить KYD. Подробности в настройках.');
     } finally {
         clearTimeout(timeout);
@@ -136,11 +136,13 @@ async function importKYDSnapshot(event) {
     const file = event.target.files[0]; if (!file || !masterKey) return;
     const vaultData = data; cancelKYDRequest(); const version = kydRequestVersion;
     try {
-        if (file.size > 50000) throw new Error('Файл сводки должен быть меньше 50 КБ.');
-        const snapshot = KYDConnector.validateSnapshot(JSON.parse(await file.text()));
+        if (file.size > 500000) throw new Error('Файл сводки должен быть меньше 500 КБ.');
+        const text = await file.text();
+        const raw = KYDConnector.parseProfile ? KYDConnector.parseProfile(text) : JSON.parse(text);
+        const snapshot = KYDConnector.validateSnapshot(raw);
         if (!masterKey || data !== vaultData || version !== kydRequestVersion) return;
         data.kyd = { snapshot, fetchedAt: snapshot.generatedAt, mode: 'file' }; saveEncrypted(); renderExperience('settings-page'); document.getElementById('kyd-status').textContent = 'Сводка загружена из файла. Автообновление недоступно.';
-    } catch (e) { if (masterKey && data === vaultData) document.getElementById('kyd-status').textContent = e instanceof SyntaxError ? 'Файл не содержит корректный JSON.' : e.message; }
+    } catch (e) { if (masterKey && data === vaultData) document.getElementById('kyd-status').textContent = e.message; }
     finally { event.target.value = ''; }
 }
 

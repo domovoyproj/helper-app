@@ -4,7 +4,7 @@
   "private": true,
   "description": "Local-first personal assistant with read-only KYD summaries",
   "scripts": {
-    "test": "node --test tests/*.test.cjs",
+    "test": "node tests/run.cjs",
     "check": "node --check app.js && node --check experience.js && node --check kyd-connector.js && node --check sw.js",
     "graph": "python -m graphify extract . --code-only"
   },

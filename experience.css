@@ -1,5 +1,6 @@
 /* Helper's responsive shell; legacy controls retain their original behavior. */
 :root { --bg-base:#101714; --bg-surface:#17211c; --card-bg:#19231e; --card-bg-elevated:#202d26; --text-main:#f0f4ed; --text-muted:#a3b3a7; --text-dim:#829488; --accent:#b6ecc1; --accent-hover:#c9f4d1; --accent-gradient:linear-gradient(125deg,#b6ecc1,#8ddaa7); --accent-glow:rgba(182,236,193,.12); --success:#9cddb3; --border:rgba(207,228,213,.11); --card-border:var(--border); --border-focus:#b6ecc1; --radius-lg:20px; }
+html, body { overflow-x:hidden; max-width:100vw; }
 body { background:#101714; color:var(--text-main); padding:24px 20px 100px; font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
 [hidden] { display:none!important; }
 button, input, select, textarea, a { -webkit-tap-highlight-color:transparent; }
@@ -9,7 +10,11 @@ input:focus,textarea:focus,select:focus { border-color:var(--accent); box-shadow
 input,textarea,select { font-size:16px; background:#121b16; }
 button { cursor:pointer; }
 .page { max-width:780px; }
-.card { box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; border-color:var(--border); padding:24px; }
+.card { box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; border-color:var(--border); padding:24px; box-sizing:border-box; max-width:100%; overflow:hidden; }
+.tools-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:18px; }
+.tools-grid .btn { margin-bottom:0; padding:12px 6px; font-size:13px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+.quick-grid { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+.quick-grid > * { min-width:0; }
 .card:hover { transform:none; border-color:rgba(207,228,213,.18); }
 .btn { min-height:44px; box-shadow:none; color:#15261b; font-weight:650; }
 .btn-secondary,.btn-danger,.btn-success,.btn-github { color:var(--text-main); }
@@ -71,5 +76,5 @@ summary { cursor:pointer; padding:10px 0; color:var(--text-muted); font-size:13p
 #toast-box { background:#d5eedb; color:#182e1e; border-color:#b6ecc1; z-index:100; max-width:calc(100vw - 32px); }
 @media(min-width:1000px) { body.is-unlocked { padding:42px 44px 64px 260px; } #dashboard-page { max-width:1020px; } }
 @media(max-width:999px) { #helper-sidebar { display:none; } #helper-dock { display:flex; position:fixed; bottom:0; left:0; right:0; background:rgba(22,32,26,.97); backdrop-filter:blur(20px); border-top:1px solid var(--border); padding:8px 8px max(8px,env(safe-area-inset-bottom)); z-index:30; justify-content:space-around; } #helper-dock button { display:flex; flex-direction:column; align-items:center; gap:5px; min-width:56px; min-height:46px; padding:7px; background:none; border:0; color:var(--text-muted); font-size:10px; border-radius:10px; } #helper-dock button.is-active { color:var(--accent); background:#2a3d30; } #toast-box { bottom:95px; } }
-@media(max-width:620px) { body { padding:18px 16px 110px; }.day-heading { padding-bottom:23px; }h1 { font-size:38px; }.overview-strip button { padding:16px 10px; }.overview-strip strong { font-size:16px; }.overview-strip span { font-size:8px; letter-spacing:.04em; }.overview-strip small { font-size:9px; }.overview-strip small svg { display:none; }.dashboard-grid { grid-template-columns:1fr; }.dashboard-grid > .card { grid-column:auto; grid-row:auto; }.kyd-card { order:1; }.history-card { order:2; }.quick-capture { display:grid; grid-template-columns:1fr 1fr; gap:8px; }.quick-capture button { padding:12px 8px; }.card { padding:20px; }.day-heading .round-button { width:38px; height:38px; }.date-navigator { max-width:none; } }
+@media(max-width:620px) { body { padding:18px 16px 110px; }.day-heading { padding-bottom:23px; }h1 { font-size:38px; }.overview-strip button { padding:16px 10px; }.overview-strip strong { font-size:16px; }.overview-strip span { font-size:8px; letter-spacing:.04em; }.overview-strip small { font-size:9px; }.overview-strip small svg { display:none; }.dashboard-grid { grid-template-columns:1fr; }.dashboard-grid > .card { grid-column:auto; grid-row:auto; }.kyd-card { order:1; }.history-card { order:2; }.quick-capture { display:grid; grid-template-columns:1fr 1fr; gap:8px; }.quick-capture button { padding:12px 8px; }.card { padding:20px; }.day-heading .round-button { width:38px; height:38px; }.date-navigator { max-width:none; }.tools-grid { grid-template-columns:1fr 1fr; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
