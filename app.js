@@ -12,17 +12,16 @@ let data = {
         let masterKey = "";
         let currentDateStr = getFormattedDate(new Date());
         let calCurrentDate = new Date();
-        let budgetCurrentDate = new Date(); // Текущий выбранный месяц для бюджета
+        let budgetCurrentDate = new Date();
         let currentTikTokCleanUrl = "";
         let currentTikTokBlob = null;
         let editingVaultIndex = null;
-        let visibleVaultPasswords = {}; // Хранит видимость паролей по индексам
+        let visibleVaultPasswords = {};
         
-        // Переменные состояния для бюджета
-        let activeBudgetTxType = 'expense'; // 'expense' | 'income'
+        let activeBudgetTxType = 'expense';
         let selectedBudgetCategory = { name: 'Еда и продукты', icon: '🍔' };
-        let activeBudgetFilterTab = 'all'; // 'all' | 'expense' | 'income'
-        let selectedBudgetCalDate = null; // Выбранный день в календаре бюджета (YYYY-MM-DD)
+        let activeBudgetFilterTab = 'all';
+        let selectedBudgetCalDate = null;
 
         const EXPENSE_CATEGORIES = [
             { name: 'Еда и продукты', icon: '🍔' },
@@ -50,7 +49,6 @@ let data = {
             { name: 'Другой доход', icon: '💰' }
         ];
 
-        // --- Утилиты безопасности и интерфейса ---
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -84,7 +82,6 @@ let data = {
             }
         }
 
-        // Встроенный TOTP (2FA)
         function base32ToHex(base32) {
             const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
             let bits = "", hex = "";
@@ -187,7 +184,6 @@ let data = {
                 if (!decryptedStr) throw new Error("Неверный ключ");
                 
                 data = JSON.parse(decryptedStr);
-                // Миграция структуры данных
                 if(!data.salaryRates) data.salaryRates = { day: 0, night: 0 };
                 if(!data.days) data.days = {};
                 if(!data.shifts) data.shifts = {};
@@ -274,12 +270,9 @@ let data = {
             showSection('dashboard-page');
         }
 
-        // --- Кэш DOM-элементов (оптимизация: getElementById вызывается один раз на id) ---
         const EL = {};
         function el(id) { return EL[id] || (EL[id] = document.getElementById(id)); }
 
-        // --- ОТСЛЕЖИВАНИЕ ВЕСА ---
-        // Собирает по одной (последней) точке веса на каждый день, отсортированной по дате.
         function getWeightSeries() {
             const out = [];
             Object.keys(data.days || {}).sort().forEach(dateStr => {
@@ -301,7 +294,6 @@ let data = {
             let now = new Date();
             let timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
             d.weightList.push({ v: val, time: timeStr });
-            // Актуальный вес пользователя => профиль (влияет на расчёт норм КБЖУ)
             if (data.profile) data.profile.weight = val;
             saveEncrypted();
             updateUI();
@@ -312,7 +304,6 @@ let data = {
             let d = getTodayData();
             if (!d.weightList || !d.weightList[idx]) return;
             d.weightList.splice(idx, 1);
-            // Синхронизируем профиль с самым свежим оставшимся замером
             let series = getWeightSeries();
             if (series.length && data.profile) data.profile.weight = series[series.length - 1].v;
             saveEncrypted();
@@ -347,7 +338,6 @@ let data = {
             const sparkWrap = el('weight-spark-wrap');
             if (!curEl) return;
 
-            // Вес на выбранную дату: последний замер на эту дату или ближайший предыдущий (перенос)
             let idxForDate = -1;
             for (let i = 0; i < series.length; i++) { if (series[i].date <= currentDateStr) idxForDate = i; else break; }
 
@@ -385,7 +375,6 @@ let data = {
                 badgeEl.style.borderColor = 'var(--border)';
             }
 
-            // Прогресс к целевому весу
             const target = (data.profile && data.profile.targetWeight) || 0;
             if (target > 0 && series.length) {
                 const start = series[0].v;
@@ -420,7 +409,6 @@ let data = {
             el('water-progress').style.width = `${Math.min(100, Math.round((water / prof.targetWater) * 100))}%`;
             el('steps-progress').style.width = `${Math.min(100, Math.round((steps / prof.targetSteps) * 100))}%`;
 
-            // Расчет баланса полезной и вредной еды
             let meals = dayData.meals || [];
             let healthyCal = 0, unhealthyCal = 0;
             let healthyCount = 0, unhealthyCount = 0;
@@ -509,7 +497,6 @@ let data = {
                 }
             });
 
-            // Настройки
             if (el('api-key-input')) el('api-key-input').value = data.geminiApiKey || '';
             if (el('gh-token-input')) el('gh-token-input').value = data.githubToken || '';
             if (el('gh-repo-input')) el('gh-repo-input').value = data.githubRepo || '';
@@ -730,7 +717,6 @@ let data = {
         function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveEncrypted(); renderPlanner(); }
         function deleteTask(i) { data.tasks.splice(i, 1); saveEncrypted(); renderPlanner(); }
         
-        // --- ДОЛГИ / ВЗАИМОРАСЧЁТЫ (раздел «Бюджет») ---
         let activeDebtType = 'owed'; // 'owed' = мне должны | 'owe' = я должен
 
         function setDebtType(type) {
@@ -832,7 +818,7 @@ let data = {
             }
 
             if (!successfulData) {
-                alert("Ошибка ИИ: " + (lastError || "Не удалось получить ответ"));
+                alert("Ошибка анализа: " + (lastError || "Не удалось получить ответ"));
                 btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; return;
             }
 
@@ -886,7 +872,6 @@ let data = {
             } catch(e) { alert("Ошибка: " + e.message); } finally { btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; }
         }
 
-        // --- БЮДЖЕТ & ФИНАНСЫ (ФУНКЦИИ) ---
         function formatCompactBudget(num) {
             if (!num || isNaN(num)) return '0';
             if (num < 1000) return String(Math.round(num));
@@ -900,7 +885,6 @@ let data = {
             if (!container) return;
             const list = activeBudgetTxType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
             
-            // Если выбранная категория не из текущего списка, переключить на первую
             if (!list.some(c => c.name === selectedBudgetCategory.name)) {
                 selectedBudgetCategory = { ...list[0] };
             }
@@ -1066,14 +1050,12 @@ let data = {
             const month = budgetCurrentDate.getMonth(); // 0-indexed
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            // Заголовки дней недели
             const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
             dayNames.forEach((d, idx) => {
                 const isWeekend = idx >= 5;
                 grid.innerHTML += `<div class="bcal-day-name ${isWeekend ? 'weekend' : ''}">${d}</div>`;
             });
 
-            // Отступ для первого дня месяца (0 = Пн, 6 = Вс)
             let firstDay = new Date(year, month, 1).getDay();
             firstDay = firstDay === 0 ? 6 : firstDay - 1;
             for (let i = 0; i < firstDay; i++) {
@@ -1083,7 +1065,6 @@ let data = {
             const todayStr = getFormattedDate(new Date());
             const txs = (data.budget && data.budget.transactions) ? data.budget.transactions : [];
 
-            // Группировка транзакций по дням
             const dayDataMap = {};
             let totalDaysWithExp = 0;
             let totalDaysWithInc = 0;
@@ -1180,13 +1161,11 @@ let data = {
             if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
             if (!data.budget.transactions) data.budget.transactions = [];
 
-            // Инициализация поля даты в форме, если пусто
             const txDateInp = document.getElementById('tx-date');
             if (txDateInp && !txDateInp.value) {
                 txDateInp.value = getFormattedDate(new Date());
             }
 
-            // Обновление чипов категорий
             renderBudgetCategoryChips();
 
             const txs = data.budget.transactions;
@@ -1198,7 +1177,6 @@ let data = {
             const monthDisplay = document.getElementById('budget-month-display');
             if (monthDisplay) monthDisplay.innerText = monthNameCapitalized;
 
-            // 1. Доходы и расходы за выбранный месяц
             let monthIncome = 0;
             let monthExpense = 0;
             const categorySums = {}; // Распределение расходов по категориям
@@ -1222,7 +1200,6 @@ let data = {
                 }
             });
 
-            // 2. Баланс за выбранный месяц (Доходы минус Расходы за этот месяц)
             const monthNet = monthIncome - monthExpense;
             const monthBalanceEl = document.getElementById('budget-month-balance');
             const balanceLabelEl = document.getElementById('budget-balance-label');
@@ -1242,7 +1219,6 @@ let data = {
                 }
             }
 
-            // 3. Общий баланс за все время (под карточкой)
             let totalIncomeAll = 0;
             let totalExpenseAll = 0;
             txs.forEach(t => {
@@ -1263,7 +1239,6 @@ let data = {
             if (monthIncomeEl) monthIncomeEl.innerText = `+ ${monthIncome.toLocaleString('ru-RU')} ₽`;
             if (monthExpenseEl) monthExpenseEl.innerText = `- ${monthExpense.toLocaleString('ru-RU')} ₽`;
 
-            // 4. Лимит расходов на месяц
             const limit = Number(data.budget.monthlyLimit) || 0;
             const limitWrapper = document.getElementById('budget-limit-wrapper');
             if (limitWrapper) {
@@ -1297,10 +1272,8 @@ let data = {
                 }
             }
 
-            // 5. Рендер финансового календаря
             renderBudgetCalendar();
 
-            // 6. Аналитика расходов по категориям
             const catContainer = document.getElementById('budget-category-breakdown');
             const catTotalHeader = document.getElementById('budget-cat-total');
             if (catTotalHeader) catTotalHeader.innerText = `${monthExpense.toLocaleString('ru-RU')} ₽`;
@@ -1330,7 +1303,6 @@ let data = {
                 }
             }
 
-            // 7. Рендер списка операций
             renderBudgetTransactionsList();
             renderDebts();
         }
@@ -1347,19 +1319,15 @@ let data = {
             const month = budgetCurrentDate.getMonth();
 
             const filtered = txs.filter(t => {
-                // Фильтр по месяцу
                 if (t.date) {
                     const [ty, tm] = t.date.split('-').map(Number);
                     if (ty !== year || (tm - 1) !== month) return false;
                 }
-                // Фильтр по выбранному дню из календаря
                 if (selectedBudgetCalDate && t.date !== selectedBudgetCalDate) {
                     return false;
                 }
-                // Фильтр по табу (Все / Расходы / Доходы)
                 if (activeBudgetFilterTab === 'expense' && t.type !== 'expense') return false;
                 if (activeBudgetFilterTab === 'income' && t.type !== 'income') return false;
-                // Поиск по ключевому слову
                 if (q) {
                     const str = `${t.category} ${t.note} ${t.amount}`.toLowerCase();
                     if (!str.includes(q)) return false;
@@ -1422,7 +1390,6 @@ let data = {
         }
 
 
-        // --- ХРАНИЛИЩЕ ПАРОЛЕЙ И 2FA ---
         function renderVault() {
             const q = (document.getElementById('search-box')?.value || '').toLowerCase().trim(); 
             const container = document.getElementById('vault-list'); 
@@ -1590,7 +1557,6 @@ let data = {
             showSection('misc-page');
         }
 
-        // --- ГЕНЕРАТОР ПАРОЛЕЙ ---
         function togglePasswordGenerator() {
             const widget = document.getElementById('generator-widget-box');
             if (!widget) return;
@@ -1633,7 +1599,6 @@ let data = {
                 result.push(chars[Math.floor(Math.random() * chars.length)]);
             }
 
-            // Перемешивание (Fisher-Yates)
             for (let i = result.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [result[i], result[j]] = [result[j], result[i]];
@@ -1720,7 +1685,6 @@ let data = {
             }
         }
 
-        // Таймер для TOTP
         setInterval(() => {
             if (document.getElementById('misc-page').classList.contains('active')) {
                 let secLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
@@ -1730,7 +1694,6 @@ let data = {
             }
         }, 1000);
 
-        // --- ЛОКАЛЬНЫЙ ЭКСПОРТ И ИМПОРТ БЭКАПА (ФАЙЛ) ---
         function exportBackupFile() {
             const encStr = localStorage.getItem('encMasterData');
             if (!encStr) return alert("Нет данных для экспорта!");
@@ -1782,7 +1745,6 @@ let data = {
             event.target.value = '';
         }
 
-        // CSV Экспорт
         function exportDataPeriod(period) {
             let today = new Date(); let endStr = getFormattedDate(today); let startStr = "2020-01-01";
             if (period === 7) { let dt = new Date(); dt.setDate(dt.getDate() - 7); startStr = getFormattedDate(dt); } 
@@ -1815,7 +1777,6 @@ let data = {
                     return `${m.name} [${tag}, ${m.cal}ккал]`;
                 }).join('; ') : "-";
 
-                // Операции бюджета за этот день
                 let dayTxs = txs.filter(t => t.date === dStr);
                 let txStr = dayTxs.length ? dayTxs.map(t => `${t.type === 'income' ? '+' : '-'}${t.amount}₽ (${t.category}${t.note ? ': ' + t.note : ''})`).join('; ') : "-";
 
@@ -1831,7 +1792,6 @@ let data = {
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // --- ФАЙЛООБМЕННИК ---
         function renderUploads() {
             const container = document.getElementById('uploads-list');
             if (!container) return;
@@ -1948,7 +1908,6 @@ let data = {
             }
         }
 
-        // --- TIKTOK ЗАГРУЗЧИК ---
         async function downloadTikTokVideo(btn) {
             const input = document.getElementById('tiktok-url-input'); const url = input.value.trim();
             const resultBox = document.getElementById('tiktok-result'); const videoEl = document.getElementById('tiktok-video-preview');
@@ -1983,7 +1942,6 @@ let data = {
             } catch (err) { if (err.name !== 'AbortError') window.open(currentTikTokCleanUrl, '_blank'); } finally { btn.innerText = origText; btn.disabled = false; }
         }
 
-        // --- GITHUB СИНХРОНИЗАЦИЯ БЭКАПОВ ---
         async function syncToGitHub(btn) {
             if (!data.githubToken || !data.githubRepo) { alert("Укажите GitHub токен и приватный репозиторий бэкапов в Настройках!"); showSection('settings-page'); return; }
             let origTxt = btn.innerText; btn.innerText = "⏳ Отправка...";
@@ -2041,9 +1999,35 @@ let data = {
             } catch(e) { alert("Ошибка соединения: " + e.message); }
         }
 
-        // --- Service Worker (офлайн-режим PWA) ---
+        let deferredInstallPrompt = null;
+
+        function updateInstallButton() {
+            const button = document.getElementById('helper-install');
+            if (button) button.hidden = !deferredInstallPrompt;
+        }
+
+        async function installHelper() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            updateInstallButton();
+        }
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            updateInstallButton();
+        });
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed:', err));
+                navigator.serviceWorker.register('sw.js').then((registration) => {
+                    const checkForUpdate = () => registration.update().catch(() => {});
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'visible') checkForUpdate();
+                    });
+                    setInterval(checkForUpdate, 60 * 60 * 1000);
+                }).catch((error) => console.warn('Service Worker:', error));
             });
         }

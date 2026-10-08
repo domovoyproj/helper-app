@@ -138,7 +138,6 @@
             transform: translateY(-1px); 
         }
 
-        /* Поле ввода с кнопкой-иконкой */
         .input-with-action {
             position: relative;
             display: flex;
@@ -485,7 +484,6 @@
         .debt-negative { color: #fb7185; font-weight: 700; font-variant-numeric: tabular-nums; }
         .hidden { display: none !important; }
 
-        /* Карточка записи пароля в хранилище */
         .vault-card {
             background: rgba(255, 255, 255, 0.025);
             border: 1px solid var(--border);
@@ -578,7 +576,6 @@
             background: rgba(59, 130, 246, 0.15);
         }
 
-        /* Виджет генератора паролей */
         .generator-widget {
             background: rgba(15, 23, 42, 0.65);
             border: 1px solid rgba(59, 130, 246, 0.25);
@@ -633,7 +630,6 @@
             transition: width 0.3s ease, background-color 0.3s ease;
         }
 
-        /* Баланс рациона и бейджи полезности еды */
         .diet-split-track {
             width: 100%;
             height: 10px;
@@ -707,7 +703,6 @@
             border-color: #fb7185;
         }
 
-        /* --- СТИЛИ ДЛЯ БЮДЖЕТА & ФИНАНСОВ --- */
         .budget-hero-card {
             background: linear-gradient(145deg, rgba(26, 38, 66, 0.85) 0%, rgba(15, 23, 42, 0.85) 100%);
             border: 1px solid rgba(59, 130, 246, 0.25);
@@ -780,7 +775,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Финансовый календарь бюджета */
         .budget-calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -923,7 +917,6 @@
         .bcal-dot.inc { background: #10b981; box-shadow: 0 0 6px rgba(168, 85, 247, 0.6); }
         .bcal-dot.both { background: #a855f7; box-shadow: 0 0 6px rgba(168, 85, 247, 0.6); }
 
-        /* Сегментированный переключатель (Segmented Control) */
         .segmented-control {
             display: flex;
             background: rgba(0, 0, 0, 0.35);
@@ -965,7 +958,6 @@
             border: 1px solid rgba(59, 130, 246, 0.4);
         }
 
-        /* Чипы быстрых сумм */
         .chip-grid {
             display: flex;
             gap: 6px;
@@ -994,7 +986,6 @@
             transform: scale(0.95);
         }
 
-        /* Сетка категорий */
         .category-selector-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -1029,7 +1020,6 @@
         }
         .cat-chip.selected .cat-label { color: #93c5fd; }
 
-        /* Строка операции транзакции */
         .tx-item {
             border: 1px solid var(--border);
             background: rgba(255, 255, 255, 0.025);
@@ -1084,7 +1074,6 @@
         .tx-amount.expense { color: #fb7185; }
         .tx-amount.income { color: #34d399; }
 
-        /* Прогресс-бар лимита бюджета */
         .budget-limit-box {
             background: rgba(255, 255, 255, 0.025);
             border: 1px solid var(--border);
@@ -1101,7 +1090,6 @@
             margin-bottom: 6px;
         }
 
-        /* Список распределения по категориям */
         .cat-stat-row {
             display: flex;
             align-items: center;
@@ -1112,7 +1100,6 @@
         }
         .cat-stat-row:last-child { border-bottom: none; }
 
-        /* Плавающее уведомление (Toast) */
         #toast-box {
             position: fixed;
             top: 20px;

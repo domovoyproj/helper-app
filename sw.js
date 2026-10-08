@@ -1,6 +1,4 @@
-// Helper PWA Service Worker — офлайн-кэш с версионированием.
-// При изменении статических файлов увеличьте CACHE_VERSION, чтобы сбросить старый кэш.
-const CACHE_VERSION = 'helper-v2.4';
+const CACHE_VERSION = 'helper-v2.5';
 const PRECACHE = [
   './',
   './index.html',
@@ -16,7 +14,6 @@ const PRECACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION)
-      // All runtime files are local. Keep the previous worker if an update is incomplete.
       .then((cache) => cache.addAll(PRECACHE))
       .then(() => self.skipWaiting())
   );
@@ -35,11 +32,9 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  // Никогда не кэшируем обращения к API (Gemini, GitHub, TinyURL и т.п.) — только сеть.
   if (url.pathname.includes('/api/')) return;
   if (url.origin !== self.location.origin && !PRECACHE.includes(req.url)) return;
 
-  // Навигация (HTML): network-first, чтобы получать свежую версию, с офлайн-фолбэком.
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
@@ -54,18 +49,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Статика: cache-first с дозаписью в кэш.
   event.respondWith(
     caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((res) => {
-        if (res && res.status === 200) {
-          if (!res.ok) throw new Error('Navigation unavailable');
+      const fresh = fetch(req).then((res) => {
+        if (res && res.ok) {
           const copy = res.clone();
           caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
         }
         return res;
-      });
+      }).catch(() => cached || Response.error());
+      return cached || fresh;
     })
   );
 });

@@ -6,21 +6,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#101714">
-    <title>Helper</title>
+    <meta name="color-scheme" content="dark light">
+    <meta name="description" content="Helper — локальный личный помощник для дел, финансов, здоровья и смен.">
+    <title>Helper — личное пространство</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="IMG_0676.png">
     <link rel="icon" type="image/png" href="IMG_0676.png">
-    <!-- Библиотека шифрования (CryptoJS) -->
-    <script src="vendor/crypto-js.min.js"></script>
+    <script defer src="vendor/crypto-js.min.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="experience.css">
 </head>
 <body>
 
-    <!-- Всплывающий Toast -->
     <div id="toast-box"><span>✓</span> <span id="toast-msg">Скопировано</span></div>
 
-    <!-- ЭКРАН 1: Авторизация -->
     <div id="auth-page" class="page active">
         <div class="card" style="margin-top: 60px; text-align: center; padding: 32px 22px;">
             <div style="font-size: 38px; margin-bottom: 10px; animation: floatSlow 3s infinite ease-in-out;">🛡️</div>
@@ -43,12 +42,11 @@
             <button class="btn btn-danger" onclick="resetVault()" style="margin-top: 12px; font-size: 13px; padding: 11px;">Сбросить локальные данные</button>
             
             <p style="margin-top: 24px; font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace; letter-spacing: 0.5px; opacity: 0.7;">
-                Helper 2.0 · Личное пространство
+                Helper 2.1 · Личное пространство
             </p>
         </div>
     </div>
 
-    <!-- ЭКРАН 2: Дашборд -->
     <div id="dashboard-page" class="page">
         <div class="card card-header" style="padding: 14px 18px; margin-bottom: 12px;">
             <h2>⚡ Helper</h2>
@@ -92,7 +90,6 @@
             </div>
         </div>
 
-        <!-- ОТСЛЕЖИВАНИЕ ВЕСА -->
         <div class="card" id="weight-card">
             <div class="card-header" style="margin-bottom:4px;">
                 <h2>⚖️ Вес</h2>
@@ -111,10 +108,9 @@
             <button class="btn btn-secondary" style="margin-top:12px;" onclick="addWeightEntry()">⚖️ Записать вес</button>
         </div>
 
-        <!-- БАЛАНС РАЦИОНА (ПОЛЕЗНАЯ VS ВРЕДНАЯ ЕДА) -->
         <div class="card" id="diet-balance-card">
             <div class="card-header" style="margin-bottom:4px;">
-                <h2>🥗 Баланс рациона (ИИ)</h2>
+                <h2>🥗 Баланс рациона</h2>
                 <span id="diet-status-badge" style="font-size:11px; padding:3px 9px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">—</span>
             </div>
             <p class="subtitle" style="margin-bottom:6px;">Соотношение полезной и вредной еды за день</p>
@@ -142,7 +138,6 @@
             </div>
         </div>
 
-        <!-- ИНСТРУМЕНТЫ И ДЕЙСТВИЯ -->
         <div class="card">
             <h2>🛠 Инструменты & Действия</h2>
             <button class="btn" onclick="showSection('food-page')" style="margin-top: 10px;">📸 Записать прием пищи</button>
@@ -155,12 +150,10 @@
                 <button class="btn btn-secondary" onclick="showSection('calendar-page'); renderCalendar();">📅 График смен</button>
                 <button class="btn btn-secondary" onclick="showSection('planner-page'); renderPlanner();">✅ Задачи</button>
             </div>
-            <!-- Линия с кнопкой "Бюджет" перед "Прочее" -->
             <div class="quick-grid">
                 <button class="btn btn-secondary" onclick="showSection('export-page')">📑 CSV Отчеты</button>
                 <button class="btn btn-secondary" onclick="showSection('budget-page'); renderBudget();">💰 Бюджет</button>
             </div>
-            <!-- "Прочее" перемещено на отдельную линию вниз -->
             <button class="btn btn-secondary" style="margin-top: 2px;" onclick="showSection('misc-page');">🧰 Прочее</button>
         </div>
 
@@ -184,11 +177,10 @@
         </div>
     </div>
 
-    <!-- ЭКРАН 3: Еда -->
     <div id="food-page" class="page">
         <div class="card">
-            <h2>📸 Расчет и ИИ-анализ питания</h2>
-            <p class="subtitle">Опишите блюдо текстом или фото — ИИ рассчитает КБЖУ и классифицирует еду на полезную / вредную</p>
+            <h2>📸 Расчёт питания</h2>
+            <p class="subtitle">Опишите блюдо текстом или добавьте фото — Helper рассчитает КБЖУ и сохранит результат</p>
             <textarea id="food-input" placeholder="Например: омлет из двух яиц и кофе без сахара..."></textarea>
             <input type="file" id="food-image" accept="image/*" class="file-input" onchange="previewImage(event)" style="margin-bottom: 8px;">
             <img id="image-preview" style="display:none; width:100%; border-radius:12px; margin-bottom:12px; max-height:220px; object-fit: cover;">
@@ -198,7 +190,6 @@
         </div>
     </div>
 
-    <!-- ЭКРАН 4: Планировщик -->
     <div id="planner-page" class="page">
         <div class="card">
             <h2>✅ Список дел</h2>
@@ -211,7 +202,6 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 5: График смен -->
     <div id="calendar-page" class="page">
         <div class="card">
             <h2>⚡ Шаблон чередования</h2>
@@ -249,9 +239,7 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 6: БЮДЖЕТ & ФИНАНСЫ (НОВЫЙ ЭКРАН) -->
     <div id="budget-page" class="page">
-        <!-- Главная карточка баланса -->
         <div class="budget-hero-card">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
@@ -261,7 +249,6 @@
                 <button class="icon-btn-sm" onclick="toggleBudgetLimitForm()" title="Настроить лимит на месяц">🎯 Лимит</button>
             </div>
 
-            <!-- Навигатор месяца -->
             <div class="date-navigator" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.06); margin-bottom: 12px; padding: 8px 12px;">
                 <button onclick="changeBudgetMonth(-1)">◀</button>
                 <span id="budget-month-display">Август 2026</span>
@@ -284,7 +271,6 @@
                 <span id="budget-all-time-val">0 ₽</span>
             </div>
 
-            <!-- Прогресс лимита расходов -->
             <div id="budget-limit-wrapper" class="budget-limit-box" style="display:none;">
                 <div class="budget-limit-header">
                     <span style="color:var(--text-muted);">Лимит расходов на месяц:</span>
@@ -296,7 +282,6 @@
                 <div id="budget-limit-remaining" style="font-size:11px; color:var(--text-muted); margin-top:6px; text-align:right;"></div>
             </div>
 
-            <!-- Форма настройки лимита (скрытая) -->
             <div id="budget-limit-form" class="hidden" style="margin-top:12px; padding:10px; background:rgba(0,0,0,0.3); border-radius:10px; border:1px solid var(--border);">
                 <div style="font-size:12px; font-weight:600; margin-bottom:6px; color:var(--text-main);">🎯 Установить месячный лимит расходов (₽)</div>
                 <div class="quick-grid" style="margin-bottom:0;">
@@ -307,7 +292,6 @@
             </div>
         </div>
 
-        <!-- КАРТОЧКА: КАЛЕНДАРЬ РАСХОДОВ И ДОХОДОВ ЗА МЕСЯЦ -->
         <div class="card" id="budget-calendar-card">
             <div class="card-header" style="margin-bottom:4px;">
                 <h2>📅 Календарь за месяц</h2>
@@ -315,10 +299,8 @@
             </div>
             <div class="subtitle" style="margin-bottom:8px;">Нажмите на день, чтобы отфильтровать операции или записать трату на эту дату</div>
 
-            <!-- Сетка календаря -->
             <div class="budget-calendar-grid" id="budget-cal-grid"></div>
 
-            <!-- Легенда календаря -->
             <div class="budget-cal-legend">
                 <div class="bcal-legend-item"><span class="bcal-dot exp"></span> Расход</div>
                 <div class="bcal-legend-item"><span class="bcal-dot inc"></span> Доход</div>
@@ -327,20 +309,16 @@
             </div>
         </div>
 
-        <!-- Добавить операцию -->
         <div class="card">
             <h2>➕ Новая операция</h2>
             
-            <!-- Переключатель Расход / Доход -->
             <div class="segmented-control" style="margin-top: 10px;">
                 <button type="button" class="segmented-btn active-expense" id="btn-tx-expense" onclick="setBudgetTxType('expense')">🔴 Расход</button>
                 <button type="button" class="segmented-btn" id="btn-tx-income" onclick="setBudgetTxType('income')">🟢 Доход</button>
             </div>
 
-            <!-- Ввод суммы -->
             <input type="number" id="tx-amount" placeholder="Сумма (₽)" style="font-size: 18px; font-weight: 700; letter-spacing: 0.5px;">
 
-            <!-- Быстрые чипы добавления суммы -->
             <div class="chip-grid">
                 <button type="button" class="chip-btn" onclick="quickAddBudgetAmount(100)">+100 ₽</button>
                 <button type="button" class="chip-btn" onclick="quickAddBudgetAmount(500)">+500 ₽</button>
@@ -349,20 +327,16 @@
                 <button type="button" class="chip-btn" onclick="document.getElementById('tx-amount').value=''">Сброс</button>
             </div>
 
-            <!-- Категории -->
             <div class="subtitle" style="margin-bottom:6px; margin-top:4px;">Категория:</div>
             <div class="category-selector-grid" id="category-chips-container">
-                <!-- Заполняется JS -->
             </div>
 
-            <!-- Описание и дата -->
             <input type="text" id="tx-note" placeholder="Комментарий / Заметка (необязательно)">
             <input type="date" id="tx-date" style="margin-bottom: 12px;">
 
             <button class="btn" onclick="addBudgetTransaction()">💾 Записать операцию</button>
         </div>
 
-        <!-- Распределение по категориям за месяц -->
         <div class="card" id="budget-analytics-card">
             <div class="card-header" style="margin-bottom:6px;">
                 <h2>📊 Расходы по категориям</h2>
@@ -371,7 +345,6 @@
             <div id="budget-category-breakdown" style="margin-top: 6px;"></div>
         </div>
 
-        <!-- История операций -->
         <div class="card">
             <div class="card-header" style="margin-bottom:8px;">
                 <h2>📋 История операций</h2>
@@ -381,7 +354,6 @@
                 </div>
             </div>
 
-            <!-- Фильтр табов -->
             <div class="segmented-control" style="margin-bottom: 10px;">
                 <button type="button" class="segmented-btn active-tab" id="filter-tx-all" onclick="setBudgetFilterTab('all')">Все</button>
                 <button type="button" class="segmented-btn" id="filter-tx-expense" onclick="setBudgetFilterTab('expense')">Расходы</button>
@@ -393,7 +365,6 @@
             <div id="budget-transactions-list" class="list-container"></div>
         </div>
 
-        <!-- КАРТОЧКА: ДОЛГИ И ВЗАИМОРАСЧЁТЫ -->
         <div class="card" id="debts-card">
             <div class="card-header" style="margin-bottom:6px;">
                 <h2>🤝 Долги и взаиморасчёты</h2>
@@ -430,7 +401,6 @@
     </div>
 
 
-    <!-- ЭКРАН 7: Добавление / Редактирование записи в Хранилище -->
     <div id="add-vault-page" class="page">
         <div class="card">
             <h2 id="vault-modal-title">🔐 Новая запись</h2>
@@ -459,7 +429,6 @@
         </div>
     </div>
 
-    <!-- ЭКРАН 8: Настройки -->
     <div id="settings-page" class="page">
         <div class="card">
             <h2>Системные API ключи</h2>
@@ -486,9 +455,7 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 9: Прочее (Файлообменник, TikTok, и Хранилище паролей в самом низу) -->
     <div id="misc-page" class="page">
-        <!-- Блок 1: Файлообменник -->
         <div class="card">
             <h2>☁️ Публичный файлообменник</h2>
             <p class="subtitle">Загрузка файлов в открытый репозиторий с выдачей короткой ссылки (до 15 МБ)</p>
@@ -498,7 +465,6 @@
             <div id="uploads-list" class="list-container" style="margin-top: 14px;"></div>
         </div>
 
-        <!-- Блок 2: TikTok Загрузчик -->
         <div class="card">
             <h2>🎬 Скачать видео TikTok</h2>
             <p class="subtitle">Вставьте ссылку на клип или видео</p>
@@ -513,7 +479,6 @@
             </div>
         </div>
 
-        <!-- Блок 3: Хранилище паролей & 2FA (ПЕРЕНЕСЕНО В САМЫЙ НИЗ) -->
         <div class="card">
             <div class="card-header" style="margin-bottom: 8px;">
                 <h2 style="margin-bottom:0;">🔐 Хранилище паролей & 2FA</h2>
@@ -530,7 +495,6 @@
                 <button class="btn btn-secondary" onclick="togglePasswordGenerator()">🎲 Генератор</button>
             </div>
             
-            <!-- Интерактивный генератор паролей -->
             <div id="generator-widget-box" class="generator-widget hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="font-weight:600; font-size:14px; color:var(--text-main);">🎲 Генератор паролей</span>
@@ -569,7 +533,6 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
     </div>
 
-    <!-- ЭКРАН 10: Выгрузка отчетов (CSV) -->
     <div id="export-page" class="page">
         <div class="card">
             <h2>📑 Экспорт аналитики</h2>
@@ -592,7 +555,6 @@
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
-    <!-- ЭКРАН 11: Калькулятор и профиль норм -->
     <div id="profile-page" class="page">
         <div class="card">
             <h2>🎯 Расчет суточных норм</h2>
@@ -632,8 +594,8 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
-    <script src="kyd-connector.js"></script>
-    <script src="experience.js"></script>
+    <script defer src="app.js"></script>
+    <script defer src="kyd-connector.js"></script>
+    <script defer src="experience.js"></script>
 </body>
 </html>

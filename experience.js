@@ -16,13 +16,28 @@ function icon(name) { return `<svg viewBox="0 0 24 24" fill="none" stroke="curre
 const helperRoutes = [['dashboard-page', 'Сегодня', 'home'], ['budget-page', 'Финансы', 'wallet'], ['planner-page', 'Задачи', 'check'], ['calendar-page', 'Смены', 'calendar'], ['misc-page', 'Ещё', 'grid']];
 let kydRequest = null;
 let kydRequestVersion = 0;
+let lastOverviewSignature = '';
+
+const appearanceDefaults = { theme: 'system', density: 'comfortable' };
+const commandItems = [
+    ['dashboard-page', 'Сегодня', 'Сводка дня и быстрые действия'],
+    ['food-page', 'Питание', 'Записать еду или распознать фото'],
+    ['budget-page', 'Финансы', 'Бюджет, операции и долги'],
+    ['planner-page', 'Задачи', 'Список дел'],
+    ['calendar-page', 'Смены', 'График и расчёт зарплаты'],
+    ['misc-page', 'Инструменты', 'Сейф, файлы и генератор паролей'],
+    ['profile-page', 'Мои нормы', 'Калории, вода и целевой вес'],
+    ['export-page', 'Отчёты', 'Экспорт CSV'],
+    ['settings-page', 'Настройки', 'Вид, интеграции и синхронизация']
+];
 
 function setupExperience() {
-    document.body.insertAdjacentHTML('afterbegin', `<aside id="helper-sidebar" hidden><a class="helper-brand" href="#" onclick="showSection('dashboard-page');return false"><span class="brand-mark">h<span>·</span></span>helper<span class="brand-caption">Личный помощник</span></a><p class="nav-caption">МОЁ ПРОСТРАНСТВО</p><nav aria-label="Основная навигация">${helperRoutes.map(([id, label, glyph]) => `<button data-route="${id}" onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span></button>`).join('')}</nav><div class="sidebar-bottom"><button data-route="settings-page" onclick="showSection('settings-page')">${icon('settings')}Настройки</button><button onclick="lockVault()">${icon('lock')}Заблокировать</button><span class="local-note"><i></i> Данные на этом устройстве</span></div></aside><nav id="helper-dock" aria-label="Основная навигация" hidden>${helperRoutes.map(([id, label, glyph]) => `<button data-route="${id}" onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span></button>`).join('')}</nav>`);
+    applyAppearance();
+    document.body.insertAdjacentHTML('afterbegin', `<aside id="helper-sidebar" hidden><a class="helper-brand" href="#" onclick="showSection('dashboard-page');return false"><span class="brand-mark">h<span>·</span></span>helper<span class="brand-caption">Личный помощник</span></a><p class="nav-caption">МОЁ ПРОСТРАНСТВО</p><nav aria-label="Основная навигация">${helperRoutes.map(([id, label, glyph]) => `<button data-route="${id}" onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span></button>`).join('')}</nav><div class="sidebar-bottom"><button onclick="openCommandPalette()">${icon('grid')}Быстрый поиск <kbd>Ctrl K</kbd></button><button data-route="settings-page" onclick="showSection('settings-page')">${icon('settings')}Настройки</button><button onclick="lockVault()">${icon('lock')}Заблокировать</button><span class="local-note" id="connection-status"><i></i><span>Данные на этом устройстве</span></span></div></aside><nav id="helper-dock" aria-label="Основная навигация" hidden>${helperRoutes.map(([id, label, glyph]) => `<button data-route="${id}" onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span></button>`).join('')}</nav><div id="command-palette" class="command-palette" hidden role="dialog" aria-modal="true" aria-labelledby="command-title" onclick="if(event.target===this)closeCommandPalette()"><div class="command-panel"><div class="command-search"><span aria-hidden="true">⌕</span><input id="command-input" type="search" placeholder="Куда перейти?" autocomplete="off" aria-labelledby="command-title"><kbd>Esc</kbd></div><h2 id="command-title" class="sr-only">Быстрый поиск</h2><div id="command-results" class="command-results"></div></div></div>`);
     const dashboard = document.getElementById('dashboard-page');
-    dashboard.firstElementChild.classList.add('legacy-header');
-    dashboard.insertAdjacentHTML('afterbegin', `<header class="day-heading"><div><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1>Всё важное.<br><span>В одном месте.</span></h1><p id="helper-greeting">Немного внимания себе — каждый день.</p></div><button class="round-button" aria-label="Настройки" onclick="showSection('settings-page')">${icon('settings')}</button></header><div class="overview-strip"><button onclick="showSection('planner-page')"><span>МОЙ ФОКУС</span><strong id="overview-tasks">0 задач</strong><small>На ближайшее время ${icon('arrow')}</small></button><button onclick="showSection('budget-page')"><span>БАЛАНС МЕСЯЦА</span><strong id="overview-money">0 ₽</strong><small>Доходы минус расходы ${icon('arrow')}</small></button><button onclick="showSection('calendar-page')"><span>СЕГОДНЯ</span><strong id="overview-shift">Без смены</strong><small>Мой рабочий график ${icon('arrow')}</small></button></div><section class="quick-capture" aria-label="Быстрая запись"><button class="capture-primary" onclick="showSection('food-page')">${icon('plus')}Записать еду</button><button onclick="quickWater()">${icon('drop')}250 мл воды</button><button onclick="addCustomSteps()">${icon('plus')}Шаги</button><button onclick="addWeightEntry()">${icon('plus')}Вес</button></section>`);
-    const cards = [...dashboard.children].filter(n => n.classList.contains('card') && !n.classList.contains('legacy-header'));
+    dashboard.firstElementChild.classList.add('original-dashboard-header');
+    dashboard.insertAdjacentHTML('afterbegin', `<header class="day-heading"><div><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1>Всё важное.<br><span>В одном месте.</span></h1><p id="helper-greeting">Немного внимания себе — каждый день.</p></div><div class="header-actions"><button class="round-button" aria-label="Быстрый поиск" onclick="openCommandPalette()">${icon('grid')}</button><button class="round-button" aria-label="Настройки" onclick="showSection('settings-page')">${icon('settings')}</button></div></header><div class="overview-strip"><button onclick="showSection('planner-page')"><span>МОЙ ФОКУС</span><strong id="overview-tasks">0 задач</strong><small>На ближайшее время ${icon('arrow')}</small></button><button onclick="showSection('budget-page')"><span>БАЛАНС МЕСЯЦА</span><strong id="overview-money">0 ₽</strong><small>Доходы минус расходы ${icon('arrow')}</small></button><button onclick="showSection('calendar-page')"><span>СЕГОДНЯ</span><strong id="overview-shift">Без смены</strong><small>Мой рабочий график ${icon('arrow')}</small></button></div><section class="quick-capture" aria-label="Быстрая запись"><button class="capture-primary" onclick="showSection('food-page')">${icon('plus')}Записать еду</button><button onclick="quickWater()">${icon('drop')}250 мл воды</button><button onclick="addCustomSteps()">${icon('plus')}Шаги</button><button onclick="addWeightEntry()">${icon('plus')}Вес</button></section>`);
+    const cards = [...dashboard.children].filter(n => n.classList.contains('card') && !n.classList.contains('original-dashboard-header'));
     const grid = document.createElement('div'); grid.className = 'dashboard-grid'; dashboard.append(grid);
     for (const card of cards) {
         const title = card.querySelector('h2')?.textContent || '';
@@ -37,7 +52,7 @@ function setupExperience() {
         grid.append(card);
     }
     grid.insertAdjacentHTML('beforeend', `<section class="card kyd-card"><div class="section-top"><span class="eyebrow">ПОДКЛЮЧЁННЫЙ СЕРВИС</span><span class="source-badge">KYD ↗</span></div><h2>Долги под контролем</h2><div id="kyd-dashboard-summary"></div><button class="text-button" onclick="showSection('settings-page');document.getElementById('kyd-settings').scrollIntoView({behavior:'smooth'})">Настроить подключение ${icon('arrow')}</button></section>`);
-    document.getElementById('settings-page').insertAdjacentHTML('afterbegin', `<section class="card" id="kyd-settings"><div class="section-top"><span class="eyebrow">ИНТЕГРАЦИИ</span><span class="source-badge">KYD</span></div><h2>Сводка из KYD</h2><p class="helper-description">Helper показывает прогресс. Долги, платежи и план остаются в KYD.</p><label for="kyd-profile-url">Ссылка на публичный профиль KYD</label><input type="url" id="kyd-profile-url" placeholder="https://domovoy1337.ru/p/domovoy" autocomplete="off"><p class="helper-hint">Вставьте ссылку на публичный профиль KYD. Если KYD блокирует прямой запрос браузера, Helper читает ту же общедоступную страницу через read-only шлюз. Скрытые суммы не передаются; токены и пароль KYD не нужны.</p><div class="quick-grid"><button class="btn" id="kyd-connect" onclick="connectKYD()">Подключить / обновить</button><button class="btn btn-secondary" onclick="disconnectKYD()">Отключить</button></div><p id="kyd-status" role="status" aria-live="polite"></p><div id="kyd-settings-summary"></div><details><summary>Загрузить сводку из файла</summary><p class="helper-hint">JSON или сохранённый HTML профиля KYD. Файл не изменяет локальный бюджет.</p><label for="kyd-import">Файл сводки KYD</label><input id="kyd-import" type="file" accept=".json,.html,.htm,application/json,text/html" onchange="importKYDSnapshot(event)"></details></section>`);
+    document.getElementById('settings-page').insertAdjacentHTML('afterbegin', `<section class="card appearance-card"><div class="section-top"><span class="eyebrow">ИНТЕРФЕЙС</span><span class="source-badge">2.1</span></div><h2>Вид Helper</h2><p class="helper-description">Выберите тему и плотность. Настройка сохраняется только на этом устройстве.</p><span class="setting-label">Тема</span><div class="segmented-control" role="group" aria-label="Тема"><button data-theme-choice="system" onclick="setAppearance('theme','system')">Система</button><button data-theme-choice="dark" onclick="setAppearance('theme','dark')">Тёмная</button><button data-theme-choice="light" onclick="setAppearance('theme','light')">Светлая</button></div><span class="setting-label">Плотность</span><div class="segmented-control" role="group" aria-label="Плотность"><button data-density-choice="comfortable" onclick="setAppearance('density','comfortable')">Обычная</button><button data-density-choice="compact" onclick="setAppearance('density','compact')">Компактная</button></div><button class="btn btn-secondary install-button" id="helper-install" hidden onclick="installHelper()">Установить Helper на устройство</button></section><section class="card" id="kyd-settings"><div class="section-top"><span class="eyebrow">ИНТЕГРАЦИИ</span><span class="source-badge">KYD</span></div><h2>Сводка из KYD</h2><p class="helper-description">Helper показывает прогресс. Долги, платежи и план остаются в KYD.</p><label for="kyd-profile-url">Ссылка на публичный профиль KYD</label><input type="url" id="kyd-profile-url" placeholder="https://domovoy1337.ru/p/domovoy" autocomplete="off"><p class="helper-hint">Если KYD блокирует прямой запрос, Helper читает ту же общедоступную страницу через шлюз только для чтения. Токены и пароль KYD не нужны.</p><div class="quick-grid"><button class="btn" id="kyd-connect" onclick="connectKYD()">Подключить / обновить</button><button class="btn btn-secondary" onclick="disconnectKYD()">Отключить</button></div><p id="kyd-status" role="status" aria-live="polite"></p><div id="kyd-settings-summary"></div><details><summary>Загрузить сводку из файла</summary><p class="helper-hint">JSON или сохранённый HTML профиля KYD. Файл не изменяет локальный бюджет.</p><label for="kyd-import">Файл сводки KYD</label><input id="kyd-import" type="file" accept=".json,.html,.htm,application/json,text/html" onchange="importKYDSnapshot(event)"></details></section>`);
     document.getElementById('misc-page').insertAdjacentHTML('afterbegin', `<section class="card"><span class="eyebrow">ИНСТРУМЕНТЫ</span><h2>Всё остальное — под рукой</h2><div class="tools-grid"><button class="btn btn-secondary" onclick="showSection('export-page')">Отчёты CSV</button><button class="btn btn-secondary" onclick="showSection('profile-page')">Мои нормы</button><button class="btn btn-secondary" onclick="showSection('settings-page')">Настройки</button><button class="btn btn-secondary" onclick="lockVault()">Заблокировать</button></div></section>`);
     const auth = document.querySelector('#auth-page .card');
     auth.firstElementChild.outerHTML = '<div class="auth-brand brand-mark">h<span>·</span></div>';
@@ -51,7 +66,91 @@ function setupExperience() {
     auth.querySelector('button[onclick="resetVault()"]').classList.add('reset-link');
     document.getElementById('toast-box').setAttribute('role', 'status');
     document.querySelectorAll('input:not([aria-label]), textarea:not([aria-label]), select:not([aria-label])').forEach(field => { if (field.placeholder && !field.labels?.length) field.setAttribute('aria-label', field.placeholder); });
+    setupCommandPalette();
+    updateConnectionStatus();
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    if (typeof updateInstallButton === 'function') updateInstallButton();
     renderExperience();
+}
+
+function getAppearance() {
+    try { return { ...appearanceDefaults, ...JSON.parse(localStorage.getItem('helperAppearance') || '{}') }; }
+    catch { return { ...appearanceDefaults }; }
+}
+
+function applyAppearance() {
+    const appearance = getAppearance();
+    const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    const theme = appearance.theme === 'system' ? (systemDark ? 'dark' : 'light') : appearance.theme;
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.themePreference = appearance.theme;
+    document.body.classList.toggle('density-compact', appearance.density === 'compact');
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.content = theme === 'light' ? '#f3f6f1' : '#101714';
+    document.querySelectorAll('[data-theme-choice]').forEach(button => button.classList.toggle('is-selected', button.dataset.themeChoice === appearance.theme));
+    document.querySelectorAll('[data-density-choice]').forEach(button => button.classList.toggle('is-selected', button.dataset.densityChoice === appearance.density));
+}
+
+function setAppearance(key, value) {
+    const appearance = getAppearance();
+    appearance[key] = value;
+    localStorage.setItem('helperAppearance', JSON.stringify(appearance));
+    applyAppearance();
+}
+
+function updateConnectionStatus() {
+    const status = document.getElementById('connection-status');
+    if (!status) return;
+    const online = navigator.onLine;
+    status.classList.toggle('is-offline', !online);
+    status.querySelector('span').textContent = online ? 'Данные на этом устройстве' : 'Офлайн · локальные функции доступны';
+}
+
+function renderCommandItems(query = '') {
+    const results = document.getElementById('command-results');
+    if (!results) return;
+    const needle = query.trim().toLocaleLowerCase('ru-RU');
+    const matches = commandItems.filter(([, label, hint]) => `${label} ${hint}`.toLocaleLowerCase('ru-RU').includes(needle));
+    results.innerHTML = matches.length ? matches.map(([id, label, hint], index) => `<button data-command-route="${id}" class="${index === 0 ? 'is-current' : ''}" onclick="runCommand('${id}')"><strong>${label}</strong><span>${hint}</span><kbd>→</kbd></button>`).join('') : '<p class="command-empty">Ничего не найдено</p>';
+}
+
+function setupCommandPalette() {
+    const input = document.getElementById('command-input');
+    input.addEventListener('input', () => renderCommandItems(input.value));
+    input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') document.querySelector('#command-results button')?.click();
+    });
+    document.addEventListener('keydown', event => {
+        const editing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
+        if (masterKey && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); openCommandPalette(); }
+        else if (masterKey && event.key === '/' && !editing) { event.preventDefault(); openCommandPalette(); }
+        else if (event.key === 'Escape') closeCommandPalette();
+    });
+    window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (getAppearance().theme === 'system') applyAppearance(); });
+}
+
+function openCommandPalette() {
+    if (!masterKey) return;
+    const palette = document.getElementById('command-palette');
+    const input = document.getElementById('command-input');
+    palette.hidden = false;
+    document.body.classList.add('has-dialog');
+    input.value = '';
+    renderCommandItems();
+    requestAnimationFrame(() => input.focus());
+}
+
+function closeCommandPalette() {
+    const palette = document.getElementById('command-palette');
+    if (!palette || palette.hidden) return;
+    palette.hidden = true;
+    document.body.classList.remove('has-dialog');
+}
+
+function runCommand(pageId) {
+    closeCommandPalette();
+    showSection(pageId);
 }
 
 function renderExperience(pageId) {
@@ -66,15 +165,20 @@ function renderExperience(pageId) {
         btn.classList.toggle('is-active', active); if (active) btn.setAttribute('aria-current', 'page'); else btn.removeAttribute('aria-current');
     });
     if (!unlocked) return;
-    const count = (data.tasks || []).filter(t => !t.done).length;
-    document.getElementById('overview-tasks').textContent = count ? `${count} ${count % 10 === 1 && count % 100 !== 11 ? 'задача' : count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 12 || count % 100 > 14) ? 'задачи' : 'задач'}` : 'Всё спокойно';
     const month = getFormattedDate(new Date()).slice(0, 7);
     const balance = (data.budget?.transactions || []).filter(t => t.date?.startsWith(month)).reduce((sum, t) => sum + (t.type === 'income' ? 1 : -1) * Number(t.amount || 0), 0);
-    document.getElementById('overview-money').textContent = formatHelperMoney(balance);
-    document.getElementById('overview-shift').textContent = ({ day: 'Дневная смена', night: 'Ночная смена', off: 'Выходной' })[data.shifts?.[getFormattedDate(new Date())]] || 'Без смены';
-    document.getElementById('helper-greeting').textContent = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · В своём ритме';
+    const count = (data.tasks || []).filter(t => !t.done).length;
+    const shift = data.shifts?.[getFormattedDate(new Date())] || '';
+    const signature = `${count}|${balance}|${shift}|${new Date().toDateString()}`;
+    if (signature !== lastOverviewSignature) {
+        lastOverviewSignature = signature;
+        document.getElementById('overview-tasks').textContent = count ? `${count} ${count % 10 === 1 && count % 100 !== 11 ? 'задача' : count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 12 || count % 100 > 14) ? 'задачи' : 'задач'}` : 'Всё спокойно';
+        document.getElementById('overview-money').textContent = formatHelperMoney(balance);
+        document.getElementById('overview-shift').textContent = ({ day: 'Дневная смена', night: 'Ночная смена', off: 'Выходной' })[shift] || 'Без смены';
+        document.getElementById('helper-greeting').textContent = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · В своём ритме';
+    }
     if (page === 'settings-page') document.getElementById('kyd-profile-url').value = data.kyd?.profileUrl || '';
-    renderKYD();
+    if (page === 'dashboard-page' || page === 'settings-page') renderKYD();
 }
 function formatHelperMoney(value) { return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(value); }
 
@@ -121,7 +225,6 @@ async function connectKYD(address) {
         saveEncrypted(); renderKYD(); status.textContent = 'Сводка обновлена. Локальные долги Helper не изменены.'; showToast('Сводка KYD обновлена');
     } catch (e) {
         if (version !== kydRequestVersion || !masterKey || data !== vaultData) return;
-        // Never keep displaying amounts after a failed privacy refresh.
         if (data.kyd?.profileUrl === url) { data.kyd.snapshot = null; saveEncrypted(); renderKYD(); }
         status.textContent = e.name === 'AbortError' ? 'KYD не ответил за 12 секунд. Попробуйте ещё раз.' : (e instanceof TypeError ? 'Нет соединения с KYD. Проверьте адрес и доступность сайта.' : e.message);
         showToast('Не удалось обновить KYD. Подробности в настройках.');

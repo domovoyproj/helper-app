@@ -1,6 +1,6 @@
 {
   "name": "helper-app",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Local-first personal assistant with read-only KYD summaries",
   "scripts": {
