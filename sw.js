@@ -1,20 +1,20 @@
-const CACHE_VERSION = 'helper-v3.5';
+const CACHE_VERSION = 'helper-v3.6';
 const PRECACHE = [
   './',
   './index.html',
-  './manifest.json?v=3.5',
-  './styles.css?v=3.5',
-  './experience.css?v=3.5',
-  './app.js?v=3.5',
-  './food-config.js?v=3.5',
-  './food-ai.js?v=3.5',
-  './experience.js?v=3.5',
-  './workspace.js?v=3.5',
+  './manifest.json?v=3.6',
+  './styles.css?v=3.6',
+  './experience.css?v=3.6',
+  './app.js?v=3.6',
+  './food-config.js?v=3.6',
+  './food-ai.js?v=3.6',
+  './experience.js?v=3.6',
+  './workspace.js?v=3.6',
   './assets/helper-logo.png',
   './favicon.png',
   './apple-touch-icon.png',
   './icon-192.png',
-  './icon-512.png?v=3.5',
+  './icon-512.png?v=3.6',
   './vendor/crypto-js.min.js'
 ];
 self.addEventListener('install', (event) => {
