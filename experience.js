@@ -40,16 +40,14 @@ const commandItems = [
 function setupExperience() {
     applyAppearance();
     const navButton = ([id,label,glyph]) => `<button data-route="${id}" onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span>${id === 'planner-page' ? '<small id="task-nav-count"></small>' : ''}</button>`;
-    document.body.insertAdjacentHTML('afterbegin', `<a class="skip-link" href="#dashboard-page">К содержимому</a><aside id="helper-sidebar" hidden><a class="helper-brand" href="#" onclick="showSection('dashboard-page');return false"><span class="brand-mark">h<span>·</span></span>helper<span class="brand-version">3.0</span></a><button class="sidebar-search" onclick="openCommandPalette()">${icon('search')}<span>Быстрый поиск</span><kbd>⌘ K</kbd></button><p class="nav-caption">МОЙ ДЕНЬ</p><nav aria-label="Основная навигация">${helperRoutes.slice(0,5).map(navButton).join('')}</nav><p class="nav-caption">ЛИЧНОЕ</p><nav aria-label="Личные инструменты">${helperRoutes.slice(5).map(navButton).join('')}${navButton(['export-page','Отчёты','chart'])}</nav><div class="sidebar-bottom"><div class="privacy-note">${icon('lock')}<strong>Только ваше.</strong><p>Данные зашифрованы<br>и хранятся на устройстве.</p></div>${navButton(['settings-page','Настройки','settings'])}<button onclick="lockVault()">${icon('logout')}<span>Заблокировать</span></button><span class="local-note" id="connection-status"><i></i><span>Данные на этом устройстве</span></span></div></aside><header id="workspace-topbar" hidden><span>Моё пространство <span class="topbar-separator">/</span> <strong id="topbar-page">Сегодня</strong></span><div><span class="saved-indicator"><i></i>Локальное хранилище</span><button class="icon-button" aria-label="Поиск" onclick="openCommandPalette()">${icon('search')}</button><button class="avatar" aria-label="Настройки" onclick="showSection('settings-page')">Я</button></div></header><nav id="helper-dock" hidden aria-label="Мобильная навигация">${[helperRoutes[0],helperRoutes[1],helperRoutes[2],helperRoutes[3],['misc-page','Ещё','grid']].map(([id,label,glyph])=>`<button data-route="${id}" onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span></button>`).join('')}</nav><div id="command-palette" class="command-palette" hidden role="dialog" aria-modal="true" aria-labelledby="command-title" onclick="if(event.target===this)closeCommandPalette()"><div class="command-panel"><div class="command-search">${icon('search')}<input id="command-input" type="search" placeholder="Найти раздел…" autocomplete="off" aria-labelledby="command-title"><button class="icon-button" aria-label="Закрыть поиск" onclick="closeCommandPalette()">${icon('close')}</button></div><h2 id="command-title" class="sr-only">Быстрый поиск</h2><div id="command-results" class="command-results"></div></div></div>`);
-    document.getElementById('settings-page').insertAdjacentHTML('afterbegin', `<section class="card appearance-card"><div class="section-top"><span class="eyebrow">ИНТЕРФЕЙС</span><span class="source-badge">3.0</span></div><h2>Вид Helper</h2><p class="helper-description">Выберите тему и плотность. Настройка сохраняется только на этом устройстве.</p><span class="setting-label">Тема</span><div class="segmented-control" role="group" aria-label="Тема"><button data-theme-choice="system" onclick="setAppearance('theme','system')">Система</button><button data-theme-choice="dark" onclick="setAppearance('theme','dark')">Тёмная</button><button data-theme-choice="light" onclick="setAppearance('theme','light')">Светлая</button></div><span class="setting-label">Плотность</span><div class="segmented-control" role="group" aria-label="Плотность"><button data-density-choice="comfortable" onclick="setAppearance('density','comfortable')">Обычная</button><button data-density-choice="compact" onclick="setAppearance('density','compact')">Компактная</button></div><button class="btn btn-secondary install-button" id="helper-install" hidden onclick="installHelper()">Установить Helper на устройство</button></section>`);
+    document.body.insertAdjacentHTML('afterbegin', `<a class="skip-link" href="#dashboard-page">К содержимому</a><aside id="helper-sidebar" hidden><a class="helper-brand" href="#" onclick="showSection('dashboard-page');return false"><span class="brand-mark">h<span>·</span></span>helper</a><button class="sidebar-search" onclick="openCommandPalette()">${icon('search')}<span>Быстрый поиск</span></button><nav aria-label="Основная навигация">${helperRoutes.slice(0,5).map(navButton).join('')}</nav><nav aria-label="Личные инструменты">${helperRoutes.slice(5).map(navButton).join('')}${navButton(['export-page','Отчёты','chart'])}</nav><div class="sidebar-bottom">${navButton(['settings-page','Настройки','settings'])}<button onclick="lockVault()">${icon('logout')}<span>Заблокировать</span></button><span class="local-note" id="connection-status"><i></i><span>Данные на этом устройстве</span></span></div></aside><nav id="helper-dock" hidden aria-label="Мобильная навигация">${[helperRoutes[0],helperRoutes[1],helperRoutes[2],helperRoutes[3],['more-page','Разделы','grid']].map(([id,label,glyph])=>`<button data-route="${id}" onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span></button>`).join('')}</nav><div id="command-palette" class="command-palette" hidden role="dialog" aria-modal="true" aria-labelledby="command-title" onclick="if(event.target===this)closeCommandPalette()"><div class="command-panel"><div class="command-search">${icon('search')}<input id="command-input" type="search" placeholder="Найти раздел…" autocomplete="off" aria-labelledby="command-title"><button class="icon-button" aria-label="Закрыть поиск" onclick="closeCommandPalette()">${icon('close')}</button></div><h2 id="command-title" class="sr-only">Быстрый поиск</h2><div id="command-results" class="command-results"></div></div></div>`);
+    document.getElementById('settings-page').insertAdjacentHTML('afterbegin', `<section class="card appearance-card"><h2>Оформление</h2><span class="setting-label">Тема</span><div class="segmented-control" role="group" aria-label="Тема"><button data-theme-choice="system" onclick="setAppearance('theme','system')">Система</button><button data-theme-choice="dark" onclick="setAppearance('theme','dark')">Тёмная</button><button data-theme-choice="light" onclick="setAppearance('theme','light')">Светлая</button></div><button class="btn btn-secondary install-button" id="helper-install" hidden onclick="installHelper()">Установить Helper на устройство</button></section>`);
 
-    document.getElementById('misc-page').insertAdjacentHTML('afterbegin', `<section class="card tools-card"><h2>Под рукой</h2><div class="tools-grid">${[['calendar-page','Смены','calendar'],['vault-page','Личный сейф','lock'],['profile-page','Мои цели','activity'],['export-page','Отчёты','chart'],['settings-page','Настройки','settings']].map(([id,label,glyph])=>`<button onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span>${icon('arrow')}</button>`).join('')}</div></section>`);
-    document.querySelector('#misc-page .tools-grid').insertAdjacentHTML('beforeend', `<button onclick="lockVault()">${icon('lock')}<span>Заблокировать</span>${icon('arrow')}</button>`);
     const auth = document.querySelector('#auth-page .card');
     auth.classList.add('auth-form');
     auth.firstElementChild.outerHTML = '<div class="auth-wordmark"><span class="brand-mark">h<span>·</span></span>helper</div>';
-    auth.querySelector('h2').textContent = 'Ваше личное пространство';
-    auth.querySelector('.subtitle').textContent = 'Один ключ ко всему, что важно.';
+    auth.querySelector('h2').textContent = 'Вход';
+    auth.querySelector('.subtitle').remove();
     const isNew = !localStorage.getItem('encMasterData');
     const input = document.getElementById('master-password');
     input.setAttribute('aria-label',isNew ? 'Придумайте мастер-пароль' : 'Мастер-пароль');
@@ -58,7 +56,6 @@ function setupExperience() {
     auth.querySelector('button[onclick="unlockVault()"]').textContent = isNew ? 'Создать пространство →' : 'Открыть пространство →';
     const note = document.createElement('p'); note.className = 'helper-hint'; note.textContent = 'Запомните мастер-пароль. Он шифрует данные, восстановить его нельзя.'; input.closest('.input-with-action').after(note);
     auth.querySelector('button[onclick="resetVault()"]').classList.add('reset-link');
-    document.getElementById('auth-page').insertAdjacentHTML('afterbegin', '<section class="auth-story"><span class="eyebrow">ВАШ ЛИЧНЫЙ HELPER</span><h1>Жизнь сложная.<br>Пусть планы<br>будут проще<span class="heading-dot">.</span></h1><p>Дела, финансы и забота о себе.<br>В одном тихом, понятном месте.</p><div class="auth-benefits"><span>01 / Без регистрации</span><span>02 / Доступно офлайн</span><span>03 / Под вашим контролем</span></div></section>');
     mountWorkspace();
     document.getElementById('toast-box').setAttribute('role','status');
     document.querySelectorAll('input:not([aria-label]),textarea:not([aria-label]),select:not([aria-label])').forEach(field=>{if(field.placeholder && !field.labels?.length)field.setAttribute('aria-label',field.placeholder);});
@@ -97,6 +94,7 @@ function updateConnectionStatus() {
     const status = document.getElementById('connection-status');
     if (!status) return;
     const online = navigator.onLine;
+    status.hidden = online;
     status.classList.toggle('is-offline', !online);
     status.querySelector('span').textContent = online ? 'Данные на этом устройстве' : 'Офлайн · локальные функции доступны';
 }
@@ -170,10 +168,11 @@ function renderExperience(pageId) {
     const page = pageId || document.querySelector('.page.active')?.id;
     const unlocked = !!masterKey;
     document.body.classList.toggle('is-unlocked',unlocked);
-    for(const id of ['helper-sidebar','helper-dock','workspace-topbar'])document.getElementById(id).hidden = !unlocked;
+    for(const id of ['helper-sidebar','helper-dock'])document.getElementById(id).hidden = !unlocked;
     document.querySelectorAll('[data-route]').forEach(button=>{
         const route = page === 'food-page' || page === 'profile-page' ? 'health-page' : page === 'add-vault-page' ? 'vault-page' : page;
-        const active = button.dataset.route === route;
+        const inDock = button.closest('#helper-dock');
+        const active = button.dataset.route === route || (inDock && button.dataset.route === 'more-page' && !['dashboard-page','planner-page','health-page','budget-page'].includes(route));
         button.classList.toggle('is-active',active);
         if(active)button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current');
     });
@@ -186,16 +185,10 @@ function renderExperience(pageId) {
         document.querySelector('[onclick="unlockVault()"]').textContent = existing ? 'Открыть пространство →' : 'Создать пространство →';
         return;
     }
-    document.getElementById('topbar-page').textContent = workspacePages[page]?.[0] || 'Сегодня';
     renderWorkspace();
 
 }
 function formatHelperMoney(value) { return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(value); }
 
-function quickWater() {
-    if (!masterKey) return;
-    recordDailyMetric('water', 250);
-    showToast(`Добавлено 250 мл · ${currentDateStr === getFormattedDate(new Date()) ? 'сегодня' : currentDateStr}`);
-}
 
 setupExperience();

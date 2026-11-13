@@ -13,8 +13,8 @@
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <script defer src="vendor/crypto-js.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=3.0">
-    <link rel="stylesheet" href="experience.css?v=3.0">
+    <link rel="stylesheet" href="styles.css?v=3.1">
+    <link rel="stylesheet" href="experience.css?v=3.1">
 </head>
 <body>
 
@@ -41,27 +41,20 @@
 
             <button class="btn btn-danger" onclick="resetVault()" style="margin-top: 12px; font-size: 13px; padding: 11px;">Сбросить локальные данные</button>
 
-            <p style="margin-top: 24px; font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace; letter-spacing: 0.5px; opacity: 0.7;">
-                Helper 3.0 · Личное пространство
-            </p>
+
         </div>
     </div>
 
     <main id="dashboard-page" class="page">
-        <section class="welcome-banner"><div><span class="eyebrow">В СВОЁМ РИТМЕ</span><h2>Меньше суеты.<br>Больше жизни.</h2><p>Планы, деньги и забота о себе.<br>Всё важное уже рядом.</p><button class="banner-link" onclick="document.getElementById('focus-input').focus()">С чего начнём? <span data-icon="arrow"></span></button></div><div class="orbit-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div><span class="orbit-core">h<span>·</span></span><span class="orbit-point point-one">✓</span><span class="orbit-point point-two">✳</span><span class="orbit-label">немного больше равновесия</span></div></section>
-        <section class="overview-strip" aria-label="Краткая сводка">
-            <button onclick="showSection('planner-page')"><span class="metric-label"><i data-icon="check"></i>Задачи в работе</span><strong id="overview-tasks">0</strong><small id="overview-task-note">можно выдохнуть</small><i class="metric-arrow" data-icon="arrow"></i></button>
-            <button onclick="showSection('budget-page')"><span class="metric-label"><i data-icon="wallet"></i>Баланс месяца</span><strong id="overview-money">0 ₽</strong><small>доходы минус расходы</small><i class="metric-arrow" data-icon="arrow"></i></button>
-            <button onclick="showSection('calendar-page')"><span class="metric-label"><i data-icon="calendar"></i>Сегодня по графику</span><strong id="overview-shift" class="shift-value">Не запланирована</strong><small>ваш рабочий ритм</small><i class="metric-arrow" data-icon="arrow"></i></button>
-        </section>
         <div class="workspace-grid">
-            <section class="card focus-card"><div class="section-top"><h2>В фокусе <span id="focus-count" class="count-badge">0</span></h2><button class="text-button" onclick="showSection('planner-page')">Все задачи <span data-icon="arrow"></span></button></div><div id="focus-list"></div><form class="focus-form" onsubmit="addFocusTask(event)"><span data-icon="plus"></span><input id="focus-input" placeholder="Что нужно сделать?" aria-label="Новая задача" maxlength="500" autocomplete="off"><button type="submit" aria-label="Добавить задачу"><span data-icon="arrow"></span></button></form></section>
-            <section class="card rhythm-card"><div class="section-top"><h2>Ближайшие 7 дней</h2><button class="icon-button" aria-label="Открыть смены" onclick="showSection('calendar-page')"><span data-icon="arrow"></span></button></div><div class="week-strip" id="week-strip"></div><p id="shift-description" class="helper-description"></p><div class="shift-legend"><span><i class="shift-dot day"></i>День</span><span><i class="shift-dot night"></i>Ночь</span><span><i class="shift-dot off"></i>Выходной</span></div></section>
-            <section class="card daily-health"><div class="section-top"><h2>Забота о себе</h2><button class="text-button" onclick="openTodayHealth()">Подробнее <span data-icon="arrow"></span></button></div><div class="health-metrics"><div class="health-metric water"><span class="health-icon" data-icon="drop"></span><span class="metric-label">Вода</span><strong id="daily-water">0</strong><small id="daily-water-goal"></small><div class="progress-track" role="progressbar" aria-label="Вода: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-water-bar" class="progress-fill"></div></div></div><div class="health-metric steps"><span class="health-icon" data-icon="activity"></span><span class="metric-label">Активность</span><strong id="daily-steps">0</strong><small id="daily-steps-goal"></small><div class="progress-track" role="progressbar" aria-label="Активность: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-steps-bar" class="progress-fill"></div></div></div><div class="health-metric cal"><span class="health-icon" data-icon="food"></span><span class="metric-label">Питание</span><strong id="daily-cal">0</strong><small id="daily-cal-goal"></small><div class="progress-track" role="progressbar" aria-label="Питание: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-cal-bar" class="progress-fill"></div></div></div></div><div class="quick-capture"><button onclick="todayWater()">+ 250 мл воды</button><button onclick="openTodayHealth('steps')">+ Шаги</button><button onclick="openTodayHealth('food')">+ Еда</button></div></section>
-            <section class="card month-card"><div class="section-top"><h2>Деньги за месяц</h2><span id="finance-month" class="quiet-badge"></span></div><div class="money-line"><span><i class="money-icon income">↙</i>Доходы</span><strong id="finance-income">0 ₽</strong></div><div class="money-line"><span><i class="money-icon expense">↗</i>Расходы</span><strong id="finance-expense">0 ₽</strong></div><div class="finance-track"><div id="finance-bar"></div></div><button class="text-button" onclick="showSection('budget-page')">Перейти к финансам <span data-icon="arrow"></span></button></section>
+            <section class="card focus-card"><div class="section-top"><h2>Задачи <span id="focus-count" class="count-badge">0</span></h2><button class="text-button" onclick="showSection('planner-page')">Все задачи <span data-icon="arrow"></span></button></div><div id="focus-list"></div><form class="focus-form" onsubmit="addFocusTask(event)"><span data-icon="plus"></span><input id="focus-input" placeholder="Что нужно сделать?" aria-label="Новая задача" maxlength="500" autocomplete="off"><button type="submit" aria-label="Добавить задачу"><span data-icon="arrow"></span></button></form></section>
+            <section class="card rhythm-card"><div class="section-top"><h2>Смены</h2><button class="text-button" onclick="showSection('calendar-page')">Календарь <span data-icon="arrow"></span></button></div><div class="week-strip" id="week-strip"></div><p id="shift-description" class="helper-description"></p></section>
+            <section class="card daily-health"><div class="section-top"><h2>Здоровье</h2><button class="text-button" onclick="openTodayHealth()">История и цели <span data-icon="arrow"></span></button></div><div class="health-metrics"><div class="health-metric water"><span class="metric-label">Вода</span><strong id="daily-water">0</strong><small id="daily-water-goal"></small><div class="progress-track" role="progressbar" aria-label="Вода: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-water-bar" class="progress-fill"></div></div></div><div class="health-metric steps"><span class="metric-label">Активность</span><strong id="daily-steps">0</strong><small id="daily-steps-goal"></small><div class="progress-track" role="progressbar" aria-label="Активность: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-steps-bar" class="progress-fill"></div></div></div><div class="health-metric cal"><span class="metric-label">Питание</span><strong id="daily-cal">0</strong><small id="daily-cal-goal"></small><div class="progress-track" role="progressbar" aria-label="Питание: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-cal-bar" class="progress-fill"></div></div></div></div><div class="quick-capture"><button onclick="openDailyMetric('water',true)">Добавить воду</button><button onclick="openDailyMetric('steps',true)">Добавить шаги</button><button onclick="openTodayHealth('food')">Записать еду</button></div></section>
+            <section class="card month-card"><div class="section-top"><h2>Финансы</h2><span id="finance-month" class="quiet-badge"></span></div><div class="money-line"><span>Доходы</span><strong id="finance-income">0 ₽</strong></div><div class="money-line"><span>Расходы</span><strong id="finance-expense">0 ₽</strong></div><button class="text-button" onclick="showSection('budget-page')">Перейти к финансам <span data-icon="arrow"></span></button></section>
         </div>
-        <footer class="workspace-footer"><span><span data-icon="lock"></span>Ваше пространство. Ваши данные.</span><span>Helper / 3.0</span></footer>
     </main>
+
+    <div id="more-page" class="page"></div>
 
     <div id="health-page" class="page">
 <div class="date-navigator">
@@ -69,6 +62,8 @@
             <span id="date-display">Сегодня</span>
             <button onclick="changeDate(1)"></button>
         </div>
+        <div class="health-entry-actions" aria-label="Записать показатели"><button class="btn btn-secondary" onclick="openDailyMetric('water')">Добавить воду</button><button class="btn btn-secondary" onclick="openDailyMetric('steps')">Добавить шаги</button><button class="btn btn-secondary" onclick="showSection('food-page')">Записать еду</button><button class="btn btn-secondary" onclick="addWeightEntry()">Записать вес</button></div>
+
 
         <div class="card">
             <div class="card-header" style="margin-bottom:4px;">
@@ -116,7 +111,7 @@
                 <div class="progress-track"><div id="weight-goal-progress" class="progress-fill fill-weight"></div></div>
             </div>
             <div id="weight-spark-wrap"></div>
-            <button class="btn btn-secondary" style="margin-top:12px;" onclick="addWeightEntry()">Записать вес</button>
+
         </div>
 
         <div class="card" id="diet-balance-card">
@@ -149,7 +144,6 @@
             </div>
         </div>
 
-        <section class="card health-actions"><h2>Быстрая запись</h2><div class="quick-grid"><button class="btn" onclick="showSection('food-page')">Записать еду</button><button class="btn btn-secondary" onclick="quickWater()">+ 250 мл воды</button><button class="btn btn-secondary" onclick="promptDailyMetric('steps')">Шаги</button></div></section>
         <div class="card">
             <h2>История за день</h2>
             <div id="daily-history-list" class="list-container" style="margin-top: 10px;"></div>
@@ -159,14 +153,14 @@
 
     <div id="food-page" class="page">
         <div class="card">
-            <h2>Расчёт питания</h2>
-            <p class="subtitle">Опишите блюдо текстом или добавьте фото — Helper рассчитает КБЖУ и сохранит результат</p>
-            <textarea id="food-input" placeholder="Например: омлет из двух яиц и кофе без сахара..."></textarea>
-            <input type="file" id="food-image" accept="image/*" class="file-input" onchange="previewImage(event)" style="margin-bottom: 8px;">
-            <img id="image-preview" style="display:none; width:100%; border-radius:12px; margin-bottom:12px; max-height:220px; object-fit: cover;">
-            <button class="btn" onclick="analyzeFood()" id="analyze-btn">Рассчитать и зафиксировать</button>
-            <div id="food-result" class="result-box hidden" style="margin-top:12px; padding:12px; background:rgba(59, 130, 246, 0.1); border-radius:12px; border:1px solid rgba(59, 130, 246, 0.3);"></div>
-            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="showSection('dashboard-page')">Назад</button>
+            <label for="food-input">Блюдо и порция</label>
+            <textarea id="food-input" placeholder="Например: омлет из 2 яиц, хлеб 40 г, кофе с молоком"></textarea>
+            <label for="food-image">Фото, если есть</label>
+            <input type="file" id="food-image" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onchange="previewImage(event)">
+            <img id="image-preview" alt="Фото блюда" style="display:none;width:100%;max-height:220px;object-fit:contain">
+            <div class="food-actions"><button class="btn" onclick="analyzeFood()" id="analyze-btn">Оценить</button><button class="text-button" onclick="cancelFoodAnalysis()" id="food-cancel" hidden>Отменить</button><button class="text-button" onclick="showSection('settings-page');document.getElementById('api-key-input').focus()">Настроить ИИ</button></div>
+            <p id="food-status" class="food-status" role="status" aria-live="polite" hidden></p>
+            <div id="food-result" class="result-box hidden"></div>
         </div>
     </div>
 
@@ -179,7 +173,6 @@
             </div>
             <div id="tasks-list" class="list-container" style="margin-top: 10px;"></div>
         </div>
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
     <div id="calendar-page" class="page">
@@ -216,7 +209,6 @@
             </div>
             <div class="calendar-grid" id="cal-grid"></div>
         </div>
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
     <div id="budget-page" class="page">
@@ -376,8 +368,6 @@
 
             <div id="debts-list" class="list-container" style="margin-top:12px;"></div>
         </div>
-
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
     </div>
 
 
@@ -425,12 +415,14 @@
 
         <div class="card">
             <h2>Подключения</h2>
-            <p class="subtitle">Google AI Studio (Для анализа еды по фото и тексту)</p>
+            <label for="api-key-input">Ключ Gemini</label>
             <div class="input-with-action">
                 <input type="password" id="api-key-input" placeholder="AIzaSy...">
                 <button type="button" class="input-action-btn" onclick="toggleInputVisibility('api-key-input', this)" title="Показать/скрыть"></button>
             </div>
 
+            <button id="gemini-check" class="btn btn-secondary" onclick="checkGeminiConnection()">Проверить доступ к Gemini</button>
+            <p id="gemini-check-status" class="helper-hint" role="status" aria-live="polite"></p>
             <p class="subtitle">GitHub Personal Access Token (права `repo`)</p>
             <div class="input-with-action">
                 <input type="password" id="gh-token-input" placeholder="ghp_...">
@@ -445,7 +437,6 @@
             <input type="text" id="gh-public-repo-input" placeholder="username/public-files">
         </div>
         <button class="btn" onclick="saveSettings()">Сохранить настройки</button>
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
     <div id="misc-page" class="page">
@@ -471,8 +462,6 @@
                 <a id="tiktok-open-browser-btn" href="#" target="_blank" class="btn btn-secondary" style="margin-top: 4px;">🌐 Открыть оригинал в браузере</a>
             </div>
         </div>
-
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
     </div>
 
     <div id="vault-page" class="page">
@@ -548,7 +537,6 @@
             </div>
             <button class="btn btn-success" onclick="exportCustomPeriod()">Скачать CSV-файл</button>
         </div>
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
     <div id="profile-page" class="page">
@@ -586,12 +574,12 @@
             <input type="number" step="0.1" id="prof-target-weight" placeholder="Цель по весу (кг)">
 
             <button class="btn" onclick="calculateAndSaveProfile()">Рассчитать и сохранить норму</button>
-            <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
         </div>
     </div>
 
-    <script defer src="app.js?v=3.0"></script>
-    <script defer src="workspace.js?v=3.0"></script>
-    <script defer src="experience.js?v=3.0"></script>
+    <script defer src="food-ai.js?v=3.1"></script>
+    <script defer src="app.js?v=3.1"></script>
+    <script defer src="workspace.js?v=3.1"></script>
+    <script defer src="experience.js?v=3.1"></script>
 </body>
 </html>

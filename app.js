@@ -123,11 +123,11 @@ let data = {
             return `${year}-${month}-${day}`;
         }
 
-        function getTodayData() {
-            if (!data.days[currentDateStr]) {
-                data.days[currentDateStr] = { calories: 0, water: 0, steps: 0, mood: '—', meals: [], waterList: [], stepsList: [], moodList: [], weightList: [] };
+        function getTodayData(date = currentDateStr) {
+            if (!data.days[date]) {
+                data.days[date] = { calories: 0, water: 0, steps: 0, mood: '—', meals: [], waterList: [], stepsList: [], moodList: [], weightList: [] };
             }
-            let d = data.days[currentDateStr];
+            let d = data.days[date];
             if (!d.meals) d.meals = [];
             if (!d.waterList) d.waterList = [];
             if (!d.stepsList) d.stepsList = [];
@@ -141,6 +141,7 @@ let data = {
 
         function showSection(pageId) {
             if (!masterKey && pageId !== 'auth-page') return;
+            if (document.querySelector('#food-page.active') && pageId !== 'food-page') cancelFoodAnalysis();
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const targetPage = document.getElementById(pageId);
             if (targetPage) targetPage.classList.add('active');
@@ -188,6 +189,9 @@ let data = {
         }
 
         function lockVault() {
+            cancelFoodAnalysis();
+            document.getElementById('metric-dialog')?.close();
+            metricEntry = null;
             masterKey = "";
             data = {
                 days: {}, shifts: {}, tasks: [], debts: [], vault: [], uploads: [],
@@ -589,18 +593,15 @@ let data = {
         function deleteWater(idx) { let d = getTodayData(); d.water = Math.max(0, d.water - d.waterList[idx]); d.waterList.splice(idx, 1); saveEncrypted(); updateUI(); }
         function deleteSteps(idx) { let d = getTodayData(); d.steps = Math.max(0, d.steps - d.stepsList[idx]); d.stepsList.splice(idx, 1); saveEncrypted(); updateUI(); }
 
-        function recordDailyMetric(metric, amount) {
+        function recordDailyMetric(metric, amount, date = currentDateStr) {
             const value = Number(amount);
             if (!masterKey || !['water','steps'].includes(metric) || !Number.isSafeInteger(value) || value <= 0) return false;
-            const day = getTodayData();
+            const day = getTodayData(date);
+            const previous = day[metric];
             day[metric] = Number(day[metric] || 0) + value;
             day[metric + 'List'].push(value);
-            saveEncrypted(); updateUI(); return true;
-        }
-        function promptDailyMetric(metric) {
-            const water = metric === 'water';
-            const value = prompt(water ? 'Количество воды (мл):' : 'Количество шагов:', water ? '250' : '1000');
-            if (value !== null && !recordDailyMetric(metric, value)) showToast('Введите целое положительное число');
+            try { saveEncrypted(); } catch (error) { day[metric] = previous; day[metric + 'List'].pop(); throw error; }
+            updateUI(); return true;
         }
 
         function saveSettings() {
@@ -609,8 +610,7 @@ let data = {
             data.githubRepo = document.getElementById('gh-repo-input').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
             data.publicRepo = document.getElementById('gh-public-repo-input').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
             saveEncrypted();
-            alert("Настройки сохранены!");
-            showSection('dashboard-page');
+            showToast("Настройки сохранены");
         }
 
         function changeCalMonth(offset) {
@@ -771,103 +771,91 @@ let data = {
             });
         }
 
-        async function analyzeFood() {
-            const txt = document.getElementById('food-input').value.trim();
-            const fInput = document.getElementById('food-image');
-            if (!txt && !fInput.files.length) return alert("Введите описание еды или прикрепите фото!");
-            if (!data.geminiApiKey) { alert("Укажите API ключ в Настройках!"); showSection('settings-page'); return; }
+        let foodRequest = null;
+        let foodRequestVersion = 0;
+        let pendingMeal = null;
 
-            const btn = document.getElementById('analyze-btn'), resBox = document.getElementById('food-result');
-            btn.innerText = "⏳ Анализ..."; btn.disabled = true; resBox.classList.add('hidden');
-
-            let parts = [{ text: `Ты профессиональный нутрициолог и диетолог. Проанализируй блюдо по описанию и/или фото.
-Определи:
-1. "name": Название блюда
-2. "cal": Калорийность (ккал, целое число)
-3. "p": Белки (граммы, число)
-4. "f": Жиры (граммы, число)
-5. "c": Углеводы (граммы, число)
-6. "health_type": Категория полезности: "healthy" (полезная/цельная/здоровая еда: овощи, крупы, фрукты, рыба, птица, яйца, творог, чистые супы) или "unhealthy" (вредная/джанк-фуд: фастфуд, сладости, чипсы, газировка, фритюр, продукты с избытком сахара и трансжиров).
-7. "health_score": Оценка пользы от 1 до 10 (10 - идеально полезно, 1 - ультра-джанк).
-8. "health_comment": Краткий вердикт (3-7 слов, например "Качественный белок и клетчатка" или "Избыток сахара и трансжиров").
-
-Описание: "${txt}".
-Верни ТОЛЬКО валидный JSON:
-{"name":"Омлет со шпинатом","cal":280,"p":20,"f":16,"c":4,"health_type":"healthy","health_score":9,"health_comment":"Богато белком и микроэлементами"}` }];
-            if (fInput.files.length) {
-                try {
-                    let b64 = await fileToBase64(fInput.files[0]);
-                    parts.push({ inline_data: { mime_type: fInput.files[0].type || "image/jpeg", data: b64 } });
-                } catch(e) { alert("Ошибка чтения фото"); btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; return; }
-            }
-
-            const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite", "gemini-2.5-pro", "gemini-1.5-pro", "gemini-3.0-flash", "gemini-3.5-flash"];
-            let lastError = null, successfulData = null;
-
-            for (let modelName of modelsToTry) {
-                try {
-                    let resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${data.geminiApiKey}`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.1 } })
-                    });
-                    let j = await resp.json();
-                    if (resp.ok && j.candidates && j.candidates.length) { successfulData = j; break; } else { lastError = j.error?.message || `HTTP ${resp.status}`; }
-                } catch(err) { lastError = err.message; }
-            }
-
-            if (!successfulData) {
-                alert("Ошибка анализа: " + (lastError || "Не удалось получить ответ"));
-                btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; return;
-            }
-
-            try {
-                let rawAiTxt = successfulData.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                let jsonMatch = rawAiTxt.match(/\{[\s\S]*\}/);
-                if (!jsonMatch) throw new Error("Формат ответа не распознан");
-
-                let meal = JSON.parse(jsonMatch[0]);
-                meal.cal = Number(meal.cal) || 0;
-                meal.p = Number(meal.p) || 0;
-                meal.f = Number(meal.f) || 0;
-                meal.c = Number(meal.c) || 0;
-                meal.name = meal.name || "Прием пищи";
-                meal.health_type = (meal.health_type === "unhealthy" || (meal.health_score && meal.health_score < 6)) ? "unhealthy" : "healthy";
-                meal.health_score = Number(meal.health_score) || (meal.health_type === "healthy" ? 8 : 3);
-                meal.health_comment = meal.health_comment || (meal.health_type === "healthy" ? "Полезная сбалансированная еда" : "Высокая калорийность / джанк");
-
-                let dData = getTodayData();
-                dData.calories += meal.cal;
-                dData.meals.push({
-                    name: meal.name,
-                    cal: meal.cal,
-                    p: meal.p,
-                    f: meal.f,
-                    c: meal.c,
-                    health_type: meal.health_type,
-                    health_score: meal.health_score,
-                    health_comment: meal.health_comment
-                });
-                saveEncrypted();
-                updateUI();
-
-                let isH = meal.health_type === 'healthy';
-                let badgeText = isH ? `🟢 Полезная еда (${meal.health_score}/10)` : `🔴 Вредная еда / Читмил (${meal.health_score}/10)`;
-                let badgeStyle = isH ? 'background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(244,63,94,0.15); color:#fb7185; border:1px solid rgba(244,63,94,0.3);';
-
-                resBox.innerHTML = `
-                    <div style="font-size:15px; font-weight:700;">${escapeHtml(meal.name)}</div>
-                    <div style="margin-top:4px; font-size:13px;">🔥 <strong>${meal.cal} ккал</strong> | Б: ${meal.p}г • Ж: ${meal.f}г • У: ${meal.c}г</div>
-                    <div style="margin-top:6px;">
-                        <span style="display:inline-block; font-size:11px; font-weight:600; padding:3px 9px; border-radius:6px; ${badgeStyle}">${badgeText}</span>
-                    </div>
-                    ${meal.health_comment ? `<div style="font-size:12px; color:var(--text-muted); margin-top:5px; font-style:italic;">💬 ${escapeHtml(meal.health_comment)}</div>` : ''}
-                    <div style="margin-top:8px; font-size:12px; color:#60a5fa;">✓ Добавлено за ${escapeHtml(document.getElementById('date-display').innerText)}!</div>
-                `;
-                resBox.classList.remove('hidden');
-                document.getElementById('food-input').value = '';
-                fInput.value = '';
-                document.getElementById('image-preview').style.display = 'none';
-            } catch(e) { alert("Ошибка: " + e.message); } finally { btn.innerText = "✨ Рассчитать и зафиксировать"; btn.disabled = false; }
+        function foodStatus(message, error = false) {
+            const status = el('food-status');
+            status.textContent = message; status.hidden = !message;
+            status.classList.toggle('is-error', error);
         }
+
+        function cancelFoodAnalysis() {
+            foodRequestVersion++;
+            foodRequest?.abort(); foodRequest = null; pendingMeal = null;
+            const button = el('analyze-btn');
+            if (button) { button.disabled = false; button.textContent = 'Оценить'; }
+            if (el('food-cancel')) el('food-cancel').hidden = true;
+            if (el('food-result')) el('food-result').classList.add('hidden');
+            if (el('gemini-check-status')) el('gemini-check-status').textContent = '';
+            if (el('gemini-check')) el('gemini-check').disabled = false;
+            foodStatus('');
+        }
+
+        async function analyzeFood() {
+            if (!masterKey || foodRequest) return;
+            const text = el('food-input').value.trim(), file = el('food-image').files[0];
+            if (!text && !file) { foodStatus('Опишите блюдо или добавьте фото.', true); return; }
+            if (!data.geminiApiKey?.trim()) { foodStatus('Добавьте ключ Gemini в настройках.', true); return; }
+            if (file && (!['image/jpeg','image/png','image/webp','image/heic','image/heif'].includes(file.type) || file.size > 8 * 1024 * 1024)) {
+                foodStatus('Нужно фото JPEG, PNG, WebP или HEIC размером до 8 МБ.', true); return;
+            }
+            const session = data, key = masterKey, date = currentDateStr, version = ++foodRequestVersion;
+            const controller = new AbortController(); foodRequest = controller; pendingMeal = null;
+            el('analyze-btn').disabled = true; el('analyze-btn').textContent = 'Оцениваю…';
+            el('food-cancel').hidden = false; el('food-result').classList.add('hidden');
+            foodStatus('Связываюсь с Gemini…');
+            try {
+                const image = file ? {type:file.type,base64:await fileToBase64(file)} : undefined;
+                if (controller.signal.aborted) return;
+                const result = await FoodAI.analyze({key:session.geminiApiKey,text,image,signal:controller.signal});
+                if (version !== foodRequestVersion || data !== session || masterKey !== key) return;
+                pendingMeal = {meal:result.meal,date,session,key};
+                const meal = result.meal;
+                el('food-result').innerHTML = `<h2>${escapeHtml(meal.name)}</h2><div class="meal-values"><strong>${meal.cal} <small>ккал</small></strong><span>Б ${meal.p} г</span><span>Ж ${meal.f} г</span><span>У ${meal.c} г</span></div><p class="helper-description">${escapeHtml(meal.health_comment)} · Оценка состава ${meal.health_score}/10</p><p class="helper-hint">Приблизительный расчёт. Проверьте порцию перед сохранением.</p><button class="btn" id="save-meal-btn" onclick="saveAnalyzedMeal()">Добавить за ${escapeHtml(date.split('-').reverse().join('.'))}</button>`;
+                el('food-result').classList.remove('hidden'); foodStatus('');
+            } catch (error) {
+                if (version === foodRequestVersion && data === session && masterKey === key) foodStatus(error.message || 'Не удалось оценить блюдо.', true);
+            } finally {
+                if (version === foodRequestVersion) {
+                    foodRequest = null; el('analyze-btn').disabled = false; el('analyze-btn').textContent = 'Оценить'; el('food-cancel').hidden = true;
+                }
+            }
+        }
+
+        function saveAnalyzedMeal() {
+            const pending = pendingMeal;
+            if (!pending || data !== pending.session || !masterKey || masterKey !== pending.key) return;
+            const day = getTodayData(pending.date);
+            const previousCalories = day.calories;
+            day.calories = Number(day.calories || 0) + pending.meal.cal; day.meals.push(pending.meal);
+            try { saveEncrypted(); }
+            catch { day.calories = previousCalories; day.meals.pop(); foodStatus('Не удалось сохранить. Проверьте свободное место на устройстве.',true); return; }
+            pendingMeal = null;
+            el('save-meal-btn').disabled = true; el('save-meal-btn').textContent = 'Добавлено';
+            el('food-input').value = ''; el('food-image').value = ''; el('image-preview').style.display = 'none';
+            updateUI(); showToast('Приём пищи добавлен');
+        }
+
+        async function checkGeminiConnection() {
+            if (!masterKey || foodRequest) return;
+            const key = el('api-key-input').value.trim();
+            const status = el('gemini-check-status');
+            if (!key) { status.textContent = 'Введите ключ Gemini.'; return; }
+            const session = data, version = ++foodRequestVersion;
+            const controller = new AbortController(); foodRequest = controller;
+            el('gemini-check').disabled = true; status.textContent = 'Проверяю доступ…';
+            try {
+                const model = await FoodAI.discoverModel(key,{signal:controller.signal,timeout:15000});
+                if (version === foodRequestVersion && masterKey && data === session) status.textContent = `Google API доступен. Модель: ${model.replace('models/','')}. Квота генерации проверяется при оценке.`;
+            } catch (error) {
+                if (version === foodRequestVersion && masterKey && data === session) status.textContent = error.message;
+            } finally {
+                if (version === foodRequestVersion) { foodRequest = null; el('gemini-check').disabled = false; }
+            }
+        }
+
 
         function formatCompactBudget(num) {
             if (!num || isNaN(num)) return '0';
