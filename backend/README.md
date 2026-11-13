@@ -18,4 +18,6 @@ Output: `backend/dist/server/index.js`. For Sites, copy the generated module to 
 
 `food-config.js` sets the public server origin. An empty value uses the direct Google path for local development only. The production app uses the server first and does not silently retry a possibly billable request through another route.
 
+Food analysis prefers stable Flash-Lite models and uses minimal thinking for known supported families. A definitive HTTP 5xx/404 generation failure gets one bounded retry on the next available model; quota, key, network and timeout errors do not cause extra generation attempts. Logs contain only phase, model ID, HTTP status, error category and elapsed time.
+
 `tests/food-server.test.cjs` verifies API bounds, CORS, credentials, response validation and redirect handling. `tests/food-gateway-browser.cjs` runs a real local HTTP gateway with fixture Gemini replies while blocking browser access to Google. The Settings check performs an actual Gemini generation on explicit user action.

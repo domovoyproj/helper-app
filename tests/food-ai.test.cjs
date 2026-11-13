@@ -71,3 +71,30 @@ test('server generation check uses the check endpoint and never falls back to a 
  assert.equal(calls,1);
  await assert.rejects(AI.analyze({key:'test',text:'x',server:'http://external.example'}),e=>e.code==='config');
 });
+
+test('food analysis prefers stable Flash-Lite and limits thinking for supported families',()=>{
+ const models=['gemini-3.8-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite','gemini-4-hydrogen'].map(name=>({...model,name:'models/'+name}));
+ assert.equal(AI.selectModel(models),'models/gemini-3.5-flash-lite');
+ assert.deepEqual(AI.generationConfig('models/gemini-3.5-flash-lite').thinkingConfig,{thinkingLevel:'MINIMAL'});
+ assert.deepEqual(AI.generationConfig('models/gemini-2.5-flash-lite').thinkingConfig,{thinkingBudget:0});
+ assert.deepEqual(AI.generationConfig('models/gemini-3.8-flash').thinkingConfig,{thinkingLevel:'LOW'});
+});
+test('temporary generation failure retries once on the next available model',async()=>{
+ const sent=[];
+ const answer=await AI.analyze({key:'test',text:'Яблоко 100 г',fetchImpl:async(url,options)=>{
+   if(options.method==='GET')return ok({models:[{...model,name:'models/gemini-3.5-flash-lite'},model]});
+   sent.push(url);return sent.length===1?{ok:false,status:503,json:async()=>({error:{message:'overloaded'}})}:ok(result(meal));
+ }});
+ assert.equal(sent.length,2);assert.ok(sent[0].includes('flash-lite'));assert.equal(answer.meal.cal,280);
+});
+test('generation retry is bounded and does not retry quota or ambiguous network errors',async()=>{
+ for(const mode of ['server','quota','network']){
+  let count=0;
+  await assert.rejects(AI.analyze({key:'test',text:'еда',fetchImpl:async(url,options)=>{
+   if(options.method==='GET')return ok({models:[model]});count++;
+   if(mode==='network')throw new TypeError('Load failed');
+   return {ok:false,status:mode==='server'?503:429,json:async()=>({error:{message:mode}})};
+  }}),error=>error.code===mode);
+  assert.equal(count,mode==='server'?2:1);
+ }
+});

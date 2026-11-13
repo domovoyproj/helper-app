@@ -20,6 +20,8 @@ export function createFoodWorker(ai, {fetchImpl = fetch, allowedOrigin = 'https:
         const key = request.headers.get('x-goog-api-key')?.trim();
         if (!key || key.length > 256 || /\s/.test(key)) return reply({error:{code:'key',message:'Введите корректный ключ Gemini.'}},401,origin);
         if (!request.headers.get('Content-Type')?.toLowerCase().startsWith('application/json')) return reply({error:{code:'input',message:'Нужен JSON.'}},415,origin);
+        const started = Date.now();
+        let stage = 'input', selectedModel = '';
         try {
             if (Number(request.headers.get('Content-Length') || 0) > maxBytes) throw new ai.FoodAIError('size','Фото слишком большое. Максимум 8 МБ.');
             // Bound the stream even when Content-Length is absent or inaccurate.
@@ -43,16 +45,22 @@ export function createFoodWorker(ai, {fetchImpl = fetch, allowedOrigin = 'https:
                 typeof image.base64 !== 'string' || !image.base64.length || image.base64.length > 11184812 ||
                 image.base64.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(image.base64))) throw new ai.FoodAIError('input','Нужно фото JPEG, PNG, WebP или HEIC размером до 8 МБ.');
             const upstream = async (url, options) => {
+                stage = options.method === 'POST' ? 'generation' : 'models';
+                if (stage === 'generation') selectedModel = new URL(url).pathname.split('/').pop().split(':')[0];
+                console.info(JSON.stringify({event:'food_stage',stage,model:selectedModel,elapsedMs:Date.now()-started}));
                 // Worker RequestInit supports manual/follow redirects, unlike browsers' error mode.
                 // Never follow a redirect with the user's credential.
                 const {credentials, ...init} = options;
                 const response = await fetchImpl(url,{...init,redirect:'manual'});
+                console.info(JSON.stringify({event:'food_upstream',stage,model:selectedModel,status:response.status,elapsedMs:Date.now()-started}));
                 if (response.status >= 300 && response.status < 400) throw new ai.FoodAIError('server','Google вернул неожиданный адрес ответа.');
                 return response;
             };
             const result = await ai.analyze({key,text:text.trim(),image,signal:request.signal,fetchImpl:upstream});
+            console.info(JSON.stringify({event:'food_complete',model:result.model,elapsedMs:Date.now()-started}));
             return reply({meal:result.meal,model:result.model,transport:'server'},200,origin);
         } catch (error) {
+            console.info(JSON.stringify({event:'food_failure',stage,model:selectedModel,code:error instanceof ai.FoodAIError ? error.code : 'internal',elapsedMs:Date.now()-started}));
             if (!(error instanceof ai.FoodAIError)) return reply({error:{code:'server',message:'Сервер оценки временно недоступен.'}},502,origin);
             const status = ({key:401,permission:403,region:403,quota:429,billing:402,input:400,size:413,timeout:504,cancelled:408})[error.code] || 502;
             const message = error.code === 'network' ? 'Сервер Helper не смог связаться с Google. Повторите запрос позже.' : error.message;
