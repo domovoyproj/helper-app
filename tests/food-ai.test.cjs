@@ -57,3 +57,17 @@ test('timeout and cancellation are separate, bounded outcomes',async()=>{
   const controller=new AbortController();controller.abort();
   await assert.rejects(AI.request('models','test',{fetchImpl:fake,signal:controller.signal}),e=>e.code==='cancelled');
 });
+
+test('server mode never contacts Google from the browser and validates the returned meal',async()=>{
+ const calls=[];
+ const response=await AI.analyze({key:'fixture-key',text:'Яблоко',server:'https://helper.example',fetchImpl:async(url,options)=>{calls.push({url,options});return ok({meal,model:model.name});}});
+ assert.equal(response.meal.cal,280);assert.equal(calls.length,1);assert.equal(calls[0].url,'https://helper.example/v1/analyze');
+ assert.equal(calls[0].options.credentials,'omit');assert.deepEqual(JSON.parse(calls[0].options.body),{text:'Яблоко'});
+ await assert.rejects(AI.analyze({key:'test',text:'еда',server:'https://helper.example',fetchImpl:async()=>ok({meal:{...meal,cal:'invalid'}})}),e=>e.code==='response');
+});
+test('server generation check uses the check endpoint and never falls back to a blocked Google connection',async()=>{
+ let calls=0;
+ await assert.rejects(AI.check({key:'test',server:'https://helper.example',fetchImpl:async(url)=>{calls++;assert.equal(url,'https://helper.example/v1/check');return {ok:false,status:429,json:async()=>({error:{code:'quota',message:'Лимит'}})};}}),e=>e.code==='quota');
+ assert.equal(calls,1);
+ await assert.rejects(AI.analyze({key:'test',text:'x',server:'http://external.example'}),e=>e.code==='config');
+});

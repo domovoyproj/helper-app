@@ -21,7 +21,7 @@ const assert = require('node:assert/strict');
         });
         await page.goto(process.env.HELPER_URL || 'http://127.0.0.1:8765');
         await page.locator('#master-password').fill('browser-fixture');await page.locator('[onclick="unlockVault()"]').click();
-        await page.evaluate(()=>{data.geminiApiKey='fixture-key';showSection('food-page');});
+        await page.evaluate(()=>{window.HELPER_FOOD_SERVER='';data.geminiApiKey='fixture-key';showSection('food-page');});
         await page.locator('#food-input').fill('Омлет из двух яиц');await page.locator('#analyze-btn').click();
         await page.locator('#food-status.is-error').waitFor();assert.match(await page.locator('#food-status').textContent(),/Нет соединения/);assert.equal(requests,1);
         assert.equal(await page.locator('#food-input').inputValue(),'Омлет из двух яиц');

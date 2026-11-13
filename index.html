@@ -13,8 +13,8 @@
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <script defer src="vendor/crypto-js.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=3.1">
-    <link rel="stylesheet" href="experience.css?v=3.1">
+    <link rel="stylesheet" href="styles.css?v=3.2">
+    <link rel="stylesheet" href="experience.css?v=3.2">
 </head>
 <body>
 
@@ -421,7 +421,8 @@
                 <button type="button" class="input-action-btn" onclick="toggleInputVisibility('api-key-input', this)" title="Показать/скрыть"></button>
             </div>
 
-            <button id="gemini-check" class="btn btn-secondary" onclick="checkGeminiConnection()">Проверить доступ к Gemini</button>
+            <p class="helper-hint">Оценка выполняется через сервер Helper. Ключ и описание передаются ему на время запроса и не сохраняются. Проверка выполнит одну оценку яблока и использует квоту Gemini.</p>
+            <button id="gemini-check" class="btn btn-secondary" onclick="checkGeminiConnection()">Проверить оценку еды</button>
             <p id="gemini-check-status" class="helper-hint" role="status" aria-live="polite"></p>
             <p class="subtitle">GitHub Personal Access Token (права `repo`)</p>
             <div class="input-with-action">
@@ -577,9 +578,10 @@
         </div>
     </div>
 
-    <script defer src="food-ai.js?v=3.1"></script>
-    <script defer src="app.js?v=3.1"></script>
-    <script defer src="workspace.js?v=3.1"></script>
-    <script defer src="experience.js?v=3.1"></script>
+    <script defer src="food-config.js?v=3.2"></script>
+    <script defer src="food-ai.js?v=3.2"></script>
+    <script defer src="app.js?v=3.2"></script>
+    <script defer src="workspace.js?v=3.2"></script>
+    <script defer src="experience.js?v=3.2"></script>
 </body>
 </html>

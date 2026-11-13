@@ -1,14 +1,15 @@
-const CACHE_VERSION = 'helper-v3.1';
+const CACHE_VERSION = 'helper-v3.2';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.json',
-  './styles.css?v=3.1',
-  './experience.css?v=3.1',
-  './app.js?v=3.1',
-  './food-ai.js?v=3.1',
-  './experience.js?v=3.1',
-  './workspace.js?v=3.1',
+  './styles.css?v=3.2',
+  './experience.css?v=3.2',
+  './app.js?v=3.2',
+  './food-config.js?v=3.2',
+  './food-ai.js?v=3.2',
+  './experience.js?v=3.2',
+  './workspace.js?v=3.2',
   './icon.svg',
   './icon-512.png',
   './vendor/crypto-js.min.js'

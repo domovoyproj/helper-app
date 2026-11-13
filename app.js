@@ -809,7 +809,7 @@ let data = {
             try {
                 const image = file ? {type:file.type,base64:await fileToBase64(file)} : undefined;
                 if (controller.signal.aborted) return;
-                const result = await FoodAI.analyze({key:session.geminiApiKey,text,image,signal:controller.signal});
+                const result = await FoodAI.analyze({key:session.geminiApiKey,text,image,signal:controller.signal,server:window.HELPER_FOOD_SERVER});
                 if (version !== foodRequestVersion || data !== session || masterKey !== key) return;
                 pendingMeal = {meal:result.meal,date,session,key};
                 const meal = result.meal;
@@ -847,8 +847,8 @@ let data = {
             const controller = new AbortController(); foodRequest = controller;
             el('gemini-check').disabled = true; status.textContent = 'Проверяю доступ…';
             try {
-                const model = await FoodAI.discoverModel(key,{signal:controller.signal,timeout:15000});
-                if (version === foodRequestVersion && masterKey && data === session) status.textContent = `Google API доступен. Модель: ${model.replace('models/','')}. Квота генерации проверяется при оценке.`;
+                const result = await FoodAI.check({key,signal:controller.signal,server:window.HELPER_FOOD_SERVER});
+                if (version === foodRequestVersion && masterKey && data === session) status.textContent = `Оценка работает: ${result.meal.name}, ${result.meal.cal} ккал. Проверены подключение, ключ и генерация ответа.`;
             } catch (error) {
                 if (version === foodRequestVersion && masterKey && data === session) status.textContent = error.message;
             } finally {
