@@ -1,12 +1,14 @@
 {
   "name": "helper-app",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "private": true,
-  "description": "Local-first personal assistant with read-only KYD summaries",
+  "description": "Private local-first workspace for tasks, health, shifts and finances",
   "scripts": {
     "test": "node tests/run.cjs",
-    "check": "node --check app.js && node --check experience.js && node --check kyd-connector.js && node --check sw.js",
-    "graph": "python -m graphify extract . --code-only"
+    "check": "node --check app.js && node --check experience.js && node --check sw.js && node --check workspace.js",
+    "graph": "graphify extract . --code-only"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  }
 }

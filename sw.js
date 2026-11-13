@@ -1,14 +1,15 @@
-const CACHE_VERSION = 'helper-v2.5';
+const CACHE_VERSION = 'helper-v3.0';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.json',
-  './styles.css',
-  './experience.css',
-  './app.js',
-  './experience.js',
-  './kyd-connector.js',
-  './IMG_0676.png',
+  './styles.css?v=3.0',
+  './experience.css?v=3.0',
+  './app.js?v=3.0',
+  './experience.js?v=3.0',
+  './workspace.js?v=3.0',
+  './icon.svg',
+  './icon-512.png',
   './vendor/crypto-js.min.js'
 ];
 self.addEventListener('install', (event) => {

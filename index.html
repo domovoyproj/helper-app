@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#101714">
+    <meta name="theme-color" content="#f6f5f1">
     <meta name="color-scheme" content="dark light">
     <meta name="description" content="Helper — локальный личный помощник для дел, финансов, здоровья и смен.">
     <title>Helper — личное пространство</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="IMG_0676.png">
-    <link rel="icon" type="image/png" href="IMG_0676.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
     <script defer src="vendor/crypto-js.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="experience.css">
+    <link rel="stylesheet" href="styles.css?v=3.0">
+    <link rel="stylesheet" href="experience.css?v=3.0">
 </head>
 <body>
 
@@ -25,44 +25,55 @@
             <div style="font-size: 38px; margin-bottom: 10px; animation: floatSlow 3s infinite ease-in-out;">🛡️</div>
             <h2 style="justify-content: center; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;">Helper</h2>
             <p class="subtitle">Мастер-пароль для расшифровки локальной базы</p>
-            
+
             <div class="input-with-action" style="margin-top: 14px;">
                 <input type="password" id="master-password" placeholder="Мастер-пароль" onkeydown="if(event.key==='Enter') unlockVault()" style="text-align: center; letter-spacing: 2px;">
-                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('master-password', this)" title="Показать/скрыть">👁️</button>
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('master-password', this)" title="Показать/скрыть"></button>
             </div>
-            
+
             <button class="btn" onclick="unlockVault()" style="margin-top: 4px;">Разблокировать</button>
-            
+
             <div class="quick-grid" style="margin-top: 8px;">
-                <button class="btn btn-github" onclick="restoreFromGitHubAuth()" style="margin-bottom:0; font-size:13px;">⬇️ С GitHub</button>
-                <button class="btn btn-secondary" onclick="document.getElementById('auth-import-file').click()" style="margin-bottom:0; font-size:13px;">📂 Из файла</button>
-                <input type="file" id="auth-import-file" accept=".json,.txt" style="display:none;" onchange="importBackupFileFromAuth(event)">
+                <button class="btn btn-github" onclick="restoreFromGitHubAuth()" style="margin-bottom:0; font-size:13px;">С GitHub</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('auth-import-file').click()" style="margin-bottom:0; font-size:13px;">Из файла</button>
+                <input type="file" id="auth-import-file" accept=".json,.txt" style="display:none;" onchange="importBackupFile(event)">
             </div>
-            
+
             <button class="btn btn-danger" onclick="resetVault()" style="margin-top: 12px; font-size: 13px; padding: 11px;">Сбросить локальные данные</button>
-            
+
             <p style="margin-top: 24px; font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace; letter-spacing: 0.5px; opacity: 0.7;">
-                Helper 2.1 · Личное пространство
+                Helper 3.0 · Личное пространство
             </p>
         </div>
     </div>
 
-    <div id="dashboard-page" class="page">
-        <div class="card card-header" style="padding: 14px 18px; margin-bottom: 12px;">
-            <h2>⚡ Helper</h2>
-            <button class="btn btn-secondary" style="width: auto; margin:0; padding: 7px 14px; font-size: 12px;" onclick="lockVault()">Блокировка</button>
+    <main id="dashboard-page" class="page">
+        <section class="welcome-banner"><div><span class="eyebrow">В СВОЁМ РИТМЕ</span><h2>Меньше суеты.<br>Больше жизни.</h2><p>Планы, деньги и забота о себе.<br>Всё важное уже рядом.</p><button class="banner-link" onclick="document.getElementById('focus-input').focus()">С чего начнём? <span data-icon="arrow"></span></button></div><div class="orbit-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div><span class="orbit-core">h<span>·</span></span><span class="orbit-point point-one">✓</span><span class="orbit-point point-two">✳</span><span class="orbit-label">немного больше равновесия</span></div></section>
+        <section class="overview-strip" aria-label="Краткая сводка">
+            <button onclick="showSection('planner-page')"><span class="metric-label"><i data-icon="check"></i>Задачи в работе</span><strong id="overview-tasks">0</strong><small id="overview-task-note">можно выдохнуть</small><i class="metric-arrow" data-icon="arrow"></i></button>
+            <button onclick="showSection('budget-page')"><span class="metric-label"><i data-icon="wallet"></i>Баланс месяца</span><strong id="overview-money">0 ₽</strong><small>доходы минус расходы</small><i class="metric-arrow" data-icon="arrow"></i></button>
+            <button onclick="showSection('calendar-page')"><span class="metric-label"><i data-icon="calendar"></i>Сегодня по графику</span><strong id="overview-shift" class="shift-value">Не запланирована</strong><small>ваш рабочий ритм</small><i class="metric-arrow" data-icon="arrow"></i></button>
+        </section>
+        <div class="workspace-grid">
+            <section class="card focus-card"><div class="section-top"><h2>В фокусе <span id="focus-count" class="count-badge">0</span></h2><button class="text-button" onclick="showSection('planner-page')">Все задачи <span data-icon="arrow"></span></button></div><div id="focus-list"></div><form class="focus-form" onsubmit="addFocusTask(event)"><span data-icon="plus"></span><input id="focus-input" placeholder="Что нужно сделать?" aria-label="Новая задача" maxlength="500" autocomplete="off"><button type="submit" aria-label="Добавить задачу"><span data-icon="arrow"></span></button></form></section>
+            <section class="card rhythm-card"><div class="section-top"><h2>Ближайшие 7 дней</h2><button class="icon-button" aria-label="Открыть смены" onclick="showSection('calendar-page')"><span data-icon="arrow"></span></button></div><div class="week-strip" id="week-strip"></div><p id="shift-description" class="helper-description"></p><div class="shift-legend"><span><i class="shift-dot day"></i>День</span><span><i class="shift-dot night"></i>Ночь</span><span><i class="shift-dot off"></i>Выходной</span></div></section>
+            <section class="card daily-health"><div class="section-top"><h2>Забота о себе</h2><button class="text-button" onclick="openTodayHealth()">Подробнее <span data-icon="arrow"></span></button></div><div class="health-metrics"><div class="health-metric water"><span class="health-icon" data-icon="drop"></span><span class="metric-label">Вода</span><strong id="daily-water">0</strong><small id="daily-water-goal"></small><div class="progress-track" role="progressbar" aria-label="Вода: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-water-bar" class="progress-fill"></div></div></div><div class="health-metric steps"><span class="health-icon" data-icon="activity"></span><span class="metric-label">Активность</span><strong id="daily-steps">0</strong><small id="daily-steps-goal"></small><div class="progress-track" role="progressbar" aria-label="Активность: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-steps-bar" class="progress-fill"></div></div></div><div class="health-metric cal"><span class="health-icon" data-icon="food"></span><span class="metric-label">Питание</span><strong id="daily-cal">0</strong><small id="daily-cal-goal"></small><div class="progress-track" role="progressbar" aria-label="Питание: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-cal-bar" class="progress-fill"></div></div></div></div><div class="quick-capture"><button onclick="todayWater()">+ 250 мл воды</button><button onclick="openTodayHealth('steps')">+ Шаги</button><button onclick="openTodayHealth('food')">+ Еда</button></div></section>
+            <section class="card month-card"><div class="section-top"><h2>Деньги за месяц</h2><span id="finance-month" class="quiet-badge"></span></div><div class="money-line"><span><i class="money-icon income">↙</i>Доходы</span><strong id="finance-income">0 ₽</strong></div><div class="money-line"><span><i class="money-icon expense">↗</i>Расходы</span><strong id="finance-expense">0 ₽</strong></div><div class="finance-track"><div id="finance-bar"></div></div><button class="text-button" onclick="showSection('budget-page')">Перейти к финансам <span data-icon="arrow"></span></button></section>
         </div>
+        <footer class="workspace-footer"><span><span data-icon="lock"></span>Ваше пространство. Ваши данные.</span><span>Helper / 3.0</span></footer>
+    </main>
 
-        <div class="date-navigator">
-            <button onclick="changeDate(-1)">◀</button>
+    <div id="health-page" class="page">
+<div class="date-navigator">
+            <button onclick="changeDate(-1)"></button>
             <span id="date-display">Сегодня</span>
-            <button onclick="changeDate(1)">▶</button>
+            <button onclick="changeDate(1)"></button>
         </div>
 
         <div class="card">
             <div class="card-header" style="margin-bottom:4px;">
-                <h2>📊 Прогресс дня и нормы</h2>
-                <button class="btn btn-secondary" style="width:auto; margin:0; padding:5px 10px; font-size:11px;" onclick="showSection('profile-page')">🎯 Мои нормы</button>
+                <h2>Прогресс дня и нормы</h2>
+                <button class="btn btn-secondary" style="width:auto; margin:0; padding:5px 10px; font-size:11px;" onclick="showSection('profile-page')">Мои нормы</button>
             </div>
             <div class="stats-vertical">
                 <div class="stat-bar-card">
@@ -92,7 +103,7 @@
 
         <div class="card" id="weight-card">
             <div class="card-header" style="margin-bottom:4px;">
-                <h2>⚖️ Вес</h2>
+                <h2>Вес</h2>
                 <span id="weight-trend-badge" style="font-size:11px; padding:3px 9px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">—</span>
             </div>
             <p class="subtitle" style="margin-bottom:6px;">Замеры веса и динамика</p>
@@ -105,16 +116,16 @@
                 <div class="progress-track"><div id="weight-goal-progress" class="progress-fill fill-weight"></div></div>
             </div>
             <div id="weight-spark-wrap"></div>
-            <button class="btn btn-secondary" style="margin-top:12px;" onclick="addWeightEntry()">⚖️ Записать вес</button>
+            <button class="btn btn-secondary" style="margin-top:12px;" onclick="addWeightEntry()">Записать вес</button>
         </div>
 
         <div class="card" id="diet-balance-card">
             <div class="card-header" style="margin-bottom:4px;">
-                <h2>🥗 Баланс рациона</h2>
+                <h2>Баланс рациона</h2>
                 <span id="diet-status-badge" style="font-size:11px; padding:3px 9px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">—</span>
             </div>
             <p class="subtitle" style="margin-bottom:6px;">Соотношение полезной и вредной еды за день</p>
-            
+
             <div class="diet-split-track">
                 <div id="diet-bar-healthy" class="diet-split-healthy" style="width: 0%;"></div>
                 <div id="diet-bar-unhealthy" class="diet-split-unhealthy" style="width: 0%;"></div>
@@ -138,53 +149,22 @@
             </div>
         </div>
 
+        <section class="card health-actions"><h2>Быстрая запись</h2><div class="quick-grid"><button class="btn" onclick="showSection('food-page')">Записать еду</button><button class="btn btn-secondary" onclick="quickWater()">+ 250 мл воды</button><button class="btn btn-secondary" onclick="promptDailyMetric('steps')">Шаги</button></div></section>
         <div class="card">
-            <h2>🛠 Инструменты & Действия</h2>
-            <button class="btn" onclick="showSection('food-page')" style="margin-top: 10px;">📸 Записать прием пищи</button>
-            <div class="quick-grid">
-                <button class="btn btn-secondary" onclick="addCustomWater()">💧 + Вода</button>
-                <button class="btn btn-secondary" onclick="addCustomSteps()">👟 + Шаги</button>
-                <button class="btn btn-secondary" onclick="addWeightEntry()">⚖️ + Вес</button>
-            </div>
-            <div class="quick-grid">
-                <button class="btn btn-secondary" onclick="showSection('calendar-page'); renderCalendar();">📅 График смен</button>
-                <button class="btn btn-secondary" onclick="showSection('planner-page'); renderPlanner();">✅ Задачи</button>
-            </div>
-            <div class="quick-grid">
-                <button class="btn btn-secondary" onclick="showSection('export-page')">📑 CSV Отчеты</button>
-                <button class="btn btn-secondary" onclick="showSection('budget-page'); renderBudget();">💰 Бюджет</button>
-            </div>
-            <button class="btn btn-secondary" style="margin-top: 2px;" onclick="showSection('misc-page');">🧰 Прочее</button>
-        </div>
-
-        <div class="card">
-            <h2>📖 История за день</h2>
+            <h2>История за день</h2>
             <div id="daily-history-list" class="list-container" style="margin-top: 10px;"></div>
         </div>
 
-        <div class="card">
-            <h2>☁️ Резервное копирование</h2>
-            <div class="quick-grid" style="margin-top: 10px;">
-                <button class="btn btn-success" onclick="syncToGitHub(this)">Отправить на GitHub</button>
-                <button class="btn btn-github" onclick="importFromGitHub(this)">Скачать с GitHub</button>
-            </div>
-            <div class="quick-grid" style="margin-top: 4px;">
-                <button class="btn btn-secondary" onclick="exportBackupFile()">💾 Экспорт бэкапа (файл)</button>
-                <button class="btn btn-secondary" onclick="document.getElementById('dash-import-file').click()">📂 Импорт бэкапа (файл)</button>
-                <input type="file" id="dash-import-file" accept=".json,.txt" style="display:none;" onchange="importBackupFile(event)">
-            </div>
-            <button class="btn btn-secondary" style="margin-top: 4px;" onclick="showSection('settings-page')">⚙️ Настройки API & GitHub</button>
-        </div>
     </div>
 
     <div id="food-page" class="page">
         <div class="card">
-            <h2>📸 Расчёт питания</h2>
+            <h2>Расчёт питания</h2>
             <p class="subtitle">Опишите блюдо текстом или добавьте фото — Helper рассчитает КБЖУ и сохранит результат</p>
             <textarea id="food-input" placeholder="Например: омлет из двух яиц и кофе без сахара..."></textarea>
             <input type="file" id="food-image" accept="image/*" class="file-input" onchange="previewImage(event)" style="margin-bottom: 8px;">
             <img id="image-preview" style="display:none; width:100%; border-radius:12px; margin-bottom:12px; max-height:220px; object-fit: cover;">
-            <button class="btn" onclick="analyzeFood()" id="analyze-btn">✨ Рассчитать и зафиксировать</button>
+            <button class="btn" onclick="analyzeFood()" id="analyze-btn">Рассчитать и зафиксировать</button>
             <div id="food-result" class="result-box hidden" style="margin-top:12px; padding:12px; background:rgba(59, 130, 246, 0.1); border-radius:12px; border:1px solid rgba(59, 130, 246, 0.3);"></div>
             <button class="btn btn-secondary" style="margin-top: 10px;" onclick="showSection('dashboard-page')">Назад</button>
         </div>
@@ -192,7 +172,7 @@
 
     <div id="planner-page" class="page">
         <div class="card">
-            <h2>✅ Список дел</h2>
+
             <div class="quick-grid" style="margin-top: 10px;">
                 <input type="text" id="task-input" placeholder="Новая задача..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') addTask()">
                 <button class="btn" onclick="addTask()" style="width: 55px; margin-bottom:0; padding:0;">+</button>
@@ -204,7 +184,7 @@
 
     <div id="calendar-page" class="page">
         <div class="card">
-            <h2>⚡ Шаблон чередования</h2>
+            <h2>Шаблон чередования</h2>
             <div class="quick-grid" style="margin-top: 10px;">
                 <select id="t-1"><option value="none">Пусто</option><option value="day">☀️ День</option><option value="night">🌙 Ночь</option><option value="off" selected>🌴 Выходной</option></select>
                 <select id="t-2"><option value="none">Пусто</option><option value="day" selected>☀️ День</option><option value="night">🌙 Ночь</option><option value="off">🌴 Выходной</option></select>
@@ -215,7 +195,7 @@
             <button class="btn" onclick="applyShiftTemplate()">Применить шаблон до конца месяца</button>
         </div>
         <div class="card">
-            <h2>💰 Расчет дохода</h2>
+            <h2>Расчет дохода</h2>
             <div class="quick-grid" style="margin-top: 10px;">
                 <div><span class="subtitle">Ставка (День)</span><input type="number" id="rate-day" placeholder="0" oninput="calculateSalary()" style="margin-bottom:0;"></div>
                 <div><span class="subtitle">Ставка (Ночь)</span><input type="number" id="rate-night" placeholder="0" oninput="calculateSalary()" style="margin-bottom:0;"></div>
@@ -230,9 +210,9 @@
         </div>
         <div class="card">
             <div class="date-navigator" style="margin-bottom:8px;">
-                <button onclick="changeCalMonth(-1)">◀</button>
+                <button onclick="changeCalMonth(-1)"></button>
                 <span id="month-name">Месяц</span>
-                <button onclick="changeCalMonth(1)">▶</button>
+                <button onclick="changeCalMonth(1)"></button>
             </div>
             <div class="calendar-grid" id="cal-grid"></div>
         </div>
@@ -246,13 +226,13 @@
                     <div class="budget-balance-label" id="budget-balance-label">💎 Баланс за месяц</div>
                     <div class="budget-balance-val" id="budget-month-balance">0 ₽</div>
                 </div>
-                <button class="icon-btn-sm" onclick="toggleBudgetLimitForm()" title="Настроить лимит на месяц">🎯 Лимит</button>
+                <button class="icon-btn-sm" onclick="toggleBudgetLimitForm()" title="Настроить лимит на месяц">Лимит</button>
             </div>
 
             <div class="date-navigator" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.06); margin-bottom: 12px; padding: 8px 12px;">
-                <button onclick="changeBudgetMonth(-1)">◀</button>
+                <button onclick="changeBudgetMonth(-1)"></button>
                 <span id="budget-month-display">Август 2026</span>
-                <button onclick="changeBudgetMonth(1)">▶</button>
+                <button onclick="changeBudgetMonth(1)"></button>
             </div>
 
             <div class="budget-stats-row">
@@ -294,7 +274,7 @@
 
         <div class="card" id="budget-calendar-card">
             <div class="card-header" style="margin-bottom:4px;">
-                <h2>📅 Календарь за месяц</h2>
+                <h2>Календарь за месяц</h2>
                 <span id="budget-cal-active-badge" style="display:none; font-size:11px; padding:3px 8px; border-radius:6px; font-weight:600; background:rgba(59,130,246,0.2); color:#93c5fd; cursor:pointer;" onclick="resetBudgetCalDateFilter()" title="Сбросить фильтр по дате"></span>
             </div>
             <div class="subtitle" style="margin-bottom:8px;">Нажмите на день, чтобы отфильтровать операции или записать трату на эту дату</div>
@@ -310,11 +290,11 @@
         </div>
 
         <div class="card">
-            <h2>➕ Новая операция</h2>
-            
+            <h2>Новая операция</h2>
+
             <div class="segmented-control" style="margin-top: 10px;">
-                <button type="button" class="segmented-btn active-expense" id="btn-tx-expense" onclick="setBudgetTxType('expense')">🔴 Расход</button>
-                <button type="button" class="segmented-btn" id="btn-tx-income" onclick="setBudgetTxType('income')">🟢 Доход</button>
+                <button type="button" class="segmented-btn active-expense" id="btn-tx-expense" onclick="setBudgetTxType('expense')">Расход</button>
+                <button type="button" class="segmented-btn" id="btn-tx-income" onclick="setBudgetTxType('income')">Доход</button>
             </div>
 
             <input type="number" id="tx-amount" placeholder="Сумма (₽)" style="font-size: 18px; font-weight: 700; letter-spacing: 0.5px;">
@@ -334,12 +314,12 @@
             <input type="text" id="tx-note" placeholder="Комментарий / Заметка (необязательно)">
             <input type="date" id="tx-date" style="margin-bottom: 12px;">
 
-            <button class="btn" onclick="addBudgetTransaction()">💾 Записать операцию</button>
+            <button class="btn" onclick="addBudgetTransaction()">Записать операцию</button>
         </div>
 
         <div class="card" id="budget-analytics-card">
             <div class="card-header" style="margin-bottom:6px;">
-                <h2>📊 Расходы по категориям</h2>
+                <h2>Расходы по категориям</h2>
                 <span id="budget-cat-total" style="font-size:12px; font-weight:700; color:#fb7185;">0 ₽</span>
             </div>
             <div id="budget-category-breakdown" style="margin-top: 6px;"></div>
@@ -347,7 +327,7 @@
 
         <div class="card">
             <div class="card-header" style="margin-bottom:8px;">
-                <h2>📋 История операций</h2>
+                <h2>История операций</h2>
                 <div style="display:flex; align-items:center; gap:6px;">
                     <span id="tx-date-filter-tag" style="display:none; font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; background:rgba(59,130,246,0.2); color:#93c5fd; cursor:pointer;" onclick="resetBudgetCalDateFilter()" title="Сбросить фильтр по дате"></span>
                     <span id="tx-count-badge" style="font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; background:rgba(255,255,255,0.06); color:var(--text-muted);">0 шт</span>
@@ -367,14 +347,14 @@
 
         <div class="card" id="debts-card">
             <div class="card-header" style="margin-bottom:6px;">
-                <h2>🤝 Долги и взаиморасчёты</h2>
+                <h2>Долги и взаиморасчёты</h2>
                 <span id="debts-net-badge" style="font-size:12px; font-weight:700; padding:3px 9px; border-radius:6px; background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border);">0 ₽</span>
             </div>
             <p class="subtitle" style="margin-bottom:6px;">Кто должен вам и кому должны вы</p>
 
             <div class="segmented-control" style="margin-top:4px;">
-                <button type="button" class="segmented-btn active-income" id="btn-debt-owed" onclick="setDebtType('owed')">🟢 Мне должны</button>
-                <button type="button" class="segmented-btn" id="btn-debt-owe" onclick="setDebtType('owe')">🔴 Я должен</button>
+                <button type="button" class="segmented-btn active-income" id="btn-debt-owed" onclick="setDebtType('owed')">Мне должны</button>
+                <button type="button" class="segmented-btn" id="btn-debt-owe" onclick="setDebtType('owe')">Я должен</button>
             </div>
 
             <input type="text" id="debt-who" placeholder="Имя / Контакт">
@@ -403,139 +383,155 @@
 
     <div id="add-vault-page" class="page">
         <div class="card">
-            <h2 id="vault-modal-title">🔐 Новая запись</h2>
+            <h2 id="vault-modal-title">Новая запись</h2>
             <p class="subtitle">Данные шифруются мастер-ключом перед сохранением</p>
-            
+
             <input type="text" id="add-name" placeholder="Сервис / Сайт (например, GitHub)">
             <input type="text" id="add-user" placeholder="Логин / Email / Телефон">
-            
+
             <div class="input-with-action">
                 <input type="password" id="add-pwd" placeholder="Пароль" oninput="checkFormPasswordStrength()">
-                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('add-pwd', this)" title="Показать/скрыть пароль">👁️</button>
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('add-pwd', this)" title="Показать/скрыть пароль"></button>
             </div>
-            
+
             <div class="quick-grid" style="margin-bottom: 10px;">
-                <button type="button" class="btn btn-secondary" style="font-size:13px; margin:0; padding:10px;" onclick="generatePasswordForForm()">🎲 Сгенерировать пароль</button>
+                <button type="button" class="btn btn-secondary" style="font-size:13px; margin:0; padding:10px;" onclick="generatePasswordForForm()">Сгенерировать пароль</button>
             </div>
 
             <div id="form-pwd-strength" class="gen-strength-meter" style="margin-bottom: 12px; display:none;">
                 <div id="form-pwd-strength-bar" class="gen-strength-bar"></div>
             </div>
-            
+
             <input type="text" id="add-secret" placeholder="2FA Secret Base32 (опционально, для кодов)">
-            
+
             <button class="btn" id="save-vault-btn" onclick="saveNewCredential()">Сохранить запись</button>
             <button class="btn btn-secondary" onclick="showSection('misc-page')">Отмена</button>
         </div>
     </div>
 
     <div id="settings-page" class="page">
+        <div class="card" id="backup-card">
+            <h2>Резервное копирование</h2>
+            <div class="quick-grid" style="margin-top: 10px;">
+                <button class="btn btn-success" onclick="syncToGitHub(this)">Отправить на GitHub</button>
+                <button class="btn btn-github" onclick="importFromGitHub(this)">Скачать с GitHub</button>
+            </div>
+            <div class="quick-grid" style="margin-top: 4px;">
+                <button class="btn btn-secondary" onclick="exportBackupFile()">Экспорт бэкапа (файл)</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('dash-import-file').click()">Импорт бэкапа (файл)</button>
+                <input type="file" id="dash-import-file" accept=".json,.txt" style="display:none;" onchange="importBackupFile(event)">
+            </div>
+        </div>
+
         <div class="card">
-            <h2>Системные API ключи</h2>
+            <h2>Подключения</h2>
             <p class="subtitle">Google AI Studio (Для анализа еды по фото и тексту)</p>
             <div class="input-with-action">
                 <input type="password" id="api-key-input" placeholder="AIzaSy...">
-                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('api-key-input', this)" title="Показать/скрыть">👁️</button>
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('api-key-input', this)" title="Показать/скрыть"></button>
             </div>
-            
+
             <p class="subtitle">GitHub Personal Access Token (права `repo`)</p>
             <div class="input-with-action">
                 <input type="password" id="gh-token-input" placeholder="ghp_...">
-                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('gh-token-input', this)" title="Показать/скрыть">👁️</button>
+                <button type="button" class="input-action-btn" onclick="toggleInputVisibility('gh-token-input', this)" title="Показать/скрыть"></button>
             </div>
         </div>
         <div class="card">
             <h2>Репозитории GitHub</h2>
-            <p class="subtitle">Бэкап базы данных (ПРИВАТНЫЙ репозиторий)</p>
+            <p class="subtitle">Резервные копии · приватный репозиторий</p>
             <input type="text" id="gh-repo-input" placeholder="username/helper-backup">
-            <p class="subtitle">Файлообменник (ПУБЛИЧНЫЙ репозиторий)</p>
+            <p class="subtitle">Общие файлы · публичный репозиторий</p>
             <input type="text" id="gh-public-repo-input" placeholder="username/public-files">
         </div>
-        <button class="btn" onclick="saveSettings()">Сохранить конфигурацию</button>
+        <button class="btn" onclick="saveSettings()">Сохранить настройки</button>
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
     <div id="misc-page" class="page">
         <div class="card">
-            <h2>☁️ Публичный файлообменник</h2>
+            <h2>Публичный файлообменник</h2>
             <p class="subtitle">Загрузка файлов в открытый репозиторий с выдачей короткой ссылки (до 15 МБ)</p>
             <input type="file" id="public-file-upload" style="margin-bottom: 8px;">
-            <button class="btn" id="upload-file-btn" onclick="uploadPublicFile(this)">🚀 Загрузить и получить ссылку</button>
-            
+            <button class="btn" id="upload-file-btn" onclick="uploadPublicFile(this)">Загрузить и получить ссылку</button>
+
             <div id="uploads-list" class="list-container" style="margin-top: 14px;"></div>
         </div>
 
         <div class="card">
-            <h2>🎬 Скачать видео TikTok</h2>
+            <h2>Скачать видео TikTok</h2>
             <p class="subtitle">Вставьте ссылку на клип или видео</p>
             <input type="text" id="tiktok-url-input" placeholder="https://vm.tiktok.com/... или https://www.tiktok.com/@...">
-            <button class="btn" onclick="downloadTikTokVideo(this)">🔍 Найти видео</button>
-            
+            <button class="btn" onclick="downloadTikTokVideo(this)">Найти видео</button>
+
             <div id="tiktok-result" class="hidden" style="margin-top: 14px;">
                 <video id="tiktok-video-preview" controls playsinline style="width: 100%; border-radius: 12px; margin-bottom: 10px; background: #000; max-height: 360px;"></video>
                 <div id="tiktok-title" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; word-break: break-word;"></div>
-                <button id="tiktok-file-download-btn" class="btn btn-success" onclick="saveToGallery(this)">📲 Сохранить в Галерею</button>
+                <button id="tiktok-file-download-btn" class="btn btn-success" onclick="saveToGallery(this)">Сохранить в Галерею</button>
                 <a id="tiktok-open-browser-btn" href="#" target="_blank" class="btn btn-secondary" style="margin-top: 4px;">🌐 Открыть оригинал в браузере</a>
             </div>
         </div>
 
+        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
+    </div>
+
+    <div id="vault-page" class="page">
         <div class="card">
             <div class="card-header" style="margin-bottom: 8px;">
-                <h2 style="margin-bottom:0;">🔐 Хранилище паролей & 2FA</h2>
+                <h2 style="margin-bottom:0;">Хранилище паролей & 2FA</h2>
                 <span id="totp-timer" style="font-size:11px; color:var(--text-muted); font-family: ui-monospace, monospace;"></span>
             </div>
             <p class="subtitle">Безопасное зашифрованное хранилище с просмотром без копирования</p>
-            
+
             <input type="text" id="search-box" placeholder="🔍 Поиск по сервису или логину..." oninput="renderVault()" style="margin-bottom: 10px;">
-            
+
             <div id="vault-list" class="list-container" style="margin-bottom: 12px;"></div>
-            
+
             <div class="quick-grid">
                 <button class="btn" onclick="openAddVaultModal()">+ Новая запись / 2FA</button>
-                <button class="btn btn-secondary" onclick="togglePasswordGenerator()">🎲 Генератор</button>
+                <button class="btn btn-secondary" onclick="togglePasswordGenerator()">Генератор</button>
             </div>
-            
+
             <div id="generator-widget-box" class="generator-widget hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="font-weight:600; font-size:14px; color:var(--text-main);">🎲 Генератор паролей</span>
                     <span id="gen-length-display" style="font-size:12px; color:var(--accent); font-weight:600;">16 символов</span>
                 </div>
-                
+
                 <div class="vault-pwd-row" style="margin-bottom: 8px;">
                     <div id="gen-result-text" class="vault-pwd-text" style="color:#60a5fa; font-weight:600;">—</div>
-                    <button class="icon-btn-sm" onclick="copyGeneratedPassword()" title="Скопировать">📋 Копировать</button>
+                    <button class="icon-btn-sm" onclick="copyGeneratedPassword()" title="Скопировать">Копировать</button>
                 </div>
-                
+
                 <div id="gen-strength-bar" class="gen-strength-meter">
                     <div id="gen-strength-fill" class="gen-strength-bar" style="width: 80%; background-color: var(--success);"></div>
                 </div>
-                
+
                 <div class="gen-slider-row" style="margin-top:10px;">
                     <span style="font-size:12px; color:var(--text-muted);">8</span>
                     <input type="range" id="gen-len-slider" min="8" max="32" value="16" oninput="onGenLengthChange()">
                     <span style="font-size:12px; color:var(--text-muted);">32</span>
                 </div>
-                
+
                 <div class="gen-options-grid">
                     <label class="gen-option-label"><input type="checkbox" id="gen-opt-upper" checked onchange="generateRandomPassword()"> A-Z (Заглавные)</label>
                     <label class="gen-option-label"><input type="checkbox" id="gen-opt-lower" checked onchange="generateRandomPassword()"> a-z (Строчные)</label>
                     <label class="gen-option-label"><input type="checkbox" id="gen-opt-numbers" checked onchange="generateRandomPassword()"> 0-9 (Цифры)</label>
                     <label class="gen-option-label"><input type="checkbox" id="gen-opt-symbols" checked onchange="generateRandomPassword()"> !@#$%^&* (Спецсимволы)</label>
                 </div>
-                
+
                 <div class="quick-grid" style="margin-bottom:0;">
-                    <button class="btn btn-secondary" style="margin-bottom:0; font-size:13px; padding:10px;" onclick="generateRandomPassword()">🔄 Обновить</button>
-                    <button class="btn btn-secondary" style="margin-bottom:0; font-size:13px; padding:10px;" onclick="useGeneratedForNewVault()">➕ Создать запись</button>
+                    <button class="btn btn-secondary" style="margin-bottom:0; font-size:13px; padding:10px;" onclick="generateRandomPassword()">Обновить</button>
+                    <button class="btn btn-secondary" style="margin-bottom:0; font-size:13px; padding:10px;" onclick="useGeneratedForNewVault()">Создать запись</button>
                 </div>
             </div>
         </div>
-        
-        <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад на главный экран</button>
+
     </div>
 
     <div id="export-page" class="page">
         <div class="card">
-            <h2>📑 Экспорт аналитики</h2>
+            <h2>Экспорт аналитики</h2>
             <p class="subtitle">Формирование структурированного CSV файла со всеми логами</p>
             <div class="quick-grid">
                 <button class="btn btn-secondary" onclick="exportDataPeriod(7)">За 7 дней</button>
@@ -545,21 +541,21 @@
         </div>
 
         <div class="card">
-            <h2>📅 Пользовательский диапазон</h2>
+            <h2>Пользовательский диапазон</h2>
             <div class="quick-grid" style="margin-top: 10px;">
                 <div><span class="subtitle">С даты:</span><input type="date" id="export-start-date"></div>
                 <div><span class="subtitle">По дату:</span><input type="date" id="export-end-date"></div>
             </div>
-            <button class="btn btn-success" onclick="exportCustomPeriod()">📥 Скачать CSV-файл</button>
+            <button class="btn btn-success" onclick="exportCustomPeriod()">Скачать CSV-файл</button>
         </div>
         <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
     </div>
 
     <div id="profile-page" class="page">
         <div class="card">
-            <h2>🎯 Расчет суточных норм</h2>
+            <h2>Расчет суточных норм</h2>
             <p class="subtitle">Формула Миффлина — Сан-Жеора для расчета КБЖУ и нормы гидратации</p>
-            
+
             <div class="quick-grid">
                 <select id="prof-gender">
                     <option value="male">Мужской пол</option>
@@ -589,13 +585,13 @@
             <p class="subtitle" style="margin-bottom:6px;">Целевой вес (необязательно)</p>
             <input type="number" step="0.1" id="prof-target-weight" placeholder="Цель по весу (кг)">
 
-            <button class="btn" onclick="calculateAndSaveProfile()">💾 Рассчитать и сохранить норму</button>
+            <button class="btn" onclick="calculateAndSaveProfile()">Рассчитать и сохранить норму</button>
             <button class="btn btn-secondary" onclick="showSection('dashboard-page')">Назад</button>
         </div>
     </div>
 
-    <script defer src="app.js"></script>
-    <script defer src="kyd-connector.js"></script>
-    <script defer src="experience.js"></script>
+    <script defer src="app.js?v=3.0"></script>
+    <script defer src="workspace.js?v=3.0"></script>
+    <script defer src="experience.js?v=3.0"></script>
 </body>
 </html>

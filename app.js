@@ -17,7 +17,7 @@ let data = {
         let currentTikTokBlob = null;
         let editingVaultIndex = null;
         let visibleVaultPasswords = {};
-        
+
         let activeBudgetTxType = 'expense';
         let selectedBudgetCategory = { name: 'Еда и продукты', icon: '🍔' };
         let activeBudgetFilterTab = 'all';
@@ -75,10 +75,12 @@ let data = {
             if (!input) return;
             if (input.type === 'password') {
                 input.type = 'text';
-                btn.innerText = '🙈';
+                btn.innerHTML = icon('eye');
+                btn.setAttribute('aria-label','Скрыть пароль');
             } else {
                 input.type = 'password';
-                btn.innerText = '👁️';
+                btn.innerHTML = icon('eye');
+                btn.setAttribute('aria-label','Показать пароль');
             }
         }
 
@@ -142,8 +144,10 @@ let data = {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const targetPage = document.getElementById(pageId);
             if (targetPage) targetPage.classList.add('active');
-            
-            if (pageId === 'dashboard-page') updateUI();
+
+            if (pageId === 'dashboard-page' || pageId === 'health-page') updateUI();
+            if (pageId === 'settings-page') { el('api-key-input').value=data.geminiApiKey || ''; el('gh-token-input').value=data.githubToken || ''; el('gh-repo-input').value=data.githubRepo || ''; el('gh-public-repo-input').value=data.publicRepo || ''; }
+            if (pageId === 'vault-page') { renderVault(); generateRandomPassword(); }
             if (pageId === 'profile-page') loadProfileInputs();
             if (pageId === 'planner-page') renderPlanner();
             if (pageId === 'calendar-page') renderCalendar();
@@ -153,13 +157,7 @@ let data = {
                 let d = new Date(); d.setDate(d.getDate() - 7);
                 document.getElementById('export-start-date').value = getFormattedDate(d);
             }
-            if (pageId === 'misc-page') {
-                renderVault();
-                renderUploads();
-                if (!document.getElementById('gen-result-text') || !document.getElementById('gen-result-text').innerText || document.getElementById('gen-result-text').innerText === '—') {
-                    generateRandomPassword();
-                }
-            }
+            if (pageId === 'misc-page') renderUploads();
             if (typeof renderExperience === 'function') renderExperience(pageId);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -179,23 +177,7 @@ let data = {
             }
 
             try {
-                const bytes = CryptoJS.AES.decrypt(encrypted, pwd);
-                const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-                if (!decryptedStr) throw new Error("Неверный ключ");
-                
-                data = JSON.parse(decryptedStr);
-                if(!data.salaryRates) data.salaryRates = { day: 0, night: 0 };
-                if(!data.days) data.days = {};
-                if(!data.shifts) data.shifts = {};
-                if(!data.tasks) data.tasks = [];
-                if(!data.debts) data.debts = [];
-                if(!data.vault) data.vault = [];
-                if(!data.uploads) data.uploads = [];
-                if(!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
-                if(!data.budget.transactions) data.budget.transactions = [];
-                if(data.budget.monthlyLimit === undefined) data.budget.monthlyLimit = 0;
-                if(!data.profile) data.profile = { gender: 'male', age: 25, height: 175, weight: 70, activity: 1.55, goal: 'maintain', targetCal: 2200, targetWater: 2500, targetSteps: 10000, targetWeight: 0 };
-                if(data.profile.targetWeight === undefined) data.profile.targetWeight = 0;
+                data = decryptBackup(encrypted, pwd);
 
                 masterKey = pwd;
                 document.getElementById('master-password').value = "";
@@ -206,17 +188,16 @@ let data = {
         }
 
         function lockVault() {
-            if (typeof cancelKYDRequest === 'function') cancelKYDRequest();
             masterKey = "";
-            data = { 
-                days: {}, shifts: {}, tasks: [], debts: [], vault: [], uploads: [], 
+            data = {
+                days: {}, shifts: {}, tasks: [], debts: [], vault: [], uploads: [],
                 budget: { transactions: [], monthlyLimit: 0 },
-                geminiApiKey: '', githubToken: '', githubRepo: '', publicRepo: '', 
-                salaryRates: { day: 0, night: 0 }, profile: {} 
+                geminiApiKey: '', githubToken: '', githubRepo: '', publicRepo: '',
+                salaryRates: { day: 0, night: 0 }, profile: {}
             };
             visibleVaultPasswords = {};
             document.querySelectorAll('input:not([type=checkbox]):not([type=radio]), textarea').forEach(input => { input.value = ''; });
-            for (const id of ['vault-list', 'uploads-list', 'kyd-dashboard-summary', 'kyd-settings-summary', 'kyd-status']) { const node = document.getElementById(id); if (node) node.replaceChildren(); }
+            for (const id of ['vault-list', 'uploads-list', 'focus-list', 'tasks-list']) { const node = document.getElementById(id); if (node) node.replaceChildren(); }
             showSection('auth-page');
         }
 
@@ -361,7 +342,7 @@ let data = {
                 const prev = series[idxForDate - 1];
                 const diff = Math.round((cur.v - prev.v) * 10) / 10;
                 const arrow = diff < 0 ? '▼' : (diff > 0 ? '▲' : '▬');
-                const color = diff < 0 ? '#34d399' : (diff > 0 ? '#fb7185' : 'var(--text-muted)');
+                const color = diff < 0 ? 'var(--success)' : (diff > 0 ? 'var(--danger)' : 'var(--text-muted)');
                 deltaEl.innerHTML = `<span style="color:${color};">${arrow} ${diff > 0 ? '+' : ''}${diff} кг</span>` + (carried ? ' <span style="color:var(--text-dim);">(перенос)</span>' : '');
                 badgeEl.innerText = `${arrow} ${Math.abs(diff)} кг`;
                 badgeEl.style.color = color;
@@ -462,17 +443,17 @@ let data = {
                     if (elBadge) {
                         if (healthyPct >= 75) {
                             elBadge.innerText = '🟢 Чистый рацион';
-                            elBadge.style.color = '#34d399';
+                            elBadge.style.color = 'var(--success)';
                             elBadge.style.background = 'rgba(16, 185, 129, 0.15)';
                             elBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
                         } else if (healthyPct >= 45) {
                             elBadge.innerText = '🟡 Умеренный баланс';
-                            elBadge.style.color = '#fbbf24';
+                            elBadge.style.color = 'var(--warning)';
                             elBadge.style.background = 'rgba(245, 158, 11, 0.15)';
                             elBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
                         } else {
                             elBadge.innerText = '🔴 Преобладает джанк';
-                            elBadge.style.color = '#fb7185';
+                            elBadge.style.color = 'var(--danger)';
                             elBadge.style.background = 'rgba(244, 63, 94, 0.15)';
                             elBadge.style.borderColor = 'rgba(244, 63, 94, 0.3)';
                         }
@@ -608,16 +589,27 @@ let data = {
         function deleteWater(idx) { let d = getTodayData(); d.water = Math.max(0, d.water - d.waterList[idx]); d.waterList.splice(idx, 1); saveEncrypted(); updateUI(); }
         function deleteSteps(idx) { let d = getTodayData(); d.steps = Math.max(0, d.steps - d.stepsList[idx]); d.stepsList.splice(idx, 1); saveEncrypted(); updateUI(); }
 
-        function addCustomWater() { let amt = prompt("Количество воды (мл):", "250"); if (amt && !isNaN(amt) && parseInt(amt) > 0) { let val = parseInt(amt); let d = getTodayData(); d.water += val; d.waterList.push(val); saveEncrypted(); updateUI(); } }
-        function addCustomSteps() { let amt = prompt("Количество шагов:", "1000"); if (amt && !isNaN(amt) && parseInt(amt) > 0) { let val = parseInt(amt); let d = getTodayData(); d.steps += val; d.stepsList.push(val); saveEncrypted(); updateUI(); } }
+        function recordDailyMetric(metric, amount) {
+            const value = Number(amount);
+            if (!masterKey || !['water','steps'].includes(metric) || !Number.isSafeInteger(value) || value <= 0) return false;
+            const day = getTodayData();
+            day[metric] = Number(day[metric] || 0) + value;
+            day[metric + 'List'].push(value);
+            saveEncrypted(); updateUI(); return true;
+        }
+        function promptDailyMetric(metric) {
+            const water = metric === 'water';
+            const value = prompt(water ? 'Количество воды (мл):' : 'Количество шагов:', water ? '250' : '1000');
+            if (value !== null && !recordDailyMetric(metric, value)) showToast('Введите целое положительное число');
+        }
 
         function saveSettings() {
             data.geminiApiKey = document.getElementById('api-key-input').value.trim();
             data.githubToken = document.getElementById('gh-token-input').value.trim();
             data.githubRepo = document.getElementById('gh-repo-input').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
             data.publicRepo = document.getElementById('gh-public-repo-input').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
-            saveEncrypted(); 
-            alert("Настройки сохранены!"); 
+            saveEncrypted();
+            alert("Настройки сохранены!");
             showSection('dashboard-page');
         }
 
@@ -627,19 +619,19 @@ let data = {
         }
 
         function renderCalendar() {
-            const grid = document.getElementById('cal-grid'); 
-            grid.innerHTML = ''; 
+            const grid = document.getElementById('cal-grid');
+            grid.innerHTML = '';
             const year = calCurrentDate.getFullYear();
             const month = calCurrentDate.getMonth();
-            
+
             document.getElementById('month-name').innerText = calCurrentDate.toLocaleString('ru', { month: 'long', year: 'numeric' });
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
+
             ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
-            let firstDay = new Date(year, month, 1).getDay(); 
-            firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+            let firstDay = new Date(year, month, 1).getDay();
+            firstDay = firstDay === 0 ? 6 : firstDay - 1;
             for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-            
+
             for(let i=1; i<=daysInMonth; i++) {
                 let dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 let shift = data.shifts[dateStr] || 'none';
@@ -647,7 +639,7 @@ let data = {
                 if (shift === 'day') { cls += ' shift-day'; emoji = '☀️ '; }
                 if (shift === 'night') { cls += ' shift-night'; emoji = '🌙 '; }
                 if (shift === 'off') { cls += ' shift-off'; emoji = '🌴 '; }
-                grid.innerHTML += `<div class="${cls}" onclick="toggleShift('${dateStr}')">${emoji ? emoji + '<br>' : ''}${i}</div>`;
+                grid.innerHTML += `<button type="button" class="${cls}" aria-label="${dateStr}: ${shift}" onclick="toggleShift('${dateStr}')">${emoji ? emoji + '<br>' : ''}${i}</button>`;
             }
 
             if(!document.getElementById('template-start-date').value) document.getElementById('template-start-date').value = getFormattedDate(new Date());
@@ -678,22 +670,22 @@ let data = {
             document.getElementById('total-salary').innerText = `Итого: ${total.toLocaleString('ru-RU')} ₽`;
         }
 
-        function toggleShift(dateStr) { 
-            let cur = data.shifts[dateStr]; 
-            if (!cur || cur === 'none') data.shifts[dateStr] = 'day'; 
-            else if (cur === 'day') data.shifts[dateStr] = 'night'; 
-            else if (cur === 'night') data.shifts[dateStr] = 'off'; 
-            else if (cur === 'off') delete data.shifts[dateStr]; 
-            saveEncrypted(); renderCalendar(); 
+        function toggleShift(dateStr) {
+            let cur = data.shifts[dateStr];
+            if (!cur || cur === 'none') data.shifts[dateStr] = 'day';
+            else if (cur === 'day') data.shifts[dateStr] = 'night';
+            else if (cur === 'night') data.shifts[dateStr] = 'off';
+            else if (cur === 'off') delete data.shifts[dateStr];
+            saveEncrypted(); renderCalendar();
         }
 
         function applyShiftTemplate() {
-            let sDate = document.getElementById('template-start-date').value; 
+            let sDate = document.getElementById('template-start-date').value;
             if (!sDate) return alert("Выберите дату начала!");
             let pattern = [document.getElementById('t-1').value, document.getElementById('t-2').value, document.getElementById('t-3').value, document.getElementById('t-4').value].filter(s => s !== 'none');
             if (!pattern.length) return alert("Шаблон пуст! Выберите смены.");
-            
-            let [y, m, d] = sDate.split('-').map(Number); 
+
+            let [y, m, d] = sDate.split('-').map(Number);
             let dt = new Date(y, m - 1, d);
             let startMonth = dt.getMonth();
             let applied = 0;
@@ -706,17 +698,22 @@ let data = {
         }
 
         function renderPlanner() {
-            const tList = document.getElementById('tasks-list');
-            tList.innerHTML = (data.tasks || []).map((t, i) => `<div class="list-item ${t.done ? 'done' : ''}"><div class="task-content" onclick="toggleTask(${i})"><input type="checkbox" ${t.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask(${i});"><span>${escapeHtml(t.text)}</span></div><button class="del-btn" onclick="deleteTask(${i})">✕</button></div>`).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Активных задач нет</p>';
+            renderTaskWorkspace();
+            if (typeof renderExperience === 'function') renderExperience();
         }
 
-        function addTask() { 
-            const inp = document.getElementById('task-input'); 
-            if (inp.value.trim()) { data.tasks.push({ text: inp.value.trim(), done: false }); inp.value = ''; saveEncrypted(); renderPlanner(); } 
+        function createTask(text) {
+            const value = String(text).trim();
+            if (!masterKey || !value) return false;
+            data.tasks.push({text:value, done:false}); saveEncrypted(); return true;
+        }
+        function addTask() {
+            const input = document.getElementById('task-input');
+            if (createTask(input.value)) { input.value = ''; renderPlanner(); }
         }
         function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveEncrypted(); renderPlanner(); }
         function deleteTask(i) { data.tasks.splice(i, 1); saveEncrypted(); renderPlanner(); }
-        
+
         let activeDebtType = 'owed'; // 'owed' = мне должны | 'owe' = я должен
 
         function setDebtType(type) {
@@ -753,7 +750,7 @@ let data = {
             if (badge) {
                 const good = net > 0, bad = net < 0;
                 badge.innerText = `${net >= 0 ? '+' : '−'} ${Math.abs(net).toLocaleString('ru-RU')} ₽`;
-                badge.style.color = good ? '#34d399' : (bad ? '#fb7185' : 'var(--text-muted)');
+                badge.style.color = good ? 'var(--success)' : (bad ? 'var(--danger)' : 'var(--text-muted)');
                 badge.style.background = good ? 'rgba(16,185,129,0.15)' : (bad ? 'rgba(244,63,94,0.15)' : 'rgba(255,255,255,0.06)');
                 badge.style.borderColor = good ? 'rgba(16,185,129,0.3)' : (bad ? 'rgba(244,63,94,0.3)' : 'var(--border)');
             }
@@ -763,19 +760,19 @@ let data = {
             }).join('') || '<p style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:13px;">Записей о долгах нет</p>';
         }
 
-        function previewImage(e) { 
-            const f = e.target.files[0], prev = document.getElementById('image-preview'); 
-            if (f) { prev.src = URL.createObjectURL(f); prev.style.display = 'block'; } else { prev.style.display = 'none'; } 
+        function previewImage(e) {
+            const f = e.target.files[0], prev = document.getElementById('image-preview');
+            if (f) { prev.src = URL.createObjectURL(f); prev.style.display = 'block'; } else { prev.style.display = 'none'; }
         }
 
-        function fileToBase64(file) { 
-            return new Promise((res, rej) => { 
-                const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result.split(',')[1]); r.onerror = err => rej(err); 
-            }); 
+        function fileToBase64(file) {
+            return new Promise((res, rej) => {
+                const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result.split(',')[1]); r.onerror = err => rej(err);
+            });
         }
 
         async function analyzeFood() {
-            const txt = document.getElementById('food-input').value.trim(); 
+            const txt = document.getElementById('food-input').value.trim();
             const fInput = document.getElementById('food-image');
             if (!txt && !fInput.files.length) return alert("Введите описание еды или прикрепите фото!");
             if (!data.geminiApiKey) { alert("Укажите API ключ в Настройках!"); showSection('settings-page'); return; }
@@ -812,7 +809,7 @@ let data = {
                     let resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${data.geminiApiKey}`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.1 } })
                     });
-                    let j = await resp.json(); 
+                    let j = await resp.json();
                     if (resp.ok && j.candidates && j.candidates.length) { successfulData = j; break; } else { lastError = j.error?.message || `HTTP ${resp.status}`; }
                 } catch(err) { lastError = err.message; }
             }
@@ -826,7 +823,7 @@ let data = {
                 let rawAiTxt = successfulData.candidates?.[0]?.content?.parts?.[0]?.text || "";
                 let jsonMatch = rawAiTxt.match(/\{[\s\S]*\}/);
                 if (!jsonMatch) throw new Error("Формат ответа не распознан");
-                
+
                 let meal = JSON.parse(jsonMatch[0]);
                 meal.cal = Number(meal.cal) || 0;
                 meal.p = Number(meal.p) || 0;
@@ -884,7 +881,7 @@ let data = {
             const container = document.getElementById('category-chips-container');
             if (!container) return;
             const list = activeBudgetTxType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
-            
+
             if (!list.some(c => c.name === selectedBudgetCategory.name)) {
                 selectedBudgetCategory = { ...list[0] };
             }
@@ -1031,7 +1028,7 @@ let data = {
             if (!data.budget || !data.budget.transactions) return;
             const idx = data.budget.transactions.findIndex(t => t.id === id);
             if (idx === -1) return;
-            
+
             const tx = data.budget.transactions[idx];
             if (confirm(`Удалить операцию "${tx.categoryIcon} ${tx.category}" на сумму ${tx.amount} ₽?`)) {
                 data.budget.transactions.splice(idx, 1);
@@ -1209,13 +1206,13 @@ let data = {
             if (monthBalanceEl) {
                 if (monthNet > 0) {
                     monthBalanceEl.innerText = `+ ${monthNet.toLocaleString('ru-RU')} ₽`;
-                    monthBalanceEl.style.color = '#34d399';
+                    monthBalanceEl.style.color = 'var(--success)';
                 } else if (monthNet < 0) {
                     monthBalanceEl.innerText = `- ${Math.abs(monthNet).toLocaleString('ru-RU')} ₽`;
-                    monthBalanceEl.style.color = '#fb7185';
+                    monthBalanceEl.style.color = 'var(--danger)';
                 } else {
                     monthBalanceEl.innerText = `0 ₽`;
-                    monthBalanceEl.style.color = '#ffffff';
+                    monthBalanceEl.style.color = 'var(--text-main)';
                 }
             }
 
@@ -1231,7 +1228,7 @@ let data = {
             if (allTimeValEl) {
                 const sign = totalNetAll > 0 ? '+ ' : (totalNetAll < 0 ? '- ' : '');
                 allTimeValEl.innerText = `${sign}${Math.abs(totalNetAll).toLocaleString('ru-RU')} ₽`;
-                allTimeValEl.style.color = totalNetAll > 0 ? '#34d399' : (totalNetAll < 0 ? '#fb7185' : 'var(--text-main)');
+                allTimeValEl.style.color = totalNetAll > 0 ? 'var(--success)' : (totalNetAll < 0 ? 'var(--danger)' : 'var(--text-main)');
             }
 
             const monthIncomeEl = document.getElementById('budget-month-income');
@@ -1246,9 +1243,9 @@ let data = {
                     limitWrapper.style.display = 'block';
                     const pct = Math.min(100, Math.round((monthExpense / limit) * 100));
                     const remaining = limit - monthExpense;
-                    
+
                     document.getElementById('budget-limit-text').innerText = `${monthExpense.toLocaleString('ru-RU')} / ${limit.toLocaleString('ru-RU')} ₽ (${pct}%)`;
-                    
+
                     const bar = document.getElementById('budget-limit-bar');
                     bar.style.width = `${pct}%`;
                     if (pct >= 100) {
@@ -1265,7 +1262,7 @@ let data = {
                         remEl.style.color = 'var(--text-muted)';
                     } else {
                         remEl.innerText = `⚠️ Лимит превышен на ${Math.abs(remaining).toLocaleString('ru-RU')} ₽!`;
-                        remEl.style.color = '#fb7185';
+                        remEl.style.color = 'var(--danger)';
                     }
                 } else {
                     limitWrapper.style.display = 'none';
@@ -1363,7 +1360,7 @@ let data = {
                 const amtClass = isInc ? 'income' : 'expense';
                 const iconBoxClass = isInc ? 'income' : 'expense';
                 const noteHtml = t.note ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px; word-break:break-word;">${escapeHtml(t.note)}</div>` : '';
-                
+
                 let dateDisplay = t.date || '';
                 if (dateDisplay) {
                     const [y, m, d] = dateDisplay.split('-');
@@ -1391,17 +1388,17 @@ let data = {
 
 
         function renderVault() {
-            const q = (document.getElementById('search-box')?.value || '').toLowerCase().trim(); 
-            const container = document.getElementById('vault-list'); 
+            const q = (document.getElementById('search-box')?.value || '').toLowerCase().trim();
+            const container = document.getElementById('vault-list');
             if (!container) return;
 
             const vaultItems = data.vault || [];
             const filtered = vaultItems.map((item, originalIndex) => ({ item, originalIndex }))
                 .filter(({ item }) => (item.name || '').toLowerCase().includes(q) || (item.user || '').toLowerCase().includes(q));
 
-            if (!filtered.length) { 
-                container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:12px 0; font-size:13px;">Сохраненных записей нет</p>'; 
-                return; 
+            if (!filtered.length) {
+                container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:12px 0; font-size:13px;">Сохраненных записей нет</p>';
+                return;
             }
 
             container.innerHTML = filtered.map(({ item, originalIndex }) => {
@@ -1436,7 +1433,7 @@ let data = {
                             <button class="del-btn" onclick="deleteVaultItem(${originalIndex})" title="Удалить">✕</button>
                         </div>
                     </div>
-                    
+
                     <div class="vault-pwd-row">
                         <div class="${pwdClass}" id="vault-pwd-val-${originalIndex}">${displayPwd}</div>
                         <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
@@ -1474,35 +1471,35 @@ let data = {
 
         function copyText(txt, successMsg) {
             if (!txt) return;
-            if (navigator.clipboard && window.isSecureContext) { 
-                navigator.clipboard.writeText(txt).then(() => showToast(successMsg || "Скопировано!")).catch(() => fallbackCopy(txt, successMsg)); 
-            } else { 
-                fallbackCopy(txt, successMsg); 
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(txt).then(() => showToast(successMsg || "Скопировано!")).catch(() => fallbackCopy(txt, successMsg));
+            } else {
+                fallbackCopy(txt, successMsg);
             }
         }
 
         function fallbackCopy(text, successMsg) {
             const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
             document.body.appendChild(ta); ta.focus(); ta.select();
-            try { 
-                document.execCommand('copy'); 
-                showToast(successMsg || "Скопировано!"); 
-            } catch(e) { 
-                prompt("Скопируйте:", text); 
+            try {
+                document.execCommand('copy');
+                showToast(successMsg || "Скопировано!");
+            } catch(e) {
+                prompt("Скопируйте:", text);
             }
             document.body.removeChild(ta);
         }
 
-        function deleteVaultItem(idx) { 
+        function deleteVaultItem(idx) {
             const item = data.vault[idx];
             if (!item) return;
-            if (confirm(`Удалить запись "${item.name}"?`)) { 
-                data.vault.splice(idx, 1); 
+            if (confirm(`Удалить запись "${item.name}"?`)) {
+                data.vault.splice(idx, 1);
                 delete visibleVaultPasswords[idx];
-                saveEncrypted(); 
-                renderVault(); 
+                saveEncrypted();
+                renderVault();
                 showToast("Запись удалена");
-            } 
+            }
         }
 
         function openAddVaultModal() {
@@ -1532,13 +1529,13 @@ let data = {
         }
 
         function saveNewCredential() {
-            const name = document.getElementById('add-name').value.trim(); 
-            const user = document.getElementById('add-user').value.trim(); 
-            const pwd = document.getElementById('add-pwd').value; 
+            const name = document.getElementById('add-name').value.trim();
+            const user = document.getElementById('add-user').value.trim();
+            const pwd = document.getElementById('add-pwd').value;
             const secret = document.getElementById('add-secret').value.trim();
-            
+
             if (!name || !pwd) return alert("Заполните название сервиса и пароль!");
-            
+
             if (editingVaultIndex !== null && data.vault[editingVaultIndex]) {
                 data.vault[editingVaultIndex] = { name, user, pwd, secret };
                 showToast("Запись обновлена!");
@@ -1547,14 +1544,14 @@ let data = {
                 data.vault.push({ name, user, pwd, secret });
                 showToast("Запись сохранена!");
             }
-            
+
             saveEncrypted();
-            document.getElementById('add-name').value = ''; 
-            document.getElementById('add-user').value = ''; 
-            document.getElementById('add-pwd').value = ''; 
-            document.getElementById('add-secret').value = ''; 
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-user').value = '';
+            document.getElementById('add-pwd').value = '';
+            document.getElementById('add-secret').value = '';
             editingVaultIndex = null;
-            showSection('misc-page');
+            showSection('vault-page');
         }
 
         function togglePasswordGenerator() {
@@ -1686,7 +1683,7 @@ let data = {
         }
 
         setInterval(() => {
-            if (document.getElementById('misc-page').classList.contains('active')) {
+            if (document.getElementById('vault-page').classList.contains('active')) {
                 let secLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
                 const timerEl = document.getElementById('totp-timer');
                 if (timerEl) timerEl.innerText = `TOTP: ${secLeft}s`;
@@ -1707,47 +1704,52 @@ let data = {
             showToast("Файл бэкапа сохранен!");
         }
 
-        function importBackupFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const encStr = e.target.result.trim();
-                try {
-                    const bytes = CryptoJS.AES.decrypt(encStr, masterKey);
-                    const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-                    if (!decryptedStr) throw new Error("Неверный мастер-пароль");
-                    
-                    data = JSON.parse(decryptedStr);
-                    if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
-                    localStorage.setItem('encMasterData', encStr);
-                    updateUI();
-                    renderVault();
-                    alert("Данные успешно импортированы из файла!");
-                } catch(err) {
-                    alert("Ошибка импорта! Файл поврежден или зашифрован другим паролем.");
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
+        function decryptBackup(encrypted, password) {
+            const text = CryptoJS.AES.decrypt(encrypted, password).toString(CryptoJS.enc.Utf8);
+            if (!text) throw new Error('Неверный мастер-пароль');
+            const restored = JSON.parse(text);
+            if (!restored || typeof restored !== 'object' || Array.isArray(restored) || !restored.days || typeof restored.days !== 'object' || Array.isArray(restored.days)) throw new Error('Неверный формат резервной копии');
+            for (const key of ['tasks','debts','vault','uploads']) {
+                if (restored[key] !== undefined && !Array.isArray(restored[key])) throw new Error('Повреждён раздел ' + key);
+                restored[key] ||= [];
+            }
+            restored.shifts ||= {};
+            restored.budget ||= {transactions:[], monthlyLimit:0};
+            restored.budget.transactions ||= [];
+            if (!Array.isArray(restored.budget.transactions)) throw new Error('Повреждён бюджет');
+            restored.budget.monthlyLimit ||= 0;
+            restored.profile = {gender:'male', age:25, height:175, weight:70, activity:1.55, goal:'maintain', targetCal:2200, targetWater:2500, targetSteps:10000, targetWeight:0, ...restored.profile};
+            restored.salaryRates ||= {day:0,night:0};
+            return restored;
         }
 
-        function importBackupFileFromAuth(event) {
+        function restoreEncryptedBackup(encrypted) {
+            const password = masterKey || document.getElementById('master-password').value;
+            if (!password) throw new Error('Введите мастер-пароль резервной копии в поле входа, затем повторите импорт.');
+            const restored = decryptBackup(encrypted, password);
+            // Persistence must succeed before swapping the live state.
+            localStorage.setItem('encMasterData', encrypted);
+            data = restored; masterKey = password;
+            document.getElementById('master-password').value = '';
+            showSection('dashboard-page'); showToast('Резервная копия восстановлена');
+        }
+
+        async function importBackupFile(event) {
             const file = event.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const encStr = e.target.result.trim();
-                localStorage.setItem('encMasterData', encStr);
-                alert("Бэкап загружен! Теперь введите мастер-пароль для входа.");
-            };
-            reader.readAsText(file);
-            event.target.value = '';
+            const originalKey = masterKey, originalData = data;
+            try {
+                const encrypted = (await file.text()).trim();
+                if (masterKey !== originalKey || data !== originalData) return;
+                if (localStorage.getItem('encMasterData') && !confirm('Заменить текущие данные резервной копией?')) return;
+                restoreEncryptedBackup(encrypted);
+            } catch (error) { alert('Не удалось восстановить данные. ' + error.message); }
+            finally { event.target.value = ''; }
         }
 
         function exportDataPeriod(period) {
             let today = new Date(); let endStr = getFormattedDate(today); let startStr = "2020-01-01";
-            if (period === 7) { let dt = new Date(); dt.setDate(dt.getDate() - 7); startStr = getFormattedDate(dt); } 
+            if (period === 7) { let dt = new Date(); dt.setDate(dt.getDate() - 7); startStr = getFormattedDate(dt); }
             else if (period === 30) { let dt = new Date(); dt.setDate(dt.getDate() - 30); startStr = getFormattedDate(dt); }
             generateAndDownloadCSV(startStr, endStr);
         }
@@ -1826,11 +1828,11 @@ let data = {
             }
             const fileInput = document.getElementById('public-file-upload');
             if (!fileInput.files.length) return alert("Выберите файл для загрузки!");
-            
-            const file = fileInput.files[0];
-            if (file.size > 15 * 1024 * 1024) return alert("Файл слишком большой (максимум 15 МБ)."); 
 
-            btn.disabled = true; 
+            const file = fileInput.files[0];
+            if (file.size > 15 * 1024 * 1024) return alert("Файл слишком большой (максимум 15 МБ).");
+
+            btn.disabled = true;
             const origText = btn.innerText;
             btn.innerText = "⏳ Подготовка файла...";
 
@@ -1838,7 +1840,7 @@ let data = {
                 const b64 = await fileToBase64(file);
                 const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                 const path = `uploads/${Date.now()}_${safeName}`;
-                
+
                 btn.innerText = "☁️ Загрузка на GitHub...";
                 const putRes = await fetch(`https://api.github.com/repos/${data.publicRepo}/contents/${path}`, {
                     method: 'PUT',
@@ -1866,7 +1868,7 @@ let data = {
 
                 if (!data.uploads) data.uploads = [];
                 data.uploads.unshift({ name: file.name, path: path, url: rawUrl, shortUrl: shortUrl, sha: sha, date: getFormattedDate(new Date()) });
-                
+
                 saveEncrypted();
                 renderUploads();
                 alert(`Файл успешно загружен!\nКороткая ссылка: ${shortUrl}`);
@@ -1882,7 +1884,7 @@ let data = {
         async function deleteUpload(idx) {
             const fileInfo = data.uploads[idx];
             if (!confirm(`Вы действительно хотите безвозвратно удалить файл "${fileInfo.name}" из репозитория?`)) return;
-            
+
             try {
                 const delRes = await fetch(`https://api.github.com/repos/${data.publicRepo}/contents/${fileInfo.path}`, {
                     method: 'DELETE',
@@ -1962,41 +1964,36 @@ let data = {
             } catch(e) { alert("Ошибка синхронизации: " + e.message); } finally { btn.innerText = origTxt; }
         }
 
-        async function importFromGitHub(btn) {
-            if (!data.githubToken || !data.githubRepo) { alert("Укажите GitHub токен и приватный репозиторий в Настройках!"); showSection('settings-page'); return; }
-            if (!confirm("Внимание! Локальные данные будут перезаписаны версией с GitHub. Продолжить?")) return;
-            let origTxt = btn.innerText; btn.innerText = "⏳ Загрузка...";
+        async function fetchGitHubBackup(repo, token) {
+            const response = await fetch(`https://api.github.com/repos/${repo}/contents/encrypted_helper_backup.json`, {headers:{Authorization: `token ${token}`,Accept:'application/vnd.github.v3+json'}});
+            if (!response.ok) throw new Error('Бэкап недоступен. Проверьте репозиторий и токен.');
+            const json = await response.json();
+            return decodeURIComponent(escape(atob((json.content || '').replace(/\s+/g,''))));
+        }
+
+        async function importFromGitHub(button) {
+            if (!data.githubToken || !data.githubRepo) { showSection('settings-page'); showToast('Укажите токен и репозиторий для бэкапов'); return; }
+            if (!confirm('Заменить текущие данные резервной копией с GitHub?')) return;
+            const label = button.textContent; button.disabled = true; button.textContent = 'Загрузка…';
+            const key = masterKey; const originalData = data;
             try {
-                let getRes = await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/encrypted_helper_backup.json`, { headers: { 'Authorization': `token ${data.githubToken}`, 'Accept': 'application/vnd.github.v3+json' } });
-                if (getRes.ok) {
-                    let json = await getRes.json();
-                    let rawBase64 = (json.content || '').replace(/\s+/g, '');
-                    let encStr = decodeURIComponent(escape(atob(rawBase64)));
-                    try {
-                        const bytes = CryptoJS.AES.decrypt(encStr, masterKey); const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-                        if (!decryptedStr) throw new Error();
-                        localStorage.setItem('encMasterData', encStr); data = JSON.parse(decryptedStr);
-                        if (!data.budget) data.budget = { transactions: [], monthlyLimit: 0 };
-                        alert("Данные успешно восстановлены!"); updateUI(); renderVault();
-                    } catch(e) { alert("Ошибка! Скачанный бэкап зашифрован другим мастер-паролем."); }
-                } else { alert("Файл бэкапа не найден в репозитории."); }
-            } catch(e) { alert("Ошибка сети: " + e.message); } finally { btn.innerText = origTxt; }
+                const encrypted = await fetchGitHubBackup(data.githubRepo, data.githubToken);
+                if (masterKey !== key || data !== originalData) return;
+                restoreEncryptedBackup(encrypted);
+            } catch (error) { alert(error.message); }
+            finally { button.disabled = false; button.textContent = label; }
         }
 
         async function restoreFromGitHubAuth() {
-            const token = prompt("Введите GitHub Personal Access Token:"); if (!token) return;
-            let repo = prompt("Введите приватный репозиторий бэкапов (например: username/helper-backup):"); if (!repo) return;
-            repo = repo.replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').trim();
+            if (!document.getElementById('master-password').value) { showToast('Сначала введите мастер-пароль резервной копии'); return; }
+            const token = prompt('GitHub Personal Access Token:'); if (!token) return;
+            const value = prompt('Приватный репозиторий: username/helper-backup'); if (!value) return;
+            const repo = value.replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').trim();
             try {
-                let getRes = await fetch(`https://api.github.com/repos/${repo}/contents/encrypted_helper_backup.json`, { headers: { 'Authorization': `token ${token.trim()}`, 'Accept': 'application/vnd.github.v3+json' } });
-                if (getRes.ok) {
-                    let json = await getRes.json();
-                    let rawBase64 = (json.content || '').replace(/\s+/g, '');
-                    let encStr = decodeURIComponent(escape(atob(rawBase64)));
-                    localStorage.setItem('encMasterData', encStr);
-                    alert("Бэкап загружен! Введите мастер-пароль для расшифровки.");
-                } else { alert("Бэкап не найден. Проверьте репозиторий и токен."); }
-            } catch(e) { alert("Ошибка соединения: " + e.message); }
+                const encrypted = await fetchGitHubBackup(repo, token.trim());
+                if (localStorage.getItem('encMasterData') && !confirm('Заменить текущие данные резервной копией с GitHub?')) return;
+                restoreEncryptedBackup(encrypted);
+            } catch (error) { alert(error.message); }
         }
 
         let deferredInstallPrompt = null;
