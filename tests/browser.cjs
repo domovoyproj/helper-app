@@ -17,6 +17,7 @@ const baseURL = process.env.HELPER_URL || 'http://127.0.0.1:8765';
     await page.locator('#master-password').fill('browser-test-key');
     await page.locator('[onclick="unlockVault()"]').click();
     await page.locator('#dashboard-page.active').waitFor();
+    await page.locator('[onclick="openFocusTask()"]').click();
     await page.locator('#focus-input').fill('Проверить новый Helper');
     await page.locator('#focus-input').press('Enter');
     assert.equal(await page.locator('#focus-list .focus-task').count(),1);

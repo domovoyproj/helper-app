@@ -191,6 +191,7 @@ let data = {
         function lockVault() {
             cancelFoodAnalysis();
             document.getElementById('metric-dialog')?.close();
+            document.getElementById('task-dialog')?.close();
             metricEntry = null;
             masterKey = "";
             data = {

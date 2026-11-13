@@ -21,8 +21,8 @@
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <script defer src="vendor/crypto-js.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=3.3">
-    <link rel="stylesheet" href="experience.css?v=3.3">
+    <link rel="stylesheet" href="styles.css?v=3.4">
+    <link rel="stylesheet" href="experience.css?v=3.4">
 </head>
 <body>
 
@@ -54,13 +54,31 @@
     </div>
 
     <main id="dashboard-page" class="page">
+        <section class="home-capture" aria-labelledby="capture-title">
+            <h2 id="capture-title">Добавить</h2>
+            <div class="home-actions">
+                <button onclick="openTodayHealth('food')" aria-label="Записать еду"><span data-icon="food"></span><span>Еда</span></button>
+                <button onclick="openDailyMetric('water',true)" aria-label="Добавить воду"><span data-icon="drop"></span><span>Вода</span></button>
+                <button onclick="openDailyMetric('steps',true)" aria-label="Добавить шаги"><span data-icon="activity"></span><span>Шаги</span></button>
+                <button onclick="openHomeBudget('expense')" aria-label="Добавить расход"><span data-icon="expense"></span><span>Расход</span></button>
+                <button onclick="openHomeBudget('income')" aria-label="Добавить доход"><span data-icon="income"></span><span>Доход</span></button>
+                <button onclick="openFocusTask()" aria-label="Добавить задачу"><span data-icon="check"></span><span>Задача</span></button>
+            </div>
+        </section>
+        <button class="home-shifts" onclick="showSection('calendar-page')"><span data-icon="calendar"></span><span><strong>Смены</strong><small id="shift-description"></small></span><span data-icon="arrow"></span></button>
         <div class="workspace-grid">
-            <section class="card focus-card"><div class="section-top"><h2>Задачи <span id="focus-count" class="count-badge">0</span></h2><button class="text-button" onclick="showSection('planner-page')">Все задачи <span data-icon="arrow"></span></button></div><div id="focus-list"></div><form class="focus-form" onsubmit="addFocusTask(event)"><span data-icon="plus"></span><input id="focus-input" placeholder="Что нужно сделать?" aria-label="Новая задача" maxlength="500" autocomplete="off"><button type="submit" aria-label="Добавить задачу"><span data-icon="arrow"></span></button></form></section>
-            <section class="card rhythm-card"><div class="section-top"><h2>Смены</h2><button class="text-button" onclick="showSection('calendar-page')">Календарь <span data-icon="arrow"></span></button></div><div class="week-strip" id="week-strip"></div><p id="shift-description" class="helper-description"></p></section>
-            <section class="card daily-health"><div class="section-top"><h2>Здоровье</h2><button class="text-button" onclick="openTodayHealth()">История и цели <span data-icon="arrow"></span></button></div><div class="health-metrics"><div class="health-metric water"><span class="metric-label">Вода</span><strong id="daily-water">0</strong><small id="daily-water-goal"></small><div class="progress-track" role="progressbar" aria-label="Вода: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-water-bar" class="progress-fill"></div></div></div><div class="health-metric steps"><span class="metric-label">Активность</span><strong id="daily-steps">0</strong><small id="daily-steps-goal"></small><div class="progress-track" role="progressbar" aria-label="Активность: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-steps-bar" class="progress-fill"></div></div></div><div class="health-metric cal"><span class="metric-label">Питание</span><strong id="daily-cal">0</strong><small id="daily-cal-goal"></small><div class="progress-track" role="progressbar" aria-label="Питание: процент цели" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="daily-cal-bar" class="progress-fill"></div></div></div></div><div class="quick-capture"><button onclick="openDailyMetric('water',true)">Добавить воду</button><button onclick="openDailyMetric('steps',true)">Добавить шаги</button><button onclick="openTodayHealth('food')">Записать еду</button></div></section>
-            <section class="card month-card"><div class="section-top"><h2>Финансы</h2><span id="finance-month" class="quiet-badge"></span></div><div class="money-line"><span>Доходы</span><strong id="finance-income">0 ₽</strong></div><div class="money-line"><span>Расходы</span><strong id="finance-expense">0 ₽</strong></div><button class="text-button" onclick="showSection('budget-page')">Перейти к финансам <span data-icon="arrow"></span></button></section>
+            <section class="card focus-card"><div class="section-top"><h2>Задачи <span id="focus-count" class="count-badge">0</span></h2><button class="text-button" onclick="showSection('planner-page')">Все задачи <span data-icon="arrow"></span></button></div><div id="focus-list"></div></section>
+            <section class="card daily-health"><div class="section-top"><h2>Итоги дня</h2><button class="text-button" onclick="openTodayHealth()">Подробнее <span data-icon="arrow"></span></button></div><div class="health-metrics"><div class="health-metric"><span class="metric-label">Вода</span><strong id="daily-water">0</strong><small>мл</small></div><div class="health-metric"><span class="metric-label">Шаги</span><strong id="daily-steps">0</strong><small>шагов</small></div><div class="health-metric"><span class="metric-label">Еда</span><strong id="daily-cal">0</strong><small>ккал</small></div></div></section>
         </div>
     </main>
+
+    <dialog id="task-dialog" class="metric-dialog" aria-labelledby="task-dialog-title">
+        <form onsubmit="addFocusTask(event)">
+            <div class="section-top"><h2 id="task-dialog-title">Новая задача</h2><button type="button" class="icon-button" aria-label="Закрыть" onclick="document.getElementById('task-dialog').close()"><span data-icon="close"></span></button></div>
+            <label for="focus-input">Что нужно сделать?</label><input id="focus-input" placeholder="Например: забрать заказ" maxlength="500" autocomplete="off" required>
+            <button type="submit" class="btn">Добавить задачу</button>
+        </form>
+    </dialog>
 
     <div id="more-page" class="page"></div>
 
@@ -586,10 +604,10 @@
         </div>
     </div>
 
-    <script defer src="food-config.js?v=3.3"></script>
-    <script defer src="food-ai.js?v=3.3"></script>
-    <script defer src="app.js?v=3.3"></script>
-    <script defer src="workspace.js?v=3.3"></script>
-    <script defer src="experience.js?v=3.3"></script>
+    <script defer src="food-config.js?v=3.4"></script>
+    <script defer src="food-ai.js?v=3.4"></script>
+    <script defer src="app.js?v=3.4"></script>
+    <script defer src="workspace.js?v=3.4"></script>
+    <script defer src="experience.js?v=3.4"></script>
 </body>
 </html>

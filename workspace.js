@@ -54,7 +54,6 @@ function mountWorkspace() {
     const history = document.getElementById('daily-history-list').closest('.card');
     history.classList.add('health-history');
     document.getElementById('health-page').querySelector('.card').after(history);
-    document.querySelector('.focus-card .section-top').after(document.querySelector('.focus-form'));
     const saveSettingsButton = document.querySelector('#settings-page > button[onclick="saveSettings()"]');
     saveSettingsButton.classList.add('settings-save');
     document.querySelector('#settings-page .page-heading').after(saveSettingsButton);
@@ -90,13 +89,22 @@ function focusBudgetEntry(type) {
     document.getElementById('tx-amount').focus({preventScroll:true});
 }
 
+function openHomeBudget(type) {
+    if (!masterKey) return;
+    showSection('budget-page');
+    document.getElementById('tx-date').value = getFormattedDate(new Date());
+    focusBudgetEntry(type);
+}
+
+function openFocusTask() {
+    if (!masterKey) return;
+    document.getElementById('task-dialog').showModal();
+    document.getElementById('focus-input').focus();
+}
+
 function getWorkspaceSummary(source, date) {
-    const month = date.slice(0, 7);
-    const transactions = (source.budget?.transactions || []).filter(t => t.date?.startsWith(month));
-    const income = transactions.filter(t => t.type === 'income').reduce((s,t) => s + Number(t.amount || 0), 0);
-    const expense = transactions.filter(t => t.type !== 'income').reduce((s,t) => s + Number(t.amount || 0), 0);
     const activeTasks = (source.tasks || []).map((task, index) => ({...task, index})).filter(t => !t.done);
-    return { income, expense, balance: income - expense, activeTasks, day: source.days?.[date] || {}, shift: source.shifts?.[date] || '' };
+    return { activeTasks, day: source.days?.[date] || {}, shift: source.shifts?.[date] || '' };
 }
 
 function renderWorkspace() {
@@ -104,27 +112,11 @@ function renderWorkspace() {
     const summary = getWorkspaceSummary(data, today);
     document.getElementById('helper-greeting').textContent = new Date().toLocaleDateString('ru-RU', {day:'numeric',month:'long',weekday:'short'});
     document.getElementById('focus-count').textContent = summary.activeTasks.length;
-    document.getElementById('focus-list').innerHTML = summary.activeTasks.length ? summary.activeTasks.slice(0,4).map(t => `<label class="focus-task"><input type="checkbox" onchange="toggleWorkspaceTask(${t.index})"><span>${escapeHtml(t.text)}</span></label>`).join('') : '<p class="empty-state">Нет задач</p>';
-    document.getElementById('finance-income').textContent = formatHelperMoney(summary.income);
-    document.getElementById('finance-expense').textContent = formatHelperMoney(summary.expense);
-    document.getElementById('finance-month').textContent = new Date().toLocaleDateString('ru-RU',{month:'long'});
-    const profile = data.profile || {};
-    const metrics = [['water',summary.day.water || 0,profile.targetWater || 2500,'мл'],['steps',summary.day.steps || 0,profile.targetSteps || 10000,'шагов'],['cal',summary.day.calories || 0,profile.targetCal || 2200,'ккал']];
-    for (const [key,value,target,unit] of metrics) {
+    document.getElementById('focus-list').innerHTML = summary.activeTasks.length ? summary.activeTasks.slice(0,3).map(t => `<label class="focus-task"><input type="checkbox" onchange="toggleWorkspaceTask(${t.index})"><span>${escapeHtml(t.text)}</span></label>`).join('') : '<p class="empty-state">Пока нет задач</p>';
+    const metrics = [['water',summary.day.water || 0],['steps',summary.day.steps || 0],['cal',summary.day.calories || 0]];
+    for (const [key,value] of metrics) {
         document.getElementById(`daily-${key}`).textContent = new Intl.NumberFormat('ru-RU').format(value);
-        document.getElementById(`daily-${key}-goal`).textContent = `из ${new Intl.NumberFormat('ru-RU').format(target)} ${unit}`;
-        const percent = Math.min(100, Math.max(0, value / target * 100));
-        const progress = document.getElementById(`daily-${key}-bar`);
-        progress.style.width = `${percent}%`;
-        progress.parentElement.setAttribute('aria-valuenow', Math.round(percent));
     }
-    const week = [];
-    for (let offset = 0; offset < 7; offset++) {
-        const day = new Date(); day.setDate(day.getDate() + offset);
-        const value = data.shifts?.[getFormattedDate(day)];
-        week.push(`<button class="week-day ${offset === 0 ? 'is-today' : ''}" onclick="showSection('calendar-page')" aria-label="${day.toLocaleDateString('ru-RU')} — ${({day:'Дневная смена',night:'Ночная смена',off:'Выходной'})[value] || 'Без смены'}"><span>${day.toLocaleDateString('ru-RU',{weekday:'short'})}</span><strong>${day.getDate()}</strong><i class="shift-dot ${value || 'none'}"></i></button>`);
-    }
-    document.getElementById('week-strip').innerHTML = week.join('');
     document.getElementById('shift-description').textContent = ({day:'Дневная смена',night:'Ночная смена',off:'Выходной'})[summary.shift] || 'На сегодня смена не задана';
     document.getElementById('task-nav-count').textContent = summary.activeTasks.length || '';
 }
@@ -133,7 +125,7 @@ function addFocusTask(event) {
     event.preventDefault();
     const input = document.getElementById('focus-input');
     const text = input.value.trim();
-    if (createTask(text)) { input.value = ''; renderWorkspace(); showToast('Задача добавлена'); }
+    if (createTask(text)) { input.value = ''; document.getElementById('task-dialog').close(); renderWorkspace(); showToast('Задача добавлена'); }
 }
 function toggleWorkspaceTask(index) { toggleTask(index); showToast('Задача выполнена'); }
 function setTaskFilter(filter) { taskFilter = filter; renderPlanner(); }

@@ -17,10 +17,10 @@ function harness() {
   return {run:code=>vm.runInContext(code,context),storage,context};
 }
 
-test('summary uses only the selected month and keeps original task indices',()=>{
+test('summary uses the selected day and keeps original task indices',()=>{
   const h=harness();
-  const s=h.run(`getWorkspaceSummary({tasks:[{text:'done',done:true},{text:'next',done:false}],budget:{transactions:[{date:'2026-11-01',type:'income',amount:1000},{date:'2026-11-04',type:'expense',amount:250},{date:'2026-10-10',type:'expense',amount:800}]}},'2026-11-13')`);
-  assert.equal(s.balance,750);assert.equal(s.income,1000);assert.equal(s.expense,250);assert.equal(s.activeTasks[0].index,1);
+  const s=h.run(`getWorkspaceSummary({tasks:[{text:'done',done:true},{text:'next',done:false}],days:{'2026-11-13':{water:500},'2026-11-12':{water:900}},shifts:{'2026-11-13':'night'}},'2026-11-13')`);
+  assert.equal(s.day.water,500);assert.equal(s.shift,'night');assert.equal(s.activeTasks[0].index,1);
 });
 test('task filtering preserves mutation indices and supports Russian search',()=>{
   const h=harness();
