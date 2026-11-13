@@ -160,7 +160,7 @@ let data = {
             }
             if (pageId === 'misc-page') renderUploads();
             if (typeof renderExperience === 'function') renderExperience(pageId);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
         function unlockVault() {

@@ -22,22 +22,52 @@ let taskQuery = '';
 function workspaceHeader(id) {
     const [title] = workspacePages[id];
     const parent = id === 'food-page' || id === 'profile-page' ? ['health-page','Здоровье'] : id === 'add-vault-page' ? ['vault-page','Личный сейф'] : null;
-    return `<header class="page-heading"><div>${parent ? `<button class="parent-link" onclick="showSection('${parent[0]}')">‹ ${parent[1]}</button>` : ''}<h1 tabindex="-1">${title}</h1></div><div class="heading-actions">${id === 'dashboard-page' ? '<span class="today-chip" id="helper-greeting"></span>' : ''}<button class="icon-button mobile-search" aria-label="Поиск" onclick="openCommandPalette()">${icon('search')}</button></div></header>`;
+    return `<header class="page-heading"><div>${parent ? `<button class="parent-link" onclick="showSection('${parent[0]}')">‹ ${parent[1]}</button>` : ''}<h1 tabindex="-1">${title}</h1>${id === 'dashboard-page' ? '<span class="today-chip" id="helper-greeting"></span>' : ''}</div><div class="heading-actions"><button class="icon-button theme-toggle" data-theme-toggle aria-label="Включить тёмную тему" onclick="toggleTheme()">${icon('moon')}</button><button class="icon-button mobile-search" aria-label="Поиск" onclick="openCommandPalette()">${icon('search')}</button></div></header>`;
 }
 
 function mountWorkspace() {
-    document.getElementById('more-page').insertAdjacentHTML('beforeend', `<nav class="section-menu" aria-label="Все разделы">${[...helperRoutes,['food-page','Питание','food'],['profile-page','Цели здоровья','activity'],['export-page','Отчёты','chart'],['settings-page','Настройки','settings']].map(([id,label,glyph]) => `<button onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span>${icon('arrow')}</button>`).join('')}<button onclick="lockVault()">${icon('lock')}<span>Заблокировать</span></button></nav>`);
+    document.getElementById('more-page').insertAdjacentHTML('beforeend', `<nav class="section-menu" aria-label="Дополнительные разделы">${[['settings-page','Настройки','settings'],helperRoutes[4],['food-page','Питание','food'],['profile-page','Цели здоровья','activity'],helperRoutes[5],['export-page','Отчёты','chart'],helperRoutes[6]].map(([id,label,glyph]) => `<button onclick="showSection('${id}')">${icon(glyph)}<span>${label}</span>${icon('arrow')}</button>`).join('')}<button onclick="lockVault()">${icon('lock')}<span>Заблокировать</span></button></nav>`);
     document.body.insertAdjacentHTML('beforeend', `<dialog id="metric-dialog" class="metric-dialog" aria-labelledby="metric-title"><form id="metric-form" onsubmit="saveMetricDialog(event)"><div class="section-top"><h2 id="metric-title">Вода</h2><button type="button" class="icon-button" aria-label="Закрыть" onclick="document.getElementById('metric-dialog').close()">${icon('close')}</button></div><p id="metric-date" class="helper-hint"></p><label id="metric-label" for="metric-amount">Количество, мл</label><input id="metric-amount" type="number" min="1" step="1" inputmode="numeric" required oninput="updateMetricPresets()"><div id="metric-presets" class="metric-presets" role="group" aria-label="Быстрый выбор количества"></div><p id="metric-error" class="food-status is-error" role="status"></p><button type="submit" class="btn">Добавить</button></form></dialog>`);
     for (const id of Object.keys(workspacePages)) {
         const page = document.getElementById(id);
         if (page) page.insertAdjacentHTML('afterbegin', workspaceHeader(id));
     }
+    document.querySelector('#more-page .page-heading').insertAdjacentHTML('afterend', `<section class="card theme-picker"><h2>Тема</h2><div class="segmented-control" role="group" aria-label="Оформление приложения"><button data-theme-choice="light" onclick="setAppearance('theme','light')">Светлая</button><button data-theme-choice="dark" onclick="setAppearance('theme','dark')">Тёмная</button><button data-theme-choice="system" onclick="setAppearance('theme','system')">Системная</button></div></section>`);
+    document.querySelector('.auth-wordmark').insertAdjacentHTML('beforeend', `<button class="icon-button theme-toggle" data-theme-toggle aria-label="Включить тёмную тему" onclick="toggleTheme()">${icon('moon')}</button>`);
+    // Keep the existing forms and mutation functions; only move their entry points.
+    const budget = document.getElementById('budget-page');
+    const entry = document.getElementById('tx-amount').closest('.card'); entry.id = 'budget-entry-card';
+    budget.querySelector('.page-heading').insertAdjacentHTML('afterend', `<div class="budget-entry-actions"><button class="btn" onclick="focusBudgetEntry('expense')">${icon('plus')} Расход</button><button class="btn btn-secondary" onclick="focusBudgetEntry('income')">${icon('plus')} Доход</button></div>`);
+    const calendar = document.getElementById('calendar-page');
+    const calendarCard = document.getElementById('cal-grid').closest('.card');
+    calendar.querySelector('.page-heading').after(calendarCard);
+    calendarCard.insertAdjacentHTML('beforeend','<p class="calendar-help">Нажмите на дату, чтобы изменить смену.</p>');
+    for (const [field,title] of [['t-1','Шаблон смен'],['rate-day','Ставки и расчёт дохода']]) {
+        const card = document.getElementById(field).closest('.card');
+        const details = document.createElement('details'); details.className = 'card secondary-settings';
+        details.innerHTML = `<summary>${title}</summary>`;
+        card.querySelector('h2').remove();
+        const content = document.createElement('div'); content.className = 'details-content';
+        while(card.firstChild) content.append(card.firstChild);
+        details.append(content);card.replaceWith(details);
+    }
+    const history = document.getElementById('daily-history-list').closest('.card');
+    history.classList.add('health-history');
+    document.getElementById('health-page').querySelector('.card').after(history);
+    document.querySelector('.focus-card .section-top').after(document.querySelector('.focus-form'));
+    const saveSettingsButton = document.querySelector('#settings-page > button[onclick="saveSettings()"]');
+    saveSettingsButton.classList.add('settings-save');
+    document.querySelector('#settings-page .page-heading').after(saveSettingsButton);
     document.querySelectorAll('[data-icon]').forEach(node => { node.innerHTML = icon(node.dataset.icon); });
     document.getElementById('planner-page').querySelector('.card').insertAdjacentHTML('afterbegin', `
         <div class="section-top"><h2>Мой список</h2><span class="count-badge" id="task-count">0</span></div>
         <div class="task-toolbar"><div class="segmented-control" aria-label="Фильтр задач">
         <button data-task-filter="active" onclick="setTaskFilter('active')">В работе</button><button data-task-filter="done" onclick="setTaskFilter('done')">Готово</button><button data-task-filter="all" onclick="setTaskFilter('all')">Все</button></div>
         <input id="task-search" type="search" placeholder="Найти задачу" aria-label="Найти задачу" oninput="taskQuery=this.value;renderPlanner()"></div>`);
+    const taskEntry = document.getElementById('task-input').closest('.quick-grid');
+    taskEntry.classList.add('task-entry');
+    document.querySelector('#planner-page .section-top').after(taskEntry);
+    taskEntry.querySelector('button').setAttribute('aria-label','Добавить задачу');
     document.querySelectorAll('.page > .btn').forEach(button => {
         if (/^Назад/.test(button.textContent.trim())) button.classList.add('back-link');
     });
@@ -52,6 +82,12 @@ function mountWorkspace() {
     });
     document.querySelectorAll('.input-action-btn').forEach(button => { button.innerHTML = icon('eye'); });
     document.querySelector('#add-vault-page button[onclick="showSection(\'misc-page\')"]')?.setAttribute('onclick', "showSection('vault-page')");
+}
+
+function focusBudgetEntry(type) {
+    setBudgetTxType(type);
+    document.getElementById('budget-entry-card').scrollIntoView({block:'start',behavior:'instant'});
+    document.getElementById('tx-amount').focus({preventScroll:true});
 }
 
 function getWorkspaceSummary(source, date) {

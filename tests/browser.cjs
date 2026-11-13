@@ -102,13 +102,13 @@ const baseURL = process.env.HELPER_URL || 'http://127.0.0.1:8765';
     // Capture real empty-state views in a separate, clean browser profile.
     const clean=await browser.newContext({viewport:{width:1440,height:1080}});const shot=await clean.newPage();await shot.goto(baseURL);
     const output=path.join(__dirname,'../docs/screenshots');fs.mkdirSync(output,{recursive:true});
-    await shot.screenshot({path:path.join(output,'welcome-desktop.png'),fullPage:true});
+    await shot.screenshot({animations:'disabled',path:path.join(output,'welcome-desktop.png'),fullPage:true});
     await shot.locator('#master-password').fill('screenshot-only');await shot.locator('[onclick="unlockVault()"]').click();await shot.mouse.move(0,0);
-    await shot.screenshot({path:path.join(output,'today-desktop.png'),fullPage:true});
-    await shot.setViewportSize({width:390,height:844});await shot.screenshot({path:path.join(output,'today-mobile.png'),fullPage:true});
-    await shot.setViewportSize({width:1440,height:1080});await shot.evaluate(()=>showSection('budget-page'));await shot.screenshot({path:path.join(output,'finance-desktop.png'),fullPage:true});
+    await shot.screenshot({animations:'disabled',path:path.join(output,'today-desktop.png'),fullPage:true});
+    await shot.setViewportSize({width:390,height:844});await shot.screenshot({animations:'disabled',path:path.join(output,'today-mobile.png'),fullPage:true});
+    await shot.setViewportSize({width:1440,height:1080});await shot.evaluate(()=>showSection('budget-page'));await shot.screenshot({animations:'disabled',path:path.join(output,'finance-desktop.png'),fullPage:true});
     assert.notEqual(await shot.locator('#budget-month-balance').evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 255)');
-    await shot.evaluate(()=>{setAppearance('theme','dark');showSection('dashboard-page');});await shot.screenshot({path:path.join(output,'today-dark.png'),fullPage:true});
+    await shot.evaluate(()=>{setAppearance('theme','dark');showSection('dashboard-page');});await shot.screenshot({animations:'disabled',path:path.join(output,'today-dark.png'),fullPage:true});
     console.log('PASS: tasks, health, finance, shifts, vault, search, lock/unlock, backup import, themes, 52 responsive route checks and offline reload.');
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

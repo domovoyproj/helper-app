@@ -2,19 +2,27 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f6f5f1">
     <meta name="color-scheme" content="dark light">
+    <script>
+        // Apply the saved theme before the first paint, including the lock screen.
+        try {
+            const preference = JSON.parse(localStorage.getItem('helperAppearance') || '{}').theme || 'system';
+            const dark = preference === 'dark' || (preference === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch {}
+    </script>
     <meta name="description" content="Helper — локальный личный помощник для дел, финансов, здоровья и смен.">
     <title>Helper — личное пространство</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <script defer src="vendor/crypto-js.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=3.2.1">
-    <link rel="stylesheet" href="experience.css?v=3.2.1">
+    <link rel="stylesheet" href="styles.css?v=3.3">
+    <link rel="stylesheet" href="experience.css?v=3.3">
 </head>
 <body>
 
@@ -578,10 +586,10 @@
         </div>
     </div>
 
-    <script defer src="food-config.js?v=3.2.1"></script>
-    <script defer src="food-ai.js?v=3.2.1"></script>
-    <script defer src="app.js?v=3.2.1"></script>
-    <script defer src="workspace.js?v=3.2.1"></script>
-    <script defer src="experience.js?v=3.2.1"></script>
+    <script defer src="food-config.js?v=3.3"></script>
+    <script defer src="food-ai.js?v=3.3"></script>
+    <script defer src="app.js?v=3.3"></script>
+    <script defer src="workspace.js?v=3.3"></script>
+    <script defer src="experience.js?v=3.3"></script>
 </body>
 </html>

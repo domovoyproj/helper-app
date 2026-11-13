@@ -1,6 +1,6 @@
 {
   "name": "helper-app",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "private": true,
   "description": "Private local-first workspace for tasks, health, shifts and finances",
   "scripts": {

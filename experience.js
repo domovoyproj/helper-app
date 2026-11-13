@@ -1,6 +1,8 @@
 'use strict';
 
 const helperIcons = {
+    moon: '<path d="M20 14a8 8 0 0 1-10-10 8 8 0 1 0 10 10Z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
     eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
     home: '<path d="m3 10 9-7 9 7v10H3z"/><path d="M9 20v-7h6v7"/>',
     wallet: '<rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 8h18m-5 5h5m-5 3h2"/>',
@@ -22,7 +24,7 @@ const helperIcons = {
 function icon(name) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${helperIcons[name] || helperIcons.grid}</svg>`; }
 const helperRoutes = [['dashboard-page','Сегодня','home'],['planner-page','Задачи','check'],['health-page','Здоровье','activity'],['budget-page','Финансы','wallet'],['calendar-page','Смены','calendar'],['vault-page','Личный сейф','lock'],['misc-page','Инструменты','grid']];
 
-const appearanceDefaults = { theme: 'light', density: 'comfortable' };
+const appearanceDefaults = { theme: 'system', density: 'comfortable' };
 const commandItems = [
     ['dashboard-page', 'Сегодня', 'Сводка дня и быстрые действия'],
     ['health-page', 'Здоровье', 'Вода, шаги, вес и история'],
@@ -57,6 +59,7 @@ function setupExperience() {
     const note = document.createElement('p'); note.className = 'helper-hint'; note.textContent = 'Запомните мастер-пароль. Он шифрует данные, восстановить его нельзя.'; input.closest('.input-with-action').after(note);
     auth.querySelector('button[onclick="resetVault()"]').classList.add('reset-link');
     mountWorkspace();
+    setupMobileViewport();
     document.getElementById('toast-box').setAttribute('role','status');
     document.querySelectorAll('input:not([aria-label]),textarea:not([aria-label]),select:not([aria-label])').forEach(field=>{if(field.placeholder && !field.labels?.length)field.setAttribute('aria-label',field.placeholder);});
     setupCommandPalette(); updateConnectionStatus();
@@ -79,7 +82,15 @@ function applyAppearance() {
     document.body.classList.toggle('density-compact', appearance.density === 'compact');
     const themeColor = document.querySelector('meta[name="theme-color"]');
     if (themeColor) themeColor.content = theme === 'light' ? '#f6f5f1' : '#191a1c';
-    document.querySelectorAll('[data-theme-choice]').forEach(button => button.classList.toggle('is-selected', button.dataset.themeChoice === appearance.theme));
+    document.querySelectorAll('[data-theme-choice]').forEach(button => {
+        button.classList.toggle('is-selected', button.dataset.themeChoice === appearance.theme);
+        button.setAttribute('aria-pressed',String(button.dataset.themeChoice === appearance.theme));
+    });
+    document.querySelectorAll('[data-theme-toggle]').forEach(button => {
+        button.innerHTML = icon(theme === 'dark' ? 'sun' : 'moon');
+        button.setAttribute('aria-label',theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему');
+        button.title = button.getAttribute('aria-label');
+    });
     document.querySelectorAll('[data-density-choice]').forEach(button => button.classList.toggle('is-selected', button.dataset.densityChoice === appearance.density));
 }
 
@@ -88,6 +99,25 @@ function setAppearance(key, value) {
     appearance[key] = value;
     localStorage.setItem('helperAppearance', JSON.stringify(appearance));
     applyAppearance();
+}
+
+function toggleTheme() {
+    setAppearance('theme',document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+}
+
+function setupMobileViewport() {
+    const viewport = window.visualViewport;
+    const update = () => {
+        const height = viewport?.height || window.innerHeight;
+        document.documentElement.style.setProperty('--visible-height',`${height}px`);
+        const editing = document.activeElement?.matches('input:not([type=checkbox]):not([type=radio]),textarea,select');
+        document.body.classList.toggle('keyboard-open',!!editing && window.innerHeight - height > 120);
+    };
+    viewport?.addEventListener('resize',update);
+    window.addEventListener('resize',update);
+    document.addEventListener('focusin',update);
+    document.addEventListener('focusout',() => requestAnimationFrame(update));
+    update();
 }
 
 function updateConnectionStatus() {
