@@ -6,10 +6,13 @@ body.is-unlocked { padding:32px 32px 48px 244px; }
 .skip-link { position:fixed; top:-80px; left:230px; padding:12px; background:var(--card-bg); z-index:300; }
 .skip-link:focus { top:8px; }
 #helper-sidebar { position:fixed; inset:0 auto 0 0; width:208px; padding:24px 14px; border-right:1px solid var(--border); background:var(--nav-bg); display:flex; flex-direction:column; overflow:auto; z-index:30; }
-.helper-brand,.auth-wordmark { display:flex; align-items:center; gap:10px; color:var(--text-main); text-decoration:none; font-size:23px; font-weight:650; letter-spacing:-.8px; }
+.helper-brand,.auth-wordmark { display:flex; align-items:center; gap:12px; color:var(--text-main); text-decoration:none; }
 .helper-brand { padding:0 10px 24px; }
-.brand-mark { display:inline-grid; position:relative; place-items:center; width:30px; height:30px; border-radius:8px; background:#e76b3c; color:#fff; font-size:28px; font-weight:700; letter-spacing:-3px; line-height:1; padding-bottom:4px; }
-.brand-mark span { position:absolute; bottom:3px; right:5px; color:#563327; }
+.brand-logo { position:relative; display:block; width:200px; max-width:100%; min-width:0; flex:0 1 200px; aspect-ratio:960 / 290; }
+.brand-logo img { display:block; width:100%; height:auto; }
+.brand-logo-letters { position:absolute; inset:0; visibility:hidden; clip-path:inset(0 0 0 35.5%); filter:brightness(0) invert(1); opacity:.94; }
+html[data-theme=dark] .brand-logo-letters { visibility:visible; }
+.auth-wordmark .theme-toggle { flex-shrink:0; }
 #helper-sidebar button { width:100%; display:flex; align-items:center; gap:10px; text-align:left; min-height:42px; padding:10px; border:0; border-radius:6px; background:none; color:var(--text-muted); font-size:13px; margin:2px 0; }
 #helper-sidebar button svg { width:17px; height:17px; }
 #helper-sidebar button:hover { background:var(--hover-bg); color:var(--text-main); }
